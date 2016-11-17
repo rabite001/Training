@@ -1,0 +1,1282 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>TEC.Core.DirectoryService</name>
+    </assembly>
+    <members>
+        <member name="T:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.DSObjectPicker">
+            <summary>
+            物件選擇器的對話框
+            </summary>
+        </member>
+        <member name="T:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.IDsObjectPicker">
+            <summary>
+            應用程式用於初始化顯示物件選擇器的介面 
+            </summary>
+        </member>
+        <member name="T:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.IDataObject">
+            <summary>
+            允許資料傳送之介面
+            </summary>
+        </member>
+        <member name="T:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.DirectoryObject">
+            <summary>
+            <see cref="T:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.DirectoryObjectPickerDialog"/>所選擇物件的詳細資料
+            </summary>
+        </member>
+        <member name="M:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.DirectoryObject.#ctor(System.String,System.String,System.String,System.String)">
+            <summary>
+            初始化儲存目錄物件資訊的物件
+            </summary>
+            <param name="name">名稱</param>
+            <param name="path">物件路徑</param>
+            <param name="schemaClass">Schema Class</param>
+            <param name="upn">UPN</param>
+        </member>
+        <member name="P:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.DirectoryObject.Path">
+            <summary>
+            取得 Active Directory 路徑
+            </summary>
+            <remarks>
+            <para>
+            此格式將會依照<see cref="T:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.DirectoryObjectPickerDialog"/>枝選擇物件的指定格式有所不同
+            </para>
+            </remarks>
+        </member>
+        <member name="P:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.DirectoryObject.SchemaClassName">
+            <summary>
+            取得目錄物件的Schema class(objectClass 屬性)
+            </summary>
+        </member>
+        <member name="P:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.DirectoryObject.Name">
+            <summary>
+            取得目錄物件的Relative Distinguished Name (RDN)
+            </summary>
+        </member>
+        <member name="P:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.DirectoryObject.Upn">
+            <summary>
+            取得目錄物件的Principal Name (userPrincipalName 屬性)
+            </summary>
+            <remarks>
+            <para>
+            如果該物件沒有userPrincipalName屬性值，則此屬性將傳回空字串。
+            </para>
+            </remarks>
+        </member>
+        <member name="T:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.DirectoryObjectPickerDialog">
+             <summary>
+             讓使用者選取目錄物件的對話框
+             </summary>
+             <remarks>
+             <para>
+             此目錄物件選擇器可以讓使用者從全域類別、Microsoft Windows 2000網域或電腦、Microsoft Windows NT 4.0網域或電腦、工作群組、等選取單一或多個物件。
+             該物件可以為使用者、聯絡人、電腦、群組或內建安全性主體。
+             </para>
+             <para>
+             這個類別為 Active Directory UI所封裝
+             </para>
+             </remarks>
+             <example>
+             <para>DirectoryObjectPickerWindow.xaml</para>
+             <code lang="XML">
+                 &lt;Window x:Class="TEC.Core.WPF.DirectoryServices.TestApplication.ActiveDirectory.DirectoryObjectPickerWindow"
+                     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                     Title="DirectoryObjectPickerWindow" Height="500" Width="700" Loaded="Window_Loaded"&gt;
+                 &lt;DockPanel&gt;
+                     &lt;DockPanel DockPanel.Dock="Top"&gt;
+                         &lt;DockPanel DockPanel.Dock="Left"&gt;
+                             &lt;StackPanel Orientation="Vertical"&gt;
+                                 &lt;TextBlock Text="Allowed Types"&gt;&lt;/TextBlock&gt;
+                                 &lt;ListBox x:Name="ListBox_AllowedTypes"&gt;
+                                     &lt;ListBox.ItemTemplate&gt;
+                                         &lt;DataTemplate&gt;
+                                             &lt;CheckBox Name="CheckBoxZone" Content="{Binding Key}" IsChecked="{Binding Value}" Margin="0,5,0,0"/&gt;
+                                         &lt;/DataTemplate&gt;
+                                     &lt;/ListBox.ItemTemplate&gt;
+                                 &lt;/ListBox&gt;
+                             &lt;/StackPanel&gt;
+                         &lt;/DockPanel&gt;
+                         &lt;DockPanel DockPanel.Dock="Left"&gt;
+                             &lt;StackPanel Orientation="Vertical"&gt;
+                                 &lt;TextBlock Text="Allowed Types"&gt;&lt;/TextBlock&gt;
+                                 &lt;ListBox x:Name="ListBox_AllowedLocations"&gt;
+                                     &lt;ListBox.ItemTemplate&gt;
+                                         &lt;DataTemplate&gt;
+                                             &lt;CheckBox Name="CheckBoxZone" Content="{Binding Key}" IsChecked="{Binding Value}" Margin="0,5,0,0"/&gt;
+                                         &lt;/DataTemplate&gt;
+                                     &lt;/ListBox.ItemTemplate&gt;
+                                 &lt;/ListBox&gt;
+                             &lt;/StackPanel&gt;
+                         &lt;/DockPanel&gt;
+                         &lt;DockPanel DockPanel.Dock="Left"&gt;
+                             &lt;StackPanel Orientation="Vertical"&gt;
+                                 &lt;TextBlock Text="Default Types"&gt;&lt;/TextBlock&gt;
+                                 &lt;ListBox x:Name="ListBox_DefaultTypes"&gt;
+                                     &lt;ListBox.ItemTemplate&gt;
+                                         &lt;DataTemplate&gt;
+                                             &lt;CheckBox Name="CheckBoxZone" Content="{Binding Key}" IsChecked="{Binding Value}" Margin="0,5,0,0"/&gt;
+                                         &lt;/DataTemplate&gt;
+                                     &lt;/ListBox.ItemTemplate&gt;
+                                 &lt;/ListBox&gt;
+                             &lt;/StackPanel&gt;
+                         &lt;/DockPanel&gt;
+                         &lt;DockPanel DockPanel.Dock="Left"&gt;
+                             &lt;StackPanel Orientation="Vertical"&gt;
+                                 &lt;TextBlock Text="Allowed Types"&gt;&lt;/TextBlock&gt;
+                                 &lt;ListBox x:Name="ListBox_DefaultLocations"&gt;
+                                     &lt;ListBox.ItemTemplate&gt;
+                                         &lt;DataTemplate&gt;
+                                             &lt;CheckBox Name="CheckBoxZone" Content="{Binding Key}" IsChecked="{Binding Value}" Margin="0,5,0,0"/&gt;
+                                         &lt;/DataTemplate&gt;
+                                     &lt;/ListBox.ItemTemplate&gt;
+                                 &lt;/ListBox&gt;
+                             &lt;/StackPanel&gt;
+                         &lt;/DockPanel&gt;
+                     &lt;/DockPanel&gt;
+                     &lt;DockPanel DockPanel.Dock="Top"&gt;
+                         &lt;Button Content="顯示物件選擇器" Click="Btn_ShowDirectoryObjectSelector_Click" x:Name="Btn_ShowDirectoryObjectSelector" DockPanel.Dock="Right"&gt;&lt;/Button&gt;
+                         &lt;DockPanel DockPanel.Dock="Right"&gt;
+                             &lt;CheckBox Content="顯示進階資訊" DockPanel.Dock="Top" x:Name="CheckBox_ShowAdvanced"&gt;&lt;/CheckBox&gt;
+                             &lt;CheckBox Content="允許多重選擇" DockPanel.Dock="Top" x:Name="CheckBox_MultiSelect"&gt;&lt;/CheckBox&gt;
+                         &lt;/DockPanel&gt;
+                         &lt;StackPanel Orientation="Vertical" DockPanel.Dock="Left"&gt;
+                             &lt;TextBlock Text="目標電腦"&gt;&lt;/TextBlock&gt;
+                             &lt;TextBox x:Name="Txt_TargetConputer"&gt;&lt;/TextBox&gt;
+                         &lt;/StackPanel&gt;
+                     &lt;/DockPanel&gt;
+                     &lt;DockPanel DockPanel.Dock="Top" Margin="0,10,0,0"&gt;
+                         &lt;TextBlock x:Name="TextBlock_SelectResult" TextWrapping="Wrap"&gt;&lt;/TextBlock&gt;
+                     &lt;/DockPanel&gt;
+                 &lt;/DockPanel&gt;
+             &lt;/Window&gt;
+             </code>
+             <para>DirectoryObjectPickerWindow.xaml.cs</para>
+             <code lang="C#">
+            using System;
+            using System.Collections.Generic;
+            using System.Linq;
+            using System.Text;
+            using System.Windows;
+            using System.Windows.Controls;
+            using System.Windows.Data;
+            using System.Windows.Documents;
+            using System.Windows.Input;
+            using System.Windows.Media;
+            using System.Windows.Media.Imaging;
+            using System.Windows.Shapes;
+            using TEC.Core.ComponentModel;
+            using TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker;
+            
+            namespace TEC.Core.WPF.DirectoryServices.TestApplication.ActiveDirectory
+            {
+                /// &lt;summary&gt;
+                /// DirectoryObjectPickerWindow.xaml 的互動邏輯
+                /// &lt;/summary&gt;
+                public partial class DirectoryObjectPickerWindow : Window
+                {
+                    public DirectoryObjectPickerWindow()
+                    {
+                        InitializeComponent();
+                    }
+            
+                    private void Window_Loaded(object sender, RoutedEventArgs e)
+                    {
+                        #region 處理物件類型
+                        //允許選取物件的類型
+                        this.AllowObjectTypeList = new List&lt;ObjectTypesCheckBoxItem&gt;();
+                        //預設選取物件的類型
+                        this.DefaultObjectTypeList = new List&lt;ObjectTypesCheckBoxItem&gt;();
+                        foreach (ObjectTypes objectType in Enum.GetValues(typeof(ObjectTypes)))
+                        {
+                            if (objectType != ObjectTypes.None &amp;&amp; objectType != ObjectTypes.All)
+                            {
+                                this.AllowObjectTypeList.Add(new ObjectTypesCheckBoxItem() { Key = objectType, Value = true });
+                                if (objectType == ObjectTypes.Users || objectType == ObjectTypes.Groups
+                                   || objectType == ObjectTypes.Computers || objectType == ObjectTypes.Contacts)
+                                {
+                                    this.DefaultObjectTypeList.Add(new ObjectTypesCheckBoxItem() { Key = objectType, Value = true });
+                                }
+                                else
+                                {
+                                    this.DefaultObjectTypeList.Add(new ObjectTypesCheckBoxItem() { Key = objectType, Value = false });
+                                }
+                            }
+                        }
+                        this.ListBox_AllowedTypes.ItemsSource = this.AllowObjectTypeList;
+                        this.ListBox_DefaultTypes.ItemsSource = this.DefaultObjectTypeList;
+                        #endregion
+                        #region 處理領域
+                        //允許選取物件的領域
+                        this.AllowLocations = new List&lt;LocationsCheckBoxItem&gt;();
+                        //預設選取物件的領域
+                        this.DefaultLocations = new List&lt;LocationsCheckBoxItem&gt;();
+            
+                        foreach (Locations location in Enum.GetValues(typeof(Locations)))
+                        {
+                            if (location != Locations.None &amp;&amp; location != Locations.All)
+                            {
+                                this.AllowLocations.Add(new LocationsCheckBoxItem() { Key = location, Value = true });
+                                if (location == Locations.JoinedDomain)
+                                {
+                                    this.DefaultLocations.Add(new LocationsCheckBoxItem() { Key = location, Value = true });
+                                }
+                                else
+                                {
+                                    this.DefaultLocations.Add(new LocationsCheckBoxItem() { Key = location, Value = false });
+                                }
+                            }
+                        }
+                        this.ListBox_AllowedLocations.ItemsSource = this.AllowLocations;
+                        this.ListBox_DefaultLocations.ItemsSource = this.DefaultLocations;
+                        #endregion
+                    }
+            
+                    private void Btn_ShowDirectoryObjectSelector_Click(object sender, RoutedEventArgs e)
+                    {
+                        try
+                        {
+                            ObjectTypes allowedTypes = ObjectTypes.None;
+                            //篩選已勾選的
+                            this.AllowObjectTypeList.Where(t =&gt; t.Value)
+                                .ToList()
+                                .ForEach(t =&gt; allowedTypes |= t.Key);
+                            ObjectTypes defaultTypes = ObjectTypes.None;
+                            //篩選已勾選的
+                            this.DefaultObjectTypeList.Where(t =&gt; t.Value)
+                                .ToList()
+                                .ForEach(t =&gt; defaultTypes |= t.Key);
+                            Locations allowedLocations = Locations.None;
+                            //篩選已勾選的
+                            this.AllowLocations.Where(t =&gt; t.Value)
+                              .ToList()
+                              .ForEach(t =&gt; allowedLocations |= t.Key);
+                            Locations defaultLocations = Locations.None;
+                            //篩選已勾選的
+                            this.DefaultLocations.Where(t =&gt; t.Value)
+                              .ToList()
+                              .ForEach(t =&gt; defaultLocations |= t.Key);
+                            // Show dialog
+                            DirectoryObjectPickerDialog picker = new DirectoryObjectPickerDialog();
+                            picker.AllowedObjectTypes = allowedTypes;
+                            picker.DefaultObjectTypes = defaultTypes;
+                            picker.AllowedLocations = allowedLocations;
+                            picker.DefaultLocations = defaultLocations;
+                            picker.MultiSelect = this.CheckBox_MultiSelect.IsChecked.Value;
+                            picker.TargetComputer = this.Txt_TargetConputer.Text;
+                            System.Windows.Forms.DialogResult dialogResult = picker.ShowDialog(new Win32Window(this));
+                            if (dialogResult == System.Windows.Forms.DialogResult.OK)
+                            {
+                                DirectoryObject[] results;
+                                results = picker.SelectedObjects;
+                                if (results == null)
+                                {
+                                    this.TextBlock_SelectResult.Text = "Results null.";
+                                    return;
+                                }
+            
+                                System.Text.StringBuilder sb = new System.Text.StringBuilder();
+            
+                                for (int i = 0; i &lt;= results.Length - 1; i++)
+                                {
+                                    sb.Append(string.Format("Name: \t {0}", results[i].Name));
+                                    sb.Append(Environment.NewLine);
+                                    sb.Append(string.Format("UPN: \t {0}", results[i].Upn));
+                                    sb.Append(Environment.NewLine);
+                                    sb.Append(string.Format("Path: \t {0}", results[i].Path));
+                                    sb.Append(Environment.NewLine);
+                                    sb.Append(string.Format("Schema Class: \t {0} ", results[i].SchemaClassName));
+                                    sb.Append(Environment.NewLine);
+                                    string downLevelName;
+                                    try
+                                    {
+                                        downLevelName = NameTranslator.TranslateUpnToDownLevel(results[i].Upn);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        downLevelName = string.Format("{0}: {1}", ex.GetType().Name, ex.Message);
+                                    }
+                                    sb.Append(string.Format("Down-level Name: \t {0} ", downLevelName));
+                                    sb.Append(Environment.NewLine);
+                                    sb.Append(Environment.NewLine);
+                                }
+                                this.TextBlock_SelectResult.Text = sb.ToString();
+                            }
+                            else
+                            {
+                                this.TextBlock_SelectResult.Text = "Dialog result: " + dialogResult.ToString();
+                            }
+                        }
+                        catch (Exception e1)
+                        {
+                            MessageBox.Show(e1.ToString());
+                        }
+                    }
+                    /// &lt;summary&gt;
+                    /// 設定或取得允許選取物件的類型
+                    /// &lt;/summary&gt;
+                    private List&lt;ObjectTypesCheckBoxItem&gt; AllowObjectTypeList { set; get; }
+                    /// &lt;summary&gt;
+                    /// 設定或取得預設選取物件的類型
+                    /// &lt;/summary&gt;
+                    private List&lt;ObjectTypesCheckBoxItem&gt; DefaultObjectTypeList { set; get; }
+                    /// &lt;summary&gt;
+                    /// 設定或取得允許選取物件的區域
+                    /// &lt;/summary&gt;
+                    private List&lt;LocationsCheckBoxItem&gt; AllowLocations { set; get; }
+                    /// &lt;summary&gt;
+                    /// 設定或取得預設選取物件的區域
+                    /// &lt;/summary&gt;
+                    private List&lt;LocationsCheckBoxItem&gt; DefaultLocations { set; get; }
+                    #region Private Classes
+                    private class ObjectTypesCheckBoxItem
+                    {
+                        public ObjectTypes Key { set; get; }
+                        public bool Value { set; get; }
+                    }
+                    private class LocationsCheckBoxItem
+                    {
+                        public Locations Key { set; get; }
+                        public bool Value { set; get; }
+                    }
+                    #endregion
+                }
+            }
+            
+             </code>
+             </example>
+        </member>
+        <member name="M:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.DirectoryObjectPickerDialog.#ctor">
+            <summary>
+            初始化物件選擇器，並將所有屬性設定為預設值。
+            </summary>
+            <remarks>
+            <para>
+            相關的預設值資訊為:
+            </para>
+            <para>
+            <list type="table">
+            <listheader><term>屬性</term><description>預設值</description></listheader>
+            <item><term>AllowedLocations</term><description>所有位置</description></item>
+            <item><term>AllowedObjectTypes</term><description>所有物件類型</description></item>
+            <item><term>DefaultLocations</term><description>無 (將預設為第一個位置)</description></item>
+            <item><term>DefaultObjectTypes</term><description>所有物件類型</description></item>
+            <item><term>MultiSelect</term><description>false</description></item>
+            <item><term>SelectedObject</term><description>null</description></item>
+            <item><term>SelectedObjects</term><description>空陣列</description></item>
+            <item><term>ShowAdvancedView</term><description>false</description></item>
+            <item><term>TargetComputer</term><description>null</description></item>
+            </list>
+            </para>
+            </remarks>
+        </member>
+        <member name="P:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.DirectoryObjectPickerDialog.AllowedLocations">
+            <summary>
+            設定或取得物件選擇器所允許搜尋的領域
+            </summary>
+        </member>
+        <member name="P:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.DirectoryObjectPickerDialog.AllowedObjectTypes">
+            <summary>
+            設定或取得物件選擇器所允許搜尋的物件類型
+            </summary>
+        </member>
+        <member name="P:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.DirectoryObjectPickerDialog.DefaultLocations">
+            <summary>
+            設定或取得物件選擇器初始化後預設已選取的領域
+            </summary>
+        </member>
+        <member name="P:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.DirectoryObjectPickerDialog.DefaultObjectTypes">
+            <summary>
+            設定或取得物件選擇器初始化後預設已選取的物件類型
+            </summary>
+        </member>
+        <member name="P:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.DirectoryObjectPickerDialog.MultiSelect">
+            <summary>
+            設定或取得使用者是否可以選擇多個物件
+            </summary>
+            <remarks>
+            <para>
+            若為<c>false</c>，使用者舊址可以選擇一個物件
+            </para>
+            </remarks>
+        </member>
+        <member name="P:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.DirectoryObjectPickerDialog.SelectedObject">
+            <summary>
+            取得已經從選擇器選擇的目錄物件，如果沒有選取則傳回<c>null</c>
+            </summary>
+            <remarks>
+            <para>
+            若<see cref="P:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.DirectoryObjectPickerDialog.MultiSelect"/>為<c>true</c>，則會傳回第一個被選取的物件，若要取得所有被選擇的物件，請使用<see cref="P:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.DirectoryObjectPickerDialog.SelectedObjects"/>
+            </para>
+            </remarks>
+        </member>
+        <member name="P:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.DirectoryObjectPickerDialog.SelectedObjects">
+            <summary>
+            取得已經從選擇器所選取的物件陣列
+            </summary>
+        </member>
+        <member name="P:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.DirectoryObjectPickerDialog.ShowAdvancedView">
+            <summary>
+            設定或取得是否要顯示進階選項(針對up-level網域)
+            </summary>
+        </member>
+        <member name="P:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.DirectoryObjectPickerDialog.TargetComputer">
+            <summary>
+            設定或取得目標電腦的名稱
+            </summary>
+            <remarks>
+            <para>
+            當此選擇器是在指定電腦上執行，可以使用該電腦定義加入的網域以及企業。如果這個值是<c>null</c>或<c>String.Empty</c>，則目標電腦就是本機電腦。
+            </para>
+            </remarks>
+        </member>
+        <member name="M:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.DirectoryObjectPickerDialog.Reset">
+            <summary>
+            重設所有預設值
+            </summary>
+        </member>
+        <member name="M:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.DirectoryObjectPickerDialog.RunDialog(System.IntPtr)">
+            <summary>
+            當叫用 ShowDialog() 時，顯示物件選擇器。
+            </summary>
+            <param name="hwndOwner">擁有此對話框的視窗</param>
+            <returns>當按下OK時，將傳回<c>true</c>，除此之外為<c>false</c></returns>
+        </member>
+        <member name="T:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.Locations">
+            <summary>
+            定義<see cref="T:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.DirectoryObjectPickerDialog"/>用於搜尋物件的區域
+            </summary>
+        </member>
+        <member name="F:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.Locations.None">
+            <summary>
+            沒有定義任何領域
+            </summary>
+        </member>
+        <member name="F:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.Locations.LocalComputer">
+            <summary>
+            本機電腦(down-level)
+            </summary>
+        </member>
+        <member name="F:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.Locations.JoinedDomain">
+            <summary>
+            目標電腦所加入的網域(down-level and up-level)
+            </summary>
+        </member>
+        <member name="F:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.Locations.EnterpriseDomain">
+            <summary>
+            適用於Windows 2000版本的電腦所屬網域(up-level)
+            </summary>
+        </member>
+        <member name="F:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.Locations.GlobalCatalog">
+            <summary>
+            企業中所有網域所包含的物件之領域(up-level)
+            </summary>
+        </member>
+        <member name="F:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.Locations.ExternalDomain">
+            <summary>
+            企業的所有外部網域，且該外部網域對於本機電腦所加入的網域是信任關係。(down-level 與 up-level)
+            </summary>
+        </member>
+        <member name="F:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.Locations.Workgroup">
+            <summary>
+            目標電腦所加入的工作群組
+            </summary>
+            <remarks>
+            <para>
+            當目標電腦沒有加入網域才適用，在此區域中只有電腦物件可以被選取。
+            </para>
+            </remarks>
+        </member>
+        <member name="F:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.Locations.UserEntered">
+            <summary>
+            允許使用者定義領域(down-level 與 up-level)
+            </summary>
+            <remarks>
+            <para>
+            如果沒有定義，該對話框會提示使用者從下拉是選單中選擇一個領域。
+            </para>
+            </remarks>
+        </member>
+        <member name="F:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.Locations.All">
+            <summary>
+            所有位置
+            </summary>
+        </member>
+        <member name="T:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.NameTranslator">
+            <summary>
+            Active Directory 名稱轉換。
+            </summary>
+            <remarks>
+            <para>
+            轉換網域名稱的格式，如NT4格式表示("TPE\Antony")轉換為User Principal Name(UPN, Antony@tecyt.com)
+            </para>
+            <para>
+            此轉換類別依賴於ActiveDs.dll轉譯COM套件
+            </para>
+            </remarks>
+        </member>
+        <member name="M:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.NameTranslator.TranslateDownLevelToUpn(System.String)">
+            <summary>
+            轉換網域名稱的格式，如NT4格式表示("TPE\Antony")轉換為User Principal Name(UPN, Antony@tpe.tecyt.com)
+            </summary>
+        </member>
+        <member name="M:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.NameTranslator.TranslateUpnToDownLevel(System.String)">
+            <summary>
+            轉換網域名稱的格式，如User Principal Name(UPN, Antony@tecyt.com)轉換為NT4格式表示("TPE\Antony")
+            </summary>
+        </member>
+        <member name="T:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.ObjectTypes">
+            <summary>
+            定義 <see cref="T:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.DirectoryObjectPickerDialog"/>用於搜尋物件的類型
+            </summary>
+        </member>
+        <member name="F:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.ObjectTypes.None">
+            <summary>
+            沒有定義類型
+            </summary>
+        </member>
+        <member name="F:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.ObjectTypes.Users">
+            <summary>
+            包含使用者物件
+            </summary>
+        </member>
+        <member name="F:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.ObjectTypes.Groups">
+            <summary>
+            包含全域安全性群組
+            </summary>
+            <remarks>
+            <para>
+            對於up-level領域，包含所有發佈與安全性群組，並且可以為全域、萬用、網域本機的群組領域。
+            </para>
+            <para>
+            對於down-level領域，包含本機與全域群組。
+            </para>
+            </remarks>
+        </member>
+        <member name="F:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.ObjectTypes.Computers">
+            <summary>
+            包含電腦物件
+            </summary>
+        </member>
+        <member name="F:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.ObjectTypes.Contacts">
+            <summary>
+            包含聯絡人物件
+            </summary>
+        </member>
+        <member name="F:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.ObjectTypes.BuiltInGroups">
+            <summary>
+            包含Built-In群組物件
+            </summary>
+            <summary>
+            <para>
+            對於up-level領域，將會包含所有被標記為Build-In群組類型的群組物件
+            </para>
+            <para>
+            對於down-level領域，沒有設定物件類型的群組將不會被Build-In所包含
+            </para>
+            </summary>
+        </member>
+        <member name="F:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.ObjectTypes.WellKnownPrincipals">
+            <summary>
+            包含所有 well-known security principals
+            </summary>
+            <remarks>
+            <para>
+            對於up-level領域，將會包含所有Well Known Security Principals容器。
+            </para>
+            <para>
+            對於down-level領域，將會包含所有Well-Known SID。
+            </para>
+            </remarks>
+        </member>
+        <member name="F:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.ObjectTypes.All">
+            <summary>
+            所有物件類型
+            </summary>
+        </member>
+        <member name="M:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.PInvoke.GlobalLock(System.IntPtr)">
+            <summary>
+            此GlobalLock方法將會鎖定全域記憶體物件，並且傳回指向該物件記憶體區塊的第一個位元組指標。
+            GlobalLock 方法會隨呼叫而增加鎖定的物件。
+            這要用來處理當從<see cref="T:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.IDataObject"/>取得資料時的剪貼簿功能。
+            </summary>
+            <param name="hMem"></param>
+            <returns></returns>
+        </member>
+        <member name="M:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.PInvoke.GlobalUnlock(System.IntPtr)">
+            <summary>
+            此 GlobalUnlock 方法將會隨呼叫而減少鎖定的記憶體物件
+            </summary>
+            <param name="hMem"></param>
+            <returns></returns>
+        </member>
+        <member name="T:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.FORMATETC">
+            <summary>
+            本結構用於OLE功能(方法)資料格式資訊的參數。
+            </summary>
+        </member>
+        <member name="T:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.STGMEDIUM">
+            <summary>
+            本結構用於一般化當<see cref="T:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.IDataObject"/>傳送資訊時所使用的全域記憶體Handle
+            </summary>
+        </member>
+        <member name="T:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.DSOP_INIT_INFO">
+            <summary>
+             本結構用於初始化<see cref="T:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.DirectoryObjectPickerDialog"/>的必要資訊
+            </summary>
+        </member>
+        <member name="T:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.DSOP_SCOPE_INIT_INFO">
+            <summary>
+            本結構包含擁有相同屬性的一個或多個領域。
+            領域為<see cref="T:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.Locations"/>所定義之，是使用者可以用於選擇物件之區域。
+            </summary>
+        </member>
+        <member name="T:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.DSOP_UPLEVEL_FILTER_FLAGS">
+            <summary>
+            包含Up-Level領域(支援ADSI LDAP提供者)中用於篩選資訊的Flag。
+            </summary>
+        </member>
+        <member name="T:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.DSOP_FILTER_FLAGS">
+            <summary>
+            包含說明使用者對於單一領域或多個領域所選擇的物件
+            </summary>
+        </member>
+        <member name="T:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.DS_SELECTION">
+            <summary>
+            包含使用者從<see cref="T:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.DirectoryObjectPickerDialog"/>選擇的物件資料。
+            <see cref="T:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.DS_SELECTION_LIST"/>包含此結構之陣列。
+            </summary>
+        </member>
+        <member name="T:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.DS_SELECTION_LIST">
+            <summary>
+            包含包含使用者從<see cref="T:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.DirectoryObjectPickerDialog"/>選擇的物件資料。
+            此結構將會自<see cref="M:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.IDsObjectPicker.InvokeDialog(System.IntPtr,TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.IDataObject@)"/>方法取得
+            <see cref="F:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.CLIPBOARD_FORMAT.CFSTR_DSOP_DS_SELECTION_LIST"/>格式的資料後，經過
+            <see cref="T:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.IDataObject"/>介面所提供。
+            </summary>
+        </member>
+        <member name="T:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.DSOP_SCOPE_TYPE_FLAGS">
+            <summary>
+            說明領域類型的結構，您也可以在相同的設定下結合多個領域。
+            </summary>
+        </member>
+        <member name="T:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.DSOP_INIT_INFO_FLAGS">
+            <summary>
+            定義<see cref="T:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.DirectoryObjectPickerDialog"/>的選擇方式
+            </summary>
+        </member>
+        <member name="T:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.DSOP_SCOPE_INIT_INFO_FLAGS">
+            <summary>
+            用於傳回在指定領域中選擇物件的ADsPath。flScope成員也可以定義用於選擇領域的下拉式選單的初始值。
+            </summary>
+        </member>
+        <member name="T:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.DSOP_FILTER_FLAGS_FLAGS">
+            <summary>
+            用於對Up-Level領域的篩選Flag(混合或原生模式之網域)
+            </summary>
+        </member>
+        <member name="T:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.DSOP_DOWNLEVEL_FLAGS">
+            <summary>
+            用於對Down-Level領域的篩選Flag(混合或原生模式之網域)
+            </summary>
+        </member>
+        <member name="T:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.HRESULT">
+            <summary>
+            當呼叫<see cref="M:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.IDsObjectPicker.InvokeDialog(System.IntPtr,TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.IDataObject@)"/>方法的結果
+            </summary>
+        </member>
+        <member name="T:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.CLIPBOARD_FORMAT">
+            <summary>
+            其CFSTR_DSOP_DS_SELECTION_LIST剪貼簿格式可經由呼叫<see cref="M:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.IDsObjectPicker.InvokeDialog(System.IntPtr,TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.IDataObject@)"/>方法後，
+            透過<see cref="T:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.IDataObject"/>提供。
+            </summary>
+        </member>
+        <member name="T:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.TYMED">
+            <summary>
+            此列舉用於說明傳送資料之儲存介質
+            </summary>
+        </member>
+        <member name="T:TEC.Core.DirectoryService.ActiveDirectory.ObjectPicker.DVASPECT">
+            <summary>
+            定義所需取得資料的繪製方式
+            </summary>
+        </member>
+        <member name="T:TEC.Core.DirectoryService.Management.ActiveDirectoryConnection">
+            <summary>
+            用於 Windows Active Directory 使用的連線類別
+            </summary>
+        </member>
+        <member name="M:TEC.Core.DirectoryService.Management.ActiveDirectoryConnection.#ctor(System.String,System.String,System.String,System.String,System.UInt32)">
+            <summary>
+            初始化 Windows Active Directory 連線服務的基底型別
+            </summary>
+            <param name="rootDC">Root Domain Component，如:DC=tecyt,DC=com</param>
+            <param name="serverAddress">LDAP Server，如: ad.tecyt.com 或 172.16.1.1</param>
+            <param name="operatorAccount">查詢/操作LDAP的帳號，如: 使用 NETBIOS\sAMAccountName 或 User Principle Name (UPN) 作為帳號。</param>
+            <param name="operatorPassword">用於查詢/操作LDAP帳號的密碼</param>
+            <param name="port"> LDAP 使用的埠號，如: 389 或 636(SSL)</param>
+        </member>
+        <member name="M:TEC.Core.DirectoryService.Management.ActiveDirectoryConnection.getGroups(System.String)">
+            <summary>
+            取得指定的帳號包含於那些群組(memberOf)
+            </summary>
+            <param name="objectDN">要查詢的物件完整DN</param>
+            <returns></returns>
+        </member>
+        <member name="M:TEC.Core.DirectoryService.Management.ActiveDirectoryConnection.activateObject(System.String)">
+            <summary>
+            啟用指定DN的物件
+            </summary>
+            <param name="distinguishedName">要啟用的物件DN</param>
+        </member>
+        <member name="M:TEC.Core.DirectoryService.Management.ActiveDirectoryConnection.setPassword(System.String,System.String,System.String,System.DirectoryServices.AccountManagement.ContextOptions)">
+            <summary>
+            設定使用者密碼
+            </summary>
+            <param name="objectDN">要設定密碼的DN</param>
+            <param name="containerDN">包含<paramref name="objectDN"/>，若輸入<c>null</c>則預設帶入<see cref="P:TEC.Core.DirectoryService.Management.LDAPConnectionBase.RootDC"/></param>
+            <param name="newPassword">新密碼</param>
+            <param name="contextOptions">指定繫結至伺服器時使用的選項。應用程式可以設定以位元 OR 運算連結的多個選項。</param>
+        </member>
+        <member name="M:TEC.Core.DirectoryService.Management.ActiveDirectoryConnection.searchDirectory(System.String,System.String,System.DirectoryServices.SearchScope,System.DirectoryServices.AuthenticationTypes,System.String[])">
+            <summary>
+            以指定的<paramref name="distinguishedName"/>為根節點，透過<paramref name="searchFilter"/>來搜尋並回傳結果，其結果可使用<see cref="M:TEC.Core.DirectoryService.Management.ActiveDirectoryConnection.getAttributeValue``1(System.DirectoryServices.SearchResult,System.String)"/>
+            或<see cref="M:TEC.Core.DirectoryService.Management.ActiveDirectoryConnection.getAttributeValueCollection``1(System.DirectoryServices.SearchResult,System.String)"/>取得其內容
+            </summary>
+            <param name="distinguishedName">基礎搜尋DN</param>
+            <param name="searchFilter">篩選過濾條件</param>
+            <param name="searchScope">搜尋範圍</param>
+            <param name="attributeList">包含結果集中要求的屬性</param>
+            <param name="authenticationTypes">用於驗證的方式</param>
+            <returns></returns>
+        </member>
+        <member name="M:TEC.Core.DirectoryService.Management.ActiveDirectoryConnection.getAttributeValue``1(System.DirectoryServices.SearchResult,System.String)">
+            <summary>
+            取得指定SearchResult的屬性值
+            </summary>
+            <typeparam name="T">要取得值的型別</typeparam>
+            <param name="searchResult">指定的查詢結果</param>
+            <param name="key">索引鍵</param>
+            <returns></returns>
+        </member>
+        <member name="M:TEC.Core.DirectoryService.Management.ActiveDirectoryConnection.getAttributeValueCollection``1(System.DirectoryServices.SearchResult,System.String)">
+            <summary>
+            取得指定SearchResult的屬性值(用於MultiValue)
+            </summary>
+            <typeparam name="T">要取得值的型別</typeparam>
+            <param name="searchResult">指定的查詢結果</param>
+            <param name="key">索引鍵</param>
+            <returns></returns>
+        </member>
+        <member name="T:TEC.Core.DirectoryService.Management.LDAPConnectionBase">
+            <summary>
+            提供LDAP連線服務的基底型別
+            </summary>
+        </member>
+        <member name="M:TEC.Core.DirectoryService.Management.LDAPConnectionBase.#ctor(System.String,System.String,System.String,System.String,System.UInt32)">
+            <summary>
+            初始化提供LDAP連線服務的基底型別
+            </summary>
+            <param name="rootDC">Root Domain Component，如:DC=tecyt,DC=com</param>
+            <param name="serverAddress">LDAP Server，如: ldap.tecyt.com 或 172.16.1.1</param>
+            <param name="operatorAccount">查詢/操作LDAP的帳號，如: TestAccount。
+            此查詢帳號將依照目錄服務的不同而有所變化，如使用 OpenLDAP 時，將使用 DistinguishedName 作為帳號；
+            使用 Windows Active Directory 時，將使用 NETBIOS\sAMAccountName 或 User Principle Name (UPN) 作為帳號。
+            </param>
+            <param name="operatorPassword">用於查詢/操作LDAP帳號的密碼</param>
+            <param name="port"> LDAP 使用的埠號，如: 389 或 636(SSL)</param>
+        </member>
+        <member name="M:TEC.Core.DirectoryService.Management.LDAPConnectionBase.Finalize">
+            <summary>
+            解構物件
+            </summary>
+        </member>
+        <member name="M:TEC.Core.DirectoryService.Management.LDAPConnectionBase.validateUser(System.String,System.String,System.DirectoryServices.AuthenticationTypes)">
+            <summary>
+            驗證指定的DN以及密碼是否正確
+            </summary>
+            <param name="distinguishedName">帳號完整DN</param>
+            <param name="password">密碼</param>
+            <param name="authenticationTypes">用於驗證的型別</param>
+            <returns>帳號密碼是否驗證成功</returns>
+        </member>
+        <member name="M:TEC.Core.DirectoryService.Management.LDAPConnectionBase.attributeValuesMultiString(System.String,System.String,System.Collections.Generic.List{System.String},System.Boolean,System.DirectoryServices.AuthenticationTypes)">
+            <summary>
+            尋找指定帳號的屬性資料
+            </summary>
+            <param name="attributeName">屬性名稱</param>
+            <param name="objectDN">要取得資料的DN</param>
+            <param name="valuesCollection">已存在的結果</param>
+            <param name="recursive">是否以遞迴方式取得<paramref name="attributeName"/>的值</param>
+            <param name="authenticationTypes">驗證方式的類型</param>
+            <returns></returns>
+        </member>
+        <member name="M:TEC.Core.DirectoryService.Management.LDAPConnectionBase.buildAbsoluteDirectoryEntry(System.String,System.DirectoryServices.AuthenticationTypes)">
+            <summary>
+            以帳號操作身分建立<see cref="T:System.DirectoryServices.DirectoryEntry"/>的執行個體
+            </summary>
+            <param name="absoluteDN">完整的DN，如: "OU=IT,DC=tecyt,DC=com"</param>
+            <param name="authenticationType">驗證方式</param>
+            <returns></returns>
+        </member>
+        <member name="M:TEC.Core.DirectoryService.Management.LDAPConnectionBase.buildAbsoluteDirectoryEntry(System.String,System.String,System.String,System.DirectoryServices.AuthenticationTypes)">
+            <summary>
+            以指定帳號身分建立<see cref="T:System.DirectoryServices.DirectoryEntry"/>的執行個體
+            </summary>
+            <param name="absoluteDN">完整的DN，如: "OU=IT,DC=tecyt,DC=com"</param>
+            <param name="authenticationType">驗證方式</param>
+            <param name="account">用於建立<see cref="T:System.DirectoryServices.DirectoryEntry"/>的帳號</param>
+            <param name="password">用於建立<see cref="T:System.DirectoryServices.DirectoryEntry"/>的密碼</param>
+            <returns></returns>
+        </member>
+        <member name="M:TEC.Core.DirectoryService.Management.LDAPConnectionBase.buildRelativeDirectoryEntry(System.String,System.DirectoryServices.AuthenticationTypes)">
+            <summary>
+            以帳號操作身分建立<see cref="T:System.DirectoryServices.DirectoryEntry"/>的執行個體
+            </summary>
+            <param name="relativeDN">相對DN，以<see cref="P:TEC.Core.DirectoryService.Management.LDAPConnectionBase.RootDC"/>為基礎，若<see cref="P:TEC.Core.DirectoryService.Management.LDAPConnectionBase.RootDC"/>
+            設定為"DC=tecyt,DC=com"的話，若此值指定"OU=IT"，則完整DN為"OU=IT,DC=tecyt,DC=com"</param>
+            <param name="authenticationType">驗證方式</param>
+            <returns></returns>
+        </member>
+        <member name="M:TEC.Core.DirectoryService.Management.LDAPConnectionBase.buildRelativeDirectoryEntry(System.String,System.String,System.String,System.DirectoryServices.AuthenticationTypes)">
+            <summary>
+            以指定帳號身分建立<see cref="T:System.DirectoryServices.DirectoryEntry"/>的執行個體
+            </summary>
+            <param name="relativeDN">相對DN，以<see cref="P:TEC.Core.DirectoryService.Management.LDAPConnectionBase.RootDC"/>為基礎，若<see cref="P:TEC.Core.DirectoryService.Management.LDAPConnectionBase.RootDC"/>
+            設定為"DC=tecyt,DC=com"的話，若此值指定"OU=IT"，則完整DN為"OU=IT,DC=tecyt,DC=com"</param>
+            <param name="authenticationType">驗證方式</param>
+            <param name="account">用於建立<see cref="T:System.DirectoryServices.DirectoryEntry"/>的帳號</param>
+            <param name="password">用於建立<see cref="T:System.DirectoryServices.DirectoryEntry"/>的密碼</param>
+            <returns></returns>
+        </member>
+        <member name="M:TEC.Core.DirectoryService.Management.LDAPConnectionBase.buildRelativeDistinguishedNameWithAddress(System.String)">
+            <summary>
+            以目前的設定建立相對DN的絕對DN位址(含伺服器路徑)
+            </summary>
+            <param name="relativeDN">相對DN，以<see cref="P:TEC.Core.DirectoryService.Management.LDAPConnectionBase.RootDC"/>為基礎，若<see cref="P:TEC.Core.DirectoryService.Management.LDAPConnectionBase.RootDC"/>
+            設定為"DC=tecyt,DC=com"的話，則此值指定"CN=test,OU=IT"後，完整DN將為"CN=test,OU=IT,DC=tecyt,DC=com"</param>
+            <returns>傳回如 172.16.1.1:389/CN=test,OU=IT,DC=tecyt,DC=com 的字串</returns>
+        </member>
+        <member name="M:TEC.Core.DirectoryService.Management.LDAPConnectionBase.buildAbsoluteDistinguishedNameWithAddress(System.String)">
+            <summary>
+            以目前的設定建立指定DN的絕對位址(含伺服器路徑)
+            </summary>
+            <param name="fullDN">完整的DN，如: "CN=test,OU=IT,DC=tecyt,DC=com"</param>
+            <returns>傳回如 172.16.1.1:389/CN=test,OU=IT,DC=tecyt,DC=com 的字串</returns>
+        </member>
+        <member name="M:TEC.Core.DirectoryService.Management.LDAPConnectionBase.buildRelativeDistinguishedName(System.String)">
+            <summary>
+            以目前的設定建立相對DN的絕對DN位址
+            </summary>
+            <param name="relativeDN">相對DN，以<see cref="P:TEC.Core.DirectoryService.Management.LDAPConnectionBase.RootDC"/>為基礎，若<see cref="P:TEC.Core.DirectoryService.Management.LDAPConnectionBase.RootDC"/>
+            設定為"DC=tecyt,DC=com"的話，則此值指定"CN=test,OU=IT"後，完整DN將為"CN=test,OU=IT,DC=tecyt,DC=com"</param>
+            <returns>傳回如 CN=test,OU=IT,DC=tecyt,DC=com 的字串</returns>
+        </member>
+        <member name="M:TEC.Core.DirectoryService.Management.LDAPConnectionBase.Dispose">
+            <summary>
+            執行與釋放 (Free)、釋放 (Release) 或重設 Unmanaged 資源相關聯之應用程式定義的工作。
+            </summary>
+        </member>
+        <member name="M:TEC.Core.DirectoryService.Management.LDAPConnectionBase.Dispose(System.Boolean)">
+            <summary>
+            釋放目前物件的資源
+            </summary>
+            <param name="isDisposing">是否開始處理物件的資源釋放行為</param>
+        </member>
+        <member name="P:TEC.Core.DirectoryService.Management.LDAPConnectionBase.RootLdapPath">
+            <summary>
+            取得LDAP主要位址，如 LDAP://172.16.1.1:389/DC=tecyt,DC=com 之字樣
+            </summary>
+        </member>
+        <member name="P:TEC.Core.DirectoryService.Management.LDAPConnectionBase.RootDC">
+            <summary>
+            取得Root Domain Component
+            </summary>
+        </member>
+        <member name="P:TEC.Core.DirectoryService.Management.LDAPConnectionBase.ServerAddress">
+            <summary>
+            取得LDAP Server位址
+            </summary>
+        </member>
+        <member name="P:TEC.Core.DirectoryService.Management.LDAPConnectionBase.OperatorAccount">
+            <summary>
+            取得查詢/操作LDAP的帳號
+            </summary>
+        </member>
+        <member name="P:TEC.Core.DirectoryService.Management.LDAPConnectionBase.OperatorPassword">
+            <summary>
+            取得查詢/操作LDAP的密碼
+            </summary>
+        </member>
+        <member name="P:TEC.Core.DirectoryService.Management.LDAPConnectionBase.Port">
+            <summary>
+            取得 LDAP 使用的埠號
+            </summary>
+        </member>
+        <member name="T:TEC.Core.DirectoryService.Management.OpenLDAPConnection">
+            <summary>
+            用於OpenLDAP的連線類別
+            </summary>
+        </member>
+        <member name="M:TEC.Core.DirectoryService.Management.OpenLDAPConnection.#ctor(System.String,System.String,System.String,System.String,System.UInt32,System.DirectoryServices.Protocols.AuthType)">
+            <summary>
+            初始化提供OpenLDAP連線服務的執行個體
+            </summary>
+            <param name="rootDC">Root Domain Component，如:DC=tecyt,DC=com</param>
+            <param name="serverAddress">LDAP Server，如: ldap.tecyt.com 或 172.16.1.1</param>
+            <param name="operatorAccount">查詢/操作LDAP的帳號，請使用 DistinguishedName 。</param>
+            <param name="operatorPassword">用於查詢/操作LDAP帳號的密碼</param>
+            <param name="port"> LDAP 使用的埠號，如: 389</param>
+            <param name="authType">用於連線OpenLDAP的驗證方式</param>
+        </member>
+        <member name="M:TEC.Core.DirectoryService.Management.OpenLDAPConnection.setPassword(System.String,System.String)">
+            <summary>
+            設定使用者密碼
+            </summary>
+            <param name="objectDN">要設定密碼的DN</param>
+            <param name="newPassword">新密碼</param>
+        </member>
+        <member name="M:TEC.Core.DirectoryService.Management.OpenLDAPConnection.getAttributeValue``1(System.DirectoryServices.Protocols.SearchResultEntry,System.String)">
+            <summary>
+            取得指定<see cref="T:System.DirectoryServices.Protocols.SearchResultEntry"/>的屬性值
+            </summary>
+            <typeparam name="T">要取得值的型別</typeparam>
+            <param name="searchResultEntry">指定的查詢結果</param>
+            <param name="key">索引鍵</param>
+            <returns></returns>
+        </member>
+        <member name="M:TEC.Core.DirectoryService.Management.OpenLDAPConnection.searchDirectory(System.String,System.String,System.DirectoryServices.Protocols.SearchScope,System.Nullable{System.Int32},System.String[])">
+            <summary>
+            以指定的<paramref name="distinguishedName"/>為根節點，透過<paramref name="searchFilter"/>來搜尋並回傳結果
+            </summary>
+            <param name="distinguishedName">基礎搜尋DN</param>
+            <param name="searchFilter">篩選過濾條件</param>
+            <param name="searchScope">搜尋範圍</param>
+            <param name="attributeList">包含結果集中要求的屬性</param>
+            <param name="maxResultsToRequest">每次分頁最大查詢結果，若輸入<c>null</c>則不啟用分頁查詢</param>
+            <returns>當啟用分頁查詢時，將有可能傳回多數資料；當不啟用分頁查詢時，僅會傳回最多一個元素。</returns>
+            <exception cref="T:System.NotSupportedException">當伺服器不支援分頁查詢時擲出</exception>
+        </member>
+        <member name="M:TEC.Core.DirectoryService.Management.OpenLDAPConnection.Dispose(System.Boolean)">
+            <summary>
+            釋放目前物件的資源
+            </summary>
+            <param name="isDisposing">是否開始處理物件的資源釋放行為</param>
+        </member>
+        <member name="P:TEC.Core.DirectoryService.Management.OpenLDAPConnection.AuthType">
+            <summary>
+            取得用於連線OpenLDAP的驗證方式
+            </summary>
+        </member>
+        <member name="P:TEC.Core.DirectoryService.Management.OpenLDAPConnection.BaseLdapPath">
+            <summary>
+            取得LDAP路徑
+            </summary>
+        </member>
+        <member name="P:TEC.Core.DirectoryService.Management.OpenLDAPConnection.LdapConnection">
+            <summary>
+            設定或取得LDAP連線
+            </summary>
+        </member>
+        <member name="P:TEC.Core.DirectoryService.Management.OpenLDAPConnection.IsConnected">
+            <summary>
+            設定或取得是否已經連結
+            </summary>
+        </member>
+        <member name="T:TEC.Core.DirectoryService.Management.Resources.ActiveDirectoryConnection">
+            <summary>
+              用於查詢當地語系化字串等的強類型資源類別。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.DirectoryService.Management.Resources.ActiveDirectoryConnection.ResourceManager">
+            <summary>
+              傳回這個類別使用的快取的 ResourceManager 執行個體。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.DirectoryService.Management.Resources.ActiveDirectoryConnection.Culture">
+            <summary>
+              覆寫目前執行緒的 CurrentUICulture 屬性，對象是所有
+              使用這個強類型資源類別的資源查閱。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.DirectoryService.Management.Resources.ActiveDirectoryConnection.CannotFindDomainUsersGroup">
+            <summary>
+              查詢類似 Cannot find the group object &quot;{1}&quot; within current domain &quot;{0}&quot;, please make sure that the initialize argument &quot;{2}&quot; is correct. 的當地語系化字串。
+            </summary>
+        </member>
+        <member name="T:TEC.Core.DirectoryService.Management.Resources.LDAPConnectionBase">
+            <summary>
+              用於查詢當地語系化字串等的強類型資源類別。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.DirectoryService.Management.Resources.LDAPConnectionBase.ResourceManager">
+            <summary>
+              傳回這個類別使用的快取的 ResourceManager 執行個體。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.DirectoryService.Management.Resources.LDAPConnectionBase.Culture">
+            <summary>
+              覆寫目前執行緒的 CurrentUICulture 屬性，對象是所有
+              使用這個強類型資源類別的資源查閱。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.DirectoryService.Management.Resources.LDAPConnectionBase.CollectionIsEmpty">
+            <summary>
+              查詢類似 The parameter &quot;{0}&quot; cannot be empty. 的當地語系化字串。
+            </summary>
+        </member>
+        <member name="T:TEC.Core.DirectoryService.Management.Resources.OpenLDAPConnection">
+            <summary>
+              用於查詢當地語系化字串等的強類型資源類別。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.DirectoryService.Management.Resources.OpenLDAPConnection.ResourceManager">
+            <summary>
+              傳回這個類別使用的快取的 ResourceManager 執行個體。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.DirectoryService.Management.Resources.OpenLDAPConnection.Culture">
+            <summary>
+              覆寫目前執行緒的 CurrentUICulture 屬性，對象是所有
+              使用這個強類型資源類別的資源查閱。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.DirectoryService.Management.Resources.OpenLDAPConnection.PagingNotSupported">
+            <summary>
+              查詢類似 The Open LDAP server does not supported paging query. 的當地語系化字串。
+            </summary>
+        </member>
+        <member name="T:TEC.Core.DirectoryService.WTSManagement.RefreshWTSUsersTimerEvent">
+            <summary>
+            更新目前工作階段使用者資料的排程事件
+            </summary>
+        </member>
+        <member name="M:TEC.Core.DirectoryService.WTSManagement.RefreshWTSUsersTimerEvent.#ctor(TEC.Core.Collections.ThreadSafeObservableCollection{TEC.Core.DirectoryService.WTSManagement.WTSUser},System.String)">
+            <summary>
+            初始化更新目前工作階段使用者資料的排程事件
+            </summary>
+            <param name="wtsUserCollection">用於更新使用者工作階段資料的集合</param>
+            <param name="serverName">取得使用者工作階段資料的主機名稱</param>
+        </member>
+        <member name="M:TEC.Core.DirectoryService.WTSManagement.RefreshWTSUsersTimerEvent.execute">
+            <summary>
+            執行排定的動作內容
+            </summary>
+        </member>
+        <member name="M:TEC.Core.DirectoryService.WTSManagement.RefreshWTSUsersTimerEvent.Dispose">
+            <summary>
+            執行與釋放 (Free)、釋放 (Release) 或重設 Unmanaged 資源相關聯之應用程式定義的工作
+            </summary>
+        </member>
+        <member name="P:TEC.Core.DirectoryService.WTSManagement.RefreshWTSUsersTimerEvent.WTSUserThreadSafeObservableCollection">
+            <summary>
+            取得目前擁有工作階段的使用者集合
+            </summary>
+        </member>
+        <member name="P:TEC.Core.DirectoryService.WTSManagement.RefreshWTSUsersTimerEvent.ServerName">
+            <summary>
+            取得使用者工作階段資料的主機名稱
+            </summary>
+        </member>
+        <member name="T:TEC.Core.DirectoryService.WTSManagement.WTSConnectionState">
+            <summary>
+            Windows Terminal Service 的連線狀態列舉
+            </summary>
+        </member>
+        <member name="F:TEC.Core.DirectoryService.WTSManagement.WTSConnectionState.WTSActive">
+            <summary>
+            A user is logged on to the WinStation
+            </summary>
+        </member>
+        <member name="F:TEC.Core.DirectoryService.WTSManagement.WTSConnectionState.WTSConnected">
+            <summary>
+            The WinStation is connected to the client
+            </summary>
+        </member>
+        <member name="F:TEC.Core.DirectoryService.WTSManagement.WTSConnectionState.WTSConnectQuery">
+            <summary>
+            The WinStation is in the process of connecting to the client.
+            </summary>
+        </member>
+        <member name="F:TEC.Core.DirectoryService.WTSManagement.WTSConnectionState.WTSShadow">
+            <summary>
+            The WinStation is shadowing another WinStation.
+            </summary>
+        </member>
+        <member name="F:TEC.Core.DirectoryService.WTSManagement.WTSConnectionState.WTSDisconnected">
+            <summary>
+            The WinStation is active but the client is disconnected.
+            </summary>
+        </member>
+        <member name="F:TEC.Core.DirectoryService.WTSManagement.WTSConnectionState.WTSIdle">
+            <summary>
+            The WinStation is waiting for a client to connect.
+            </summary>
+        </member>
+        <member name="F:TEC.Core.DirectoryService.WTSManagement.WTSConnectionState.WTSListen">
+            <summary>
+            he WinStation is listening for a connection. A listener session waits for requests for new client connections. No user is logged on a listener session. A listener session cannot be reset, shadowed, or changed to a regular client session.
+            </summary>
+        </member>
+        <member name="F:TEC.Core.DirectoryService.WTSManagement.WTSConnectionState.WTSReset">
+            <summary>
+            The WinStation is being reset.
+            </summary>
+        </member>
+        <member name="F:TEC.Core.DirectoryService.WTSManagement.WTSConnectionState.WTSDown">
+            <summary>
+            The WinStation is down due to an error.
+            </summary>
+        </member>
+        <member name="F:TEC.Core.DirectoryService.WTSManagement.WTSConnectionState.WTSInit">
+            <summary>
+            The WinStation is initializing.
+            </summary>
+        </member>
+        <member name="T:TEC.Core.DirectoryService.WTSManagement.WTSUser">
+            <summary>
+            描述工作階段使用者的資料
+            </summary>
+            <remarks>詳細說明資料請參考 https://msdn.microsoft.com/en-us/library/aa383861%28v=vs.85%29.aspx </remarks>
+        </member>
+        <member name="P:TEC.Core.DirectoryService.WTSManagement.WTSUser.WTSInitialProgram">
+            <summary>
+            取得在使用者登入遠端桌面服務(Remote Desktop Services)時所初始執行的程式名稱，若無相關資料則為<c>null</c>參考。當值發生變更時將引發屬性變更的事件
+            </summary>
+        </member>
+        <member name="P:TEC.Core.DirectoryService.WTSManagement.WTSUser.WTSApplicationName">
+            <summary>
+            取得目前工作階段正在執行的應用程式公開名稱，若無相關資料則為<c>null</c>參考。當值發生變更時將引發屬性變更的事件
+            </summary>
+            <remarks>不支援以下平台: Windows Server 2008 R2, Windows 7, Windows Server 2008, and Windows Vista</remarks>
+        </member>
+        <member name="P:TEC.Core.DirectoryService.WTSManagement.WTSUser.WTSWorkingDirectory">
+            <summary>
+            取得在使用者登入遠端桌面服務(Remote Desktop Services)時所初始執行的預設目錄，若無相關資料則為<c>null</c>參考。當值發生變更時將引發屬性變更的事件
+            </summary>
+        </member>
+        <member name="P:TEC.Core.DirectoryService.WTSManagement.WTSUser.WTSOEMId">
+            <summary>
+            此值保留，無作用。。當值發生變更時將引發屬性變更的事件
+            </summary>
+        </member>
+        <member name="P:TEC.Core.DirectoryService.WTSManagement.WTSUser.WTSSessionId">
+            <summary>
+            取得工作識別(ULONG)。當值發生變更時將引發屬性變更的事件
+            </summary>
+        </member>
+        <member name="P:TEC.Core.DirectoryService.WTSManagement.WTSUser.WTSUserName">
+            <summary>
+            取得關聯於此工作階段的使用者，若無相關資料則為<c>null</c>參考。當值發生變更時將引發屬性變更的事件
+            </summary>
+        </member>
+        <member name="P:TEC.Core.DirectoryService.WTSManagement.WTSUser.WTSWinStationName">
+            <summary>
+            取得遠端桌面服務(Remote Desktop Services)工作階段的名稱，若無相關資料則為<c>null</c>參考。當值發生變更時將引發屬性變更的事件
+            </summary>
+            <remarks>
+            Despite its name, specifying this type does not return the window station name. Rather, it returns the name of the Remote Desktop Services session.
+            Each Remote Desktop Services session is associated with an interactive window station.
+            Because the only supported window station name for an interactive window station is "WinSta0",
+            each session is associated with its own "WinSta0" window station.
+            </remarks>
+        </member>
+        <member name="P:TEC.Core.DirectoryService.WTSManagement.WTSUser.WTSDomainName">
+            <summary>
+            取得登入使用者隸屬的網域名稱，若無相關資料則為<c>null</c>參考。當值發生變更時將引發屬性變更的事件
+            </summary>
+        </member>
+        <member name="P:TEC.Core.DirectoryService.WTSManagement.WTSUser.WTSConnectState">
+            <summary>
+            取得目前連線的狀態。當值發生變更時將引發屬性變更的事件。當值發生變更時將引發屬性變更的事件
+            </summary>
+        </member>
+        <member name="P:TEC.Core.DirectoryService.WTSManagement.WTSUser.WTSClientBuildNumber">
+            <summary>
+            取得客戶端的組建號碼(ULONG)。當值發生變更時將引發屬性變更的事件
+            </summary>
+        </member>
+        <member name="P:TEC.Core.DirectoryService.WTSManagement.WTSUser.WTSClientName">
+            <summary>
+            取得客戶端名稱，若無相關資料則為<c>null</c>參考。當值發生變更時將引發屬性變更的事件
+            </summary>
+        </member>
+        <member name="P:TEC.Core.DirectoryService.WTSManagement.WTSUser.WTSClientDirectory">
+            <summary>
+            取得客戶端的安裝路徑，若無相關資料則為<c>null</c>參考。當值發生變更時將引發屬性變更的事件
+            </summary>
+        </member>
+        <member name="P:TEC.Core.DirectoryService.WTSManagement.WTSUser.WTSClientProductId">
+            <summary>
+            取得產品識別碼(USHORT)。當值發生變更時將引發屬性變更的事件
+            </summary>
+        </member>
+        <member name="P:TEC.Core.DirectoryService.WTSManagement.WTSUser.WTSClientHardwareId">
+            <summary>
+            取得硬體編號，目前僅回傳0，此值保留未來使用。當值發生變更時將引發屬性變更的事件
+            </summary>
+        </member>
+        <member name="P:TEC.Core.DirectoryService.WTSManagement.WTSUser.WTSClientProtocolType">
+            <summary>
+            取得遠端桌面連線的協定。 0: Console Session; 1: Retained for legacy purposes; 2: RDP portocol。當值發生變更時將引發屬性變更的事件
+            </summary>
+        </member>
+        <member name="T:TEC.Core.DirectoryService.WTSManagement.WTSUserLoader">
+            <summary>
+            讀取 Windows 使用者狀態的類別
+            </summary>
+            <example>
+            <para>WTSUserLoaderTest.cs</para>
+            <code lang="C#">
+            public class WTSUserLoaderTest
+            {
+                public WTSUserLoaderTest()
+                {
+                    this.TimerManager = new TimerManager();//或用現有的排程管理物件
+                    this.WTSUserCollection = new ThreadSafeObservableCollection&lt;WTSUser&gt;();
+                    this.WTSUserCollection.CollectionChanged += this.WTSUserCollection_CollectionChanged;
+                    this.WTSUserCollection.CollectionChanging += this.WTSUserCollection_CollectionChanging;
+                    this.RefreshWTSUsersTimerStorage = this.TimerManager.createTimersTimer(new RefreshWTSUsersTimerEvent(this.WTSUserCollection, "localhost"),
+                        new TimePeriodCollection() { new TimeRange(DateTime.Now, DateTime.MaxValue, true) },
+                        null, 5000, NextTimeEvaluationType.ExecutionEndTime);
+                    //下行程式可放置相對應的區域執行
+                    this.RefreshWTSUsersTimerStorage.start();
+                }
+                private void WTSUserCollection_CollectionChanging(object sender, CollectionChangingEventArgs e)
+                {
+                    //當集合的值準備要發生變更時
+                }
+                private void WTSUserCollection_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+                {
+                    //當工作階段數量發生變更時
+                }
+                private void WtsUser_PropertyChanged(object sender, PropertyChangedEventArgs e)
+                {
+                    WTSUser wTSUser = sender as WTSUser;
+                    //當工作階段使用者的屬性值發生變更時
+                }
+                /// &lt;summary&gt;
+                /// 設定或取得目前所有工作階段的資訊
+                /// &lt;/summary&gt;
+                private ThreadSafeObservableCollection&lt;WTSUser&gt; WTSUserCollection { set; get; }
+                /// &lt;summary&gt;
+                /// 設定或取得用於更新工作階段使用者作業的排程物件
+                /// &lt;/summary&gt;
+                private TimersTimerStorage RefreshWTSUsersTimerStorage { set; get; }
+                /// &lt;summary&gt;
+                /// 設定或取得排程器管理物件
+                /// &lt;/summary&gt;
+                private TimerManager TimerManager { set; get; }
+            }
+            </code>
+            </example>
+        </member>
+        <member name="M:TEC.Core.DirectoryService.WTSManagement.WTSUserLoader.getUsers(System.String)">
+            <summary>
+            取得指定電腦的登入者狀態
+            </summary>
+            <param name="serverName">要取得登入工作階段的電腦名稱</param>
+            <returns></returns>
+        </member>
+    </members>
+</doc>

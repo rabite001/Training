@@ -1,0 +1,46 @@
+﻿@using WebApplication1.Models
+@model IndexModel
+@{
+    this.Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Index</title>
+    @*<link href="~/Content/Sites.css" rel="stylesheet" />*@
+    <link href="@Url.Content("~/Content/bootstrap.css")" rel="stylesheet" />
+    <script src="~/Scripts/jquery-1.9.1.min.js"></script>
+    <script src="~/Scripts/bootstrap.min.js"></script>
+</head>
+<body>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <td>
+                    Name
+                </td>
+                <td>
+                    Money
+                </td>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (BankAccountInfo bankAccountInfo in this.Model.BankAccountInfoList)
+            {
+                <tr>
+                    <td>
+                        @bankAccountInfo.Name
+                    </td>
+                    <td>
+                        @bankAccountInfo.Amount
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <a class="btn btn-info" href="@Url.Action("Index2","Home",new { accountType="sdfg" })">Add Data</a>
+</body>
+</html>

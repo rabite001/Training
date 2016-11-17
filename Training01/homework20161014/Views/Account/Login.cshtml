@@ -1,0 +1,20 @@
+﻿@using homework20161014.Models.Account
+@model LoginModel
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<form method="post" action="@Url.Action("Login")">
+    <div>
+        帳號:<input type="text" name="account" />
+    </div>
+    <div>
+        密碼:<input type="text" name="password" />
+    </div>
+    @if (!String.IsNullOrWhiteSpace(this.Model.Message))
+    {
+        <span>@this.Model.Message</span>
+    }
+    <input type="submit" value="登入" />
+</form>
+

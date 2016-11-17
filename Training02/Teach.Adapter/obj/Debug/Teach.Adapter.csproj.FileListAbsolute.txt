@@ -1,0 +1,16 @@
+d:\Users\Yen\documents\visual studio 2015\Projects\Teach.Web\Teach.Adapter\bin\Debug\Teach.Adapter.dll
+d:\Users\Yen\documents\visual studio 2015\Projects\Teach.Web\Teach.Adapter\bin\Debug\Teach.Adapter.pdb
+d:\Users\Yen\documents\visual studio 2015\Projects\Teach.Web\Teach.Adapter\bin\Debug\TEC.Core.dll
+d:\Users\Yen\documents\visual studio 2015\Projects\Teach.Web\Teach.Adapter\bin\Debug\TEC.Core.Portable.dll
+d:\Users\Yen\documents\visual studio 2015\Projects\Teach.Web\Teach.Adapter\bin\Debug\TEC.Core.xml
+d:\Users\Yen\documents\visual studio 2015\Projects\Teach.Web\Teach.Adapter\bin\Debug\TEC.Core.Portable.xml
+d:\Users\Yen\documents\visual studio 2015\Projects\Teach.Web\Teach.Adapter\bin\Debug\zh\TEC.Core.resources.dll
+d:\Users\Yen\documents\visual studio 2015\Projects\Teach.Web\Teach.Adapter\bin\Debug\zh\TEC.Core.Portable.resources.dll
+d:\Users\Yen\documents\visual studio 2015\Projects\Teach.Web\Teach.Adapter\obj\Debug\Teach.Adapter.dll
+d:\Users\Yen\documents\visual studio 2015\Projects\Teach.Web\Teach.Adapter\obj\Debug\Teach.Adapter.pdb
+D:\Users\Yen\Documents\Visual Studio 2015\Projects\Teach.Web\Teach.Adapter\obj\Debug\Teach.Adapter.csprojResolveAssemblyReference.cache
+D:\Users\Yen\Documents\Visual Studio 2015\Projects\Teach.Web\Teach.Adapter\bin\Debug\Teach.Util.dll
+D:\Users\Yen\Documents\Visual Studio 2015\Projects\Teach.Web\Teach.Adapter\bin\Debug\Teach.Util.pdb
+D:\Users\Yen\Documents\Visual Studio 2015\Projects\Teach.Web\Teach.Adapter\bin\Debug\TEC.Core.Transactions.dll
+D:\Users\Yen\Documents\Visual Studio 2015\Projects\Teach.Web\Teach.Adapter\bin\Debug\TEC.Core.Transactions.xml
+D:\Users\Yen\Documents\Visual Studio 2015\Projects\Teach.Web\Teach.Adapter\bin\Debug\zh\TEC.Core.Transactions.resources.dll

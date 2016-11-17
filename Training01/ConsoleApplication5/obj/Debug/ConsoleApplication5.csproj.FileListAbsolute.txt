@@ -1,0 +1,12 @@
+D:\Users\Yen\Documents\Visual Studio 2015\Projects\ConsoleApplication1\ConsoleApplication5\bin\Debug\ConsoleApplication5.exe.config
+D:\Users\Yen\Documents\Visual Studio 2015\Projects\ConsoleApplication1\ConsoleApplication5\bin\Debug\ConsoleApplication5.exe
+D:\Users\Yen\Documents\Visual Studio 2015\Projects\ConsoleApplication1\ConsoleApplication5\bin\Debug\ConsoleApplication5.pdb
+D:\Users\Yen\Documents\Visual Studio 2015\Projects\ConsoleApplication1\ConsoleApplication5\bin\Debug\TEC.Core.dll
+D:\Users\Yen\Documents\Visual Studio 2015\Projects\ConsoleApplication1\ConsoleApplication5\bin\Debug\TEC.Core.Portable.dll
+D:\Users\Yen\Documents\Visual Studio 2015\Projects\ConsoleApplication1\ConsoleApplication5\bin\Debug\TEC.Core.xml
+D:\Users\Yen\Documents\Visual Studio 2015\Projects\ConsoleApplication1\ConsoleApplication5\bin\Debug\TEC.Core.Portable.xml
+D:\Users\Yen\Documents\Visual Studio 2015\Projects\ConsoleApplication1\ConsoleApplication5\bin\Debug\zh\TEC.Core.resources.dll
+D:\Users\Yen\Documents\Visual Studio 2015\Projects\ConsoleApplication1\ConsoleApplication5\bin\Debug\zh\TEC.Core.Portable.resources.dll
+D:\Users\Yen\Documents\Visual Studio 2015\Projects\ConsoleApplication1\ConsoleApplication5\obj\Debug\ConsoleApplication5.csprojResolveAssemblyReference.cache
+D:\Users\Yen\Documents\Visual Studio 2015\Projects\ConsoleApplication1\ConsoleApplication5\obj\Debug\ConsoleApplication5.exe
+D:\Users\Yen\Documents\Visual Studio 2015\Projects\ConsoleApplication1\ConsoleApplication5\obj\Debug\ConsoleApplication5.pdb

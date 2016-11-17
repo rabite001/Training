@@ -1,0 +1,42 @@
+﻿
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Confirm</title>
+    <title>Index</title>
+    <link href="@Url.Content("~/Content/bootstrap.css")" rel="stylesheet" />
+    <script src="~/Scripts/jquery-1.9.1.min.js"></script>
+    <script src="~/Scripts/bootstrap.min.js"></script>
+</head>
+<body>
+    <div class="row">
+        <div class="col-sm-5 ">
+            Confirm Name:
+        </div>
+        <div class="col-sm-7">
+            <span>Ver1.@this.Request.QueryString["name"]</span>
+            <span>Ver2.@this.TempData["name"]</span>
+            <span>Ver3.@this.ViewBag.Name</span>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-5 ">
+            Confirm Amount:
+        </div>
+        <div class="col-sm-7">
+            <span>Ver1.@this.Request.QueryString["amount"]</span>
+            <span>Ver2.@this.TempData["amount"]</span>
+            <span>Ver3.@this.ViewBag.Amount</span>
+        </div>
+    </div>
+    <div class="text-center row">
+        <input type="submit" class="btn btn-danger" value="Confirm" />
+    </div>
+</body>
+</html>

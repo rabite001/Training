@@ -1,0 +1,1409 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>TEC.Core.Portable</name>
+    </assembly>
+    <members>
+        <member name="T:TEC.Core.Collections.CollectionExtensions">
+            <summary>
+            集合的靜態擴充類別
+            </summary>
+        </member>
+        <member name="M:TEC.Core.Collections.CollectionExtensions.isNullOrEmpty``1(System.Collections.Generic.IEnumerable{``0})">
+            <summary>
+            傳回輸入的集合參考是否為<c>null</c>參考或沒有任何元素
+            </summary>
+            <typeparam name="T">集合元素的型別</typeparam>
+            <param name="enumerable">集合參考</param>
+            <returns>傳回是否為<c>null</c>參考或沒有任何元素</returns>
+            <example>
+            <code lang="C#">
+            public class CollectionExtensionsTest
+            {
+                public static void main()
+                {
+                    List&lt;string&gt; list1 = new List&lt;string&gt;();
+                    List&lt;string&gt; list2 = null;
+                    List&lt;string&gt; list3 = new List&lt;string&gt;() { "word1" };
+                    List&lt;string&gt; list4 = new List&lt;string&gt;() { "word2", "word3" };
+                    bool b1 = list1.isNullOrEmpty(); //true
+                    bool b2 = list2.isNullOrEmpty(); //true
+                    bool b3 = list3.isNullOrEmpty(); //false
+                    bool b4 = list4.isNullOrEmpty(); //false
+                    SomeCollection someCollection = new SomeCollection();
+                    bool b5 = someCollection.isNullOrEmpty(t =&gt; t.Item != null);//true
+                    SomeCollection someCollection2 = new SomeCollection() { Item = new SomeItem() };
+                    bool b6 = someCollection2.isNullOrEmpty(t =&gt; t.Item != null);//false
+                }
+                internal class SomeCollection
+                {
+                    public SomeItem Item { set; get; }
+                    //You can implement as your own collection such as linked list
+                }
+                internal class SomeItem
+                {
+                    /// &lt;summary&gt;
+                    /// Set or Get the Value for this object.
+                    /// &lt;/summary&gt;
+                    public int Value { set; get; }
+                }
+            }
+            </code>
+            </example>
+        </member>
+        <member name="M:TEC.Core.Collections.CollectionExtensions.isNullOrEmpty(System.Collections.IEnumerable)">
+            <summary>
+            傳回輸入的集合參考是否為<c>null</c>參考或沒有任何元素
+            </summary>
+            <param name="enumerable">集合參考</param>
+            <returns>傳回是否為<c>null</c>參考或沒有任何元素</returns>
+            <example>
+            <code lang="C#">
+            public class CollectionExtensionsTest
+            {
+                public static void main()
+                {
+                    List&lt;string&gt; list1 = new List&lt;string&gt;();
+                    List&lt;string&gt; list2 = null;
+                    List&lt;string&gt; list3 = new List&lt;string&gt;() { "word1" };
+                    List&lt;string&gt; list4 = new List&lt;string&gt;() { "word2", "word3" };
+                    bool b1 = list1.isNullOrEmpty(); //true
+                    bool b2 = list2.isNullOrEmpty(); //true
+                    bool b3 = list3.isNullOrEmpty(); //false
+                    bool b4 = list4.isNullOrEmpty(); //false
+                    SomeCollection someCollection = new SomeCollection();
+                    bool b5 = someCollection.isNullOrEmpty(t =&gt; t.Item != null);//true
+                    SomeCollection someCollection2 = new SomeCollection() { Item = new SomeItem() };
+                    bool b6 = someCollection2.isNullOrEmpty(t =&gt; t.Item != null);//false
+                }
+                internal class SomeCollection
+                {
+                    public SomeItem Item { set; get; }
+                    //You can implement as your own collection such as linked list
+                }
+                internal class SomeItem
+                {
+                    /// &lt;summary&gt;
+                    /// Set or Get the Value for this object.
+                    /// &lt;/summary&gt;
+                    public int Value { set; get; }
+                }
+            }
+            </code>
+            </example>
+        </member>
+        <member name="M:TEC.Core.Collections.CollectionExtensions.isNullOrEmpty``1(``0,System.Func{``0,System.Boolean})">
+            <summary>
+            傳回輸入的型別參考是否為<c>null</c>參考或沒有任何子項目
+            </summary>
+            <typeparam name="TSource">判斷是否有子項目的型別，通常為容器型別或集合型別</typeparam>
+            <param name="source">來源物件參考</param>
+            <param name="hasItemFunc">用於判斷是否在指定的<typeparamref name="TSource"/>型別中有任意元素存在的方法封裝</param>
+            <returns>傳回是否為<c>null</c>參考或沒有任何子項目</returns>
+            <example>
+            <code lang="C#">
+            public class CollectionExtensionsTest
+            {
+                public static void main()
+                {
+                    List&lt;string&gt; list1 = new List&lt;string&gt;();
+                    List&lt;string&gt; list2 = null;
+                    List&lt;string&gt; list3 = new List&lt;string&gt;() { "word1" };
+                    List&lt;string&gt; list4 = new List&lt;string&gt;() { "word2", "word3" };
+                    bool b1 = list1.isNullOrEmpty(); //true
+                    bool b2 = list2.isNullOrEmpty(); //true
+                    bool b3 = list3.isNullOrEmpty(); //false
+                    bool b4 = list4.isNullOrEmpty(); //false
+                    SomeCollection someCollection = new SomeCollection();
+                    bool b5 = someCollection.isNullOrEmpty(t =&gt; t.Item != null);//true
+                    SomeCollection someCollection2 = new SomeCollection() { Item = new SomeItem() };
+                    bool b6 = someCollection2.isNullOrEmpty(t =&gt; t.Item != null);//false
+                }
+                internal class SomeCollection
+                {
+                    public SomeItem Item { set; get; }
+                    //You can implement as your own collection such as linked list
+                }
+                internal class SomeItem
+                {
+                    /// &lt;summary&gt;
+                    /// Set or Get the Value for this object.
+                    /// &lt;/summary&gt;
+                    public int Value { set; get; }
+                }
+            }
+            </code>
+            </example>
+        </member>
+        <member name="T:TEC.Core.ComponentModel.DescriptiveEnumEnforcementAttribute">
+            <summary>
+            描述列舉是否必須要指定<see cref="T:TEC.Core.ComponentModel.EnumDescriptionAttribute"/>屬性
+            </summary>
+            <seealso cref="T:TEC.Core.ComponentModel.EnumDescriptionAttribute"/>
+            <seealso cref="T:TEC.Core.ComponentModel.EnumExtension"/>
+        </member>
+        <member name="M:TEC.Core.ComponentModel.DescriptiveEnumEnforcementAttribute.#ctor">
+            <summary>
+            初始化<see cref="T:TEC.Core.ComponentModel.DescriptiveEnumEnforcementAttribute"/>執行個體
+            </summary>
+        </member>
+        <member name="M:TEC.Core.ComponentModel.DescriptiveEnumEnforcementAttribute.#ctor(TEC.Core.ComponentModel.DescriptiveEnumEnforcementAttribute.EnforcementTypeEnum)">
+            <summary>
+            初始化<see cref="T:TEC.Core.ComponentModel.DescriptiveEnumEnforcementAttribute"/>執行個體
+            </summary>
+            <param name="enforcementType">
+            當列舉沒有指定Description屬性時的強制性動作
+            </param>
+        </member>
+        <member name="P:TEC.Core.ComponentModel.DescriptiveEnumEnforcementAttribute.EnforcementType">
+            <summary>
+            描述此強制性物件的列舉
+            </summary>
+        </member>
+        <member name="T:TEC.Core.ComponentModel.DescriptiveEnumEnforcementAttribute.EnforcementTypeEnum">
+            <summary>
+            列舉Description強制性列舉
+            </summary>
+        </member>
+        <member name="F:TEC.Core.ComponentModel.DescriptiveEnumEnforcementAttribute.EnforcementTypeEnum.ThrowException">
+            <summary>
+            若沒有對應描述屬性時，將會擲出例外。
+            </summary>
+        </member>
+        <member name="F:TEC.Core.ComponentModel.DescriptiveEnumEnforcementAttribute.EnforcementTypeEnum.DefaultToValue">
+            <summary>
+            若沒有對應描述屬性時，將以此列舉字串為預設值。
+            </summary>
+        </member>
+        <member name="T:TEC.Core.ComponentModel.EnumDescriptionAttribute">
+            <summary>
+            適用於描述列舉型別的屬性
+            </summary>
+            <seealso cref="T:TEC.Core.ComponentModel.DescriptiveEnumEnforcementAttribute"/>
+            <seealso cref="T:TEC.Core.ComponentModel.EnumExtension"/>
+            <example>
+            <para>
+            TestEnum.cs
+            </para>
+            <code lang="C#">
+            //using TEC.Core.ComponentModel;
+            /// &lt;summary&gt;
+            /// 測試列舉型別
+            /// &lt;/summary&gt;
+            [DescriptiveEnumEnforcementAttribute(
+                //當取得此列舉型別的其中一個值且該值沒有被EnumDescriptionAttribute描述時，執行的動作
+                EnforcementType = DescriptiveEnumEnforcementAttribute.EnforcementTypeEnum.ThrowException)]
+            public enum TestEnum
+            {
+                [EnumDescriptionAttribute("Enum Value 1")]
+                Enum1,
+                [EnumDescriptionAttribute("Enum Value 2")]
+                Enum2,
+                Enum3
+            }
+            </code>
+            <para>
+            EnumDescriptionAttributeTest.cs
+            </para>
+            <code lang="C#">
+            public class EnumDescriptionAttributeTest
+            {
+                public static void main()
+                {
+                    //using TEC.Core.ComponentModel
+                    string enum1Descrption = TestEnum.Enum1.getEnumDescription();//Enum Value 1
+                    string enum2Descrption = TestEnum.Enum2.getEnumDescription();//Enum Value 2
+                    TestEnum enum1 = "Enum Value 1".getEnumSingle&lt;TestEnum&gt;();
+                    TestEnum enum2 = "Enum Value 2".getEnumSingle&lt;TestEnum&gt;();
+                    //Throw Exception
+                    string enum3Descrption = TestEnum.Enum3.getEnumDescription();
+                    //Throw Exception
+                    TestEnum enum3 = "Enum Value 3".getEnumSingle&lt;TestEnum&gt;();
+                }
+            }
+            </code>
+            </example>
+        </member>
+        <member name="M:TEC.Core.ComponentModel.EnumDescriptionAttribute.#ctor(System.String)">
+            <summary>
+            使用描述來初始化<see cref="T:TEC.Core.ComponentModel.EnumDescriptionAttribute"/>的執行個體
+            </summary>
+            <param name="description">描述文字</param>
+        </member>
+        <member name="P:TEC.Core.ComponentModel.EnumDescriptionAttribute.Description">
+            <summary>
+            設定或取得描述
+            </summary>
+        </member>
+        <member name="T:TEC.Core.ComponentModel.EnumExtension">
+            <summary>
+            擴充列舉型別的靜態類別
+            </summary>
+        </member>
+        <member name="M:TEC.Core.ComponentModel.EnumExtension.getEnumSingle``1(System.String)">
+            <summary>
+            由指定的列舉描述取得指定型別的列舉，若對應到0或多個值時，會擲出例外。
+            </summary>
+            <typeparam name="T">列舉型別</typeparam>
+            <param name="description">描述</param>
+            <returns>依照描述取得指定<typeparamref name="T"/>的列舉</returns>
+        </member>
+        <member name="M:TEC.Core.ComponentModel.EnumExtension.getEnum``1(System.String)">
+            <summary>
+            由指定的列舉描述取得指定型別的列舉
+            </summary>
+            <typeparam name="T">列舉型別</typeparam>
+            <param name="description">描述</param>
+            <returns>依照描述取得指定<typeparamref name="T"/>的列舉</returns>
+        </member>
+        <member name="M:TEC.Core.ComponentModel.EnumExtension.getEnumDescription(System.Enum)">
+            <summary>
+            取得指定列舉的描述
+            </summary>
+            <param name="value">要取得描述的列舉</param>
+            <returns>傳回描述，或是依照指定的強制處理狀況，回應其列舉名稱或擲出例外</returns>
+        </member>
+        <member name="M:TEC.Core.ComponentModel.EnumExtension.getEnumDescription``1(System.Object)">
+            <summary>
+            取得指定列舉的描述
+            </summary>
+            <typeparam name="T">列舉型別</typeparam>
+            <param name="value">要取得描述的列舉</param>
+            <returns>傳回描述，或是依照指定的強制處理狀況，回應其列舉名稱或擲出例外</returns>
+        </member>
+        <member name="M:TEC.Core.ComponentModel.EnumExtension.getEnumValue``1(System.String)">
+            <summary>
+            由指定的<see cref="T:TEC.Core.ComponentModel.EnumDescriptionAttribute"/>取得對應的列舉值
+            </summary>
+            <typeparam name="T">列舉型別</typeparam>
+            <param name="description">描述</param>
+            <returns></returns>
+            <exception cref="T:System.ArgumentException">當型別參數<typeparamref name="T"/>為不為列舉型別時擲出</exception>
+            <exception cref="T:System.ArgumentException">當無法對應到任何列舉時擲出</exception>
+        </member>
+        <member name="M:TEC.Core.ComponentModel.EnumExtension.getEnumDescription(System.Object)">
+            <summary>取得指定列舉的描述</summary>
+            <param name="value">要取得描述的列舉</param>
+            <returns>傳回描述，或是依照指定的強制處理狀況，回應其列舉名稱或擲出例外</returns>
+        </member>
+        <member name="M:TEC.Core.ComponentModel.EnumExtension.toArray``1(``0)">
+            <summary>
+            將有被標記<see cref="T:System.FlagsAttribute"/>的列舉值轉換為指定<typeparamref name="T"/>的陣列
+            </summary>
+            <typeparam name="T">被標記<see cref="T:System.FlagsAttribute"/>的列舉</typeparam>
+            <param name="tEnum">被標記<see cref="T:System.FlagsAttribute"/>的列舉值</param>
+            <returns><typeparamref name="T"/>的陣列</returns>
+            <exception cref="T:System.ArgumentException">當輸入的參數型別之基底型別不為<see cref="T:System.Enum"/>時擲出</exception>
+            <exception cref="T:System.ArgumentException">當輸入的參數型別沒有標記<see cref="T:System.FlagsAttribute"/>時擲出</exception>
+            <example>
+            <code lang="C#">
+            public class FlagsEnumToArrayTest
+            {
+                public static void main()
+                {
+                    //using TEC.Core.ComponentModel;
+                    TestFlagsEnum testFlagsEnum1 = TestFlagsEnum.Enum1 | TestFlagsEnum.Enum2;
+                    TestFlagsEnum[] testFlagsEnumArray1 = testFlagsEnum1.toArray();
+                }
+            }
+            [Flags]
+            public enum TestFlagsEnum
+            {
+                Enum1 = 1,
+                Enum2 = 2,
+                Enum3 = 4
+            }
+            </code>
+            </example>
+        </member>
+        <member name="T:TEC.Core.ComponentModel.Resources.EnumExtension">
+            <summary>
+              用於查詢當地語系化字串等的強類型資源類別。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.ComponentModel.Resources.EnumExtension.ResourceManager">
+            <summary>
+              傳回這個類別使用的快取的 ResourceManager 執行個體。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.ComponentModel.Resources.EnumExtension.Culture">
+            <summary>
+              覆寫目前執行緒的 CurrentUICulture 屬性，對象是所有
+              使用這個強類型資源類別的資源查閱。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.ComponentModel.Resources.EnumExtension.EnumMustDeclaredWithFlags">
+            <summary>
+              查詢類似 The enum type &quot;{0}&quot; must declared with &quot;{1}&quot;. 的當地語系化字串。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.ComponentModel.Resources.EnumExtension.EnumMustDescribeWithAttribute">
+            <summary>
+              查詢類似 The enum type &quot;{0}&quot; must be described with &quot;{1}&quot; attribute to execute default action. 的當地語系化字串。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.ComponentModel.Resources.EnumExtension.EnumNotDescribeWithAttribute">
+            <summary>
+              查詢類似 The enum value &quot;{0}&quot; must have a &quot;{1}&quot; attribute. 的當地語系化字串。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.ComponentModel.Resources.EnumExtension.TooMuchEnumDescriptionAttribute">
+            <summary>
+              查詢類似 There are too many &quot;{0}&quot; attributes within enum type &quot;{1}&quot;, the corresponding value is &quot;{2}&quot;. 的當地語系化字串。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.ComponentModel.Resources.EnumExtension.TypeParamTMustEnum">
+            <summary>
+              查詢類似 Generic type T must be Enum type. 的當地語系化字串。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.ComponentModel.Resources.EnumExtension.ValueMustBeEnum">
+            <summary>
+              查詢類似 Argument must be enum type. 的當地語系化字串。
+            </summary>
+        </member>
+        <member name="T:TEC.Core.Data.Formula.FormulaConditionAppliedResult`1">
+            <summary>
+            當公式套用完成後的結果
+            </summary>
+            <typeparam name="TCalculateValue">公式套用的目標型別</typeparam>
+        </member>
+        <member name="M:TEC.Core.Data.Formula.FormulaConditionAppliedResult`1.#ctor(System.Collections.Generic.List{TEC.Core.Data.Formula.IFormulaCondition{`0}},`0,`0)">
+            <summary>
+            初始化公式套用完成後的結果
+            </summary>
+            <param name="conditions">已套用的公式</param>
+            <param name="after">套用後的值</param>
+            <param name="before">套用前的值</param>
+        </member>
+        <member name="P:TEC.Core.Data.Formula.FormulaConditionAppliedResult`1.Condition">
+            <summary>
+            取得已套用的公式
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Data.Formula.FormulaConditionAppliedResult`1.BeforeApplyingValue">
+            <summary>
+            取得套用前的值
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Data.Formula.FormulaConditionAppliedResult`1.AfterApplyingValue">
+            <summary>
+            取得套用後的值
+            </summary>
+        </member>
+        <member name="T:TEC.Core.Data.Formula.FormulaConditionsExecutionRule">
+            <summary>
+            公式套用(執行)模式的列舉
+            </summary>
+        </member>
+        <member name="F:TEC.Core.Data.Formula.FormulaConditionsExecutionRule.ExecuteAllOnce">
+            <summary>
+            將所有條件依順序執行一次
+            </summary>
+        </member>
+        <member name="F:TEC.Core.Data.Formula.FormulaConditionsExecutionRule.StopAfterFirstApplied">
+            <summary>
+            依順序執行條件，直至任一條件成功套用為止
+            </summary>
+        </member>
+        <member name="F:TEC.Core.Data.Formula.FormulaConditionsExecutionRule.StopAfterFirstFailed">
+            <summary>
+            依順序執行條件，直至任一條件套用失敗為止
+            </summary>
+        </member>
+        <member name="F:TEC.Core.Data.Formula.FormulaConditionsExecutionRule.ExecuteLoopUntilNoValueChangedInACycle">
+            <summary>
+            反覆套用所有條件，直至某一週期所有條件都無法變更計算結果的值為止
+            </summary>
+        </member>
+        <member name="T:TEC.Core.Data.Formula.IFormulaCalculator`1">
+            <summary>
+            針對<typeparamref name="TCalculateValue"/>所使用的計算公式介面
+            </summary>
+            <typeparam name="TCalculateValue">當實作介面時需要運算的值類型，可以為自訂或內建型別</typeparam>
+        </member>
+        <member name="M:TEC.Core.Data.Formula.IFormulaCalculator`1.calculate(`0,System.Collections.Generic.IList{TEC.Core.Data.Formula.IFormulaCondition{`0}},TEC.Core.Data.Formula.FormulaConditionsExecutionRule,System.Globalization.CultureInfo,System.Object)">
+            <summary>
+            將指定的<typeparamref name="TCalculateValue"/>套用公式並利用文化特性來運算結果。
+            </summary>
+            <param name="source">要套用公式的<typeparamref name="TCalculateValue"/>參考</param>
+            <param name="conditions">要套用的公式考慮清單</param>
+            <param name="cultureInfo">套用公式所要使用的文化特性</param>
+            <param name="formulaConditionExecuteRule">套用模式</param>
+            <param name="parameter">套用公式要參考的參數</param>
+            <returns>傳回公式套用後的結果</returns>
+        </member>
+        <member name="M:TEC.Core.Data.Formula.IFormulaCalculator`1.tryCalculate(`0,System.Collections.Generic.IList{TEC.Core.Data.Formula.IFormulaCondition{`0}},TEC.Core.Data.Formula.FormulaConditionsExecutionRule,System.Globalization.CultureInfo,System.Object,TEC.Core.Data.Formula.FormulaConditionAppliedResult{`0}@)">
+            <summary>
+            將指定的<typeparamref name="TCalculateValue"/>嘗試套用公式並利用文化特性來運算結果。
+            </summary>
+            <param name="source">要套用公式的<typeparamref name="TCalculateValue"/>參考</param>
+            <param name="conditions">要套用的公式考慮清單</param>
+            <param name="cultureInfo">套用公式所要使用的文化特性</param>
+            <param name="result">套用的結果</param>
+            <param name="formulaConditionExecuteRule">套用模式</param>
+            <param name="parameter">套用公式要參考的參數</param>
+            <returns>若有成功套用，則傳回<c>true</c>，若套用過程中發生任何錯誤，則傳回<c>false</c></returns>
+        </member>
+        <member name="T:TEC.Core.Data.Formula.IFormulaCondition`1">
+            <summary>
+            一個用於針對<typeparamref name="TCalculateValue"/>型別所設定的運算條件
+            </summary>
+            <typeparam name="TCalculateValue">當實作介面時需要運算的值類型，可以為自訂或內建型別</typeparam>
+        </member>
+        <member name="M:TEC.Core.Data.Formula.IFormulaCondition`1.getIsConditionTenable(`0,System.Object)">
+            <summary>
+            依照目前公式條件的設定，取得輸入的值是否條件成立
+            </summary>
+            <param name="value">要判斷的值</param>
+            <param name="parameter">套用公式要參考的參數</param>
+        </member>
+        <member name="M:TEC.Core.Data.Formula.IFormulaCondition`1.applyFormulaCondition(`0@,System.Globalization.CultureInfo,System.Object)">
+            <summary>
+            將目前的公式條件套用到指定的數值中
+            </summary>
+            <param name="value">要將目前公式套用的目標</param>
+            <param name="cultureInfo">套用公式所要使用的文化特性</param>
+            <param name="parameter">套用公式要參考的參數</param>
+        </member>
+        <member name="T:TEC.Core.Data.IValueConverter">
+            <summary>
+            提供將自訂邏輯套用至繫結的方法
+            </summary>
+        </member>
+        <member name="M:TEC.Core.Data.IValueConverter.convert(System.Object,System.Type,System.Object,System.Globalization.CultureInfo)">
+            <summary>
+            轉換值
+            </summary>
+            <param name="value">由繫結來源所產生的值</param>
+            <param name="targetType">繫結目標屬性的型別</param>
+            <param name="parameter">要使用的轉換子參數</param>
+            <param name="culture">要在轉換子中使用的文化特性 (Culture)。</param>
+            <returns>已轉換的值。 如果方法傳回 <c lang="C#">null</c>，就會使用有效的 <c lang="C#">null</c> 值。</returns>
+        </member>
+        <member name="M:TEC.Core.Data.IValueConverter.convertBack(System.Object,System.Type,System.Object,System.Globalization.CultureInfo)">
+            <summary>
+            轉換值
+            </summary>
+            <param name="value">由繫結目標所產生的值</param>
+            <param name="targetType">要轉換成的型別</param>
+            <param name="parameter">要使用的轉換子參數</param>
+            <param name="culture">要在轉換子中使用的文化特性 (Culture)。</param>
+            <returns>已轉換的值。 如果方法傳回 <c lang="C#">null</c>，就會使用有效的 <c lang="C#">null</c> 值。</returns>
+        </member>
+        <member name="T:TEC.Core.Data.ValueConvertedEventArgs`2">
+            <summary>
+            當值轉換完成後引發的事件參數
+            </summary>
+            <typeparam name="TConvertedValue">轉換後的類型</typeparam>
+            <typeparam name="TSourceValue">轉換前的類型</typeparam>
+        </member>
+        <member name="M:TEC.Core.Data.ValueConvertedEventArgs`2.#ctor(`0,`1)">
+            <summary>
+            初始化已轉換值後的事件參數
+            </summary>
+            <param name="convertedValue">經過轉換的值</param>
+            <param name="sourceValue">轉換前的值</param>
+        </member>
+        <member name="P:TEC.Core.Data.ValueConvertedEventArgs`2.ConvertedValue">
+            <summary>
+            取得已轉換後的值
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Data.ValueConvertedEventArgs`2.SourceValue">
+            <summary>
+            取得轉換前的值
+            </summary>
+        </member>
+        <member name="T:TEC.Core.Data.ValueConverterBase`2">
+            <summary>
+            擁有互相轉型功能的轉型基底類別
+            </summary>
+            <typeparam name="TSource">來源類型</typeparam>
+            <typeparam name="TTarget">目標類型</typeparam>
+        </member>
+        <member name="M:TEC.Core.Data.ValueConverterBase`2.convertInternal(`0,System.Type,System.Object,System.Globalization.CultureInfo)">
+            <summary>
+            轉換值，由<typeparamref name="TSource"/>轉換為<typeparamref name="TTarget"/>
+            </summary>
+            <param name="value">由繫結來源所產生的值</param>
+            <param name="targetType">繫結目標屬性的型別</param>
+            <param name="parameter">要使用的轉換子參數</param>
+            <param name="culture">要在轉換子中使用的文化特性 (Culture)</param>
+            <returns>已轉換的值。 如果方法傳回 <c lang="C#">null</c>，就會使用有效的 <c lang="C#">null</c> 值</returns>
+        </member>
+        <member name="M:TEC.Core.Data.ValueConverterBase`2.TEC#Core#Data#IValueConverter#convert(System.Object,System.Type,System.Object,System.Globalization.CultureInfo)">
+            <summary>
+            轉換值，由<typeparamref name="TSource"/>轉換為<typeparamref name="TTarget"/>
+            </summary>
+            <param name="value">由繫結來源所產生的值</param>
+            <param name="targetType">繫結目標屬性的型別</param>
+            <param name="parameter">要使用的轉換子參數</param>
+            <param name="culture">要在轉換子中使用的文化特性 (Culture)</param>
+            <returns>已轉換的值。 如果方法傳回 <c lang="C#">null</c>，就會使用有效的 <c lang="C#">null</c> 值</returns>
+        </member>
+        <member name="M:TEC.Core.Data.ValueConverterBase`2.convert(`0,System.Type,System.Object,System.Globalization.CultureInfo)">
+            <summary>
+            轉換值，由<typeparamref name="TSource"/>轉換為<typeparamref name="TTarget"/>
+            </summary>
+            <param name="value">由繫結來源所產生的值</param>
+            <param name="targetType">繫結目標屬性的型別</param>
+            <param name="parameter">要使用的轉換子參數</param>
+            <param name="culture">要在轉換子中使用的文化特性 (Culture)</param>
+            <returns>已轉換的值。 如果方法傳回 <c lang="C#">null</c>，就會使用有效的 <c lang="C#">null</c> 值</returns>
+        </member>
+        <member name="M:TEC.Core.Data.ValueConverterBase`2.convert(`0)">
+            <summary>
+            將<typeparamref name="TSource"/>轉換為<typeparamref name="TTarget"/>物件
+            </summary>
+            <param name="value">要轉換的<typeparamref name="TSource"/></param>
+            <returns>轉型完成的<typeparamref name="TTarget"/></returns>
+        </member>
+        <member name="M:TEC.Core.Data.ValueConverterBase`2.convert(`0,System.Object)">
+            <summary>
+            將<typeparamref name="TSource"/>轉換為<typeparamref name="TTarget"/>
+            </summary>
+            <param name="parameter">要使用的轉換子參數</param>
+            <param name="value">要轉換的<typeparamref name="TSource"/></param>
+            <returns>轉型完成的<typeparamref name="TTarget"/></returns>
+        </member>
+        <member name="M:TEC.Core.Data.ValueConverterBase`2.convert(`0,System.Object,System.Globalization.CultureInfo)">
+            <summary>
+            將<typeparamref name="TSource"/>轉換為<typeparamref name="TTarget"/>
+            </summary>
+            <param name="parameter">要使用的轉換子參數</param>
+            <param name="value">要轉換的<typeparamref name="TSource"/></param>
+            <param name="culture">要在轉換子中使用的文化特性 (Culture)</param>
+            <returns>轉型完成的<typeparamref name="TTarget"/></returns>
+        </member>
+        <member name="M:TEC.Core.Data.ValueConverterBase`2.convertBackInternal(`1,System.Type,System.Object,System.Globalization.CultureInfo)">
+            <summary>
+            轉換值，由<typeparamref name="TTarget"/>轉換為<typeparamref name="TSource"/>
+            </summary>
+            <param name="value">由繫結目標所產生的值</param>
+            <param name="targetType">要轉換成的型別</param>
+            <param name="parameter">要使用的轉換子參數</param>
+            <param name="culture">要在轉換子中使用的文化特性</param>
+            <returns></returns>
+        </member>
+        <member name="M:TEC.Core.Data.ValueConverterBase`2.TEC#Core#Data#IValueConverter#convertBack(System.Object,System.Type,System.Object,System.Globalization.CultureInfo)">
+            <summary>
+            轉換值，由<typeparamref name="TTarget"/>轉換為<typeparamref name="TSource"/>
+            </summary>
+            <param name="value">由繫結目標所產生的值</param>
+            <param name="targetType">要轉換成的型別</param>
+            <param name="parameter">要使用的轉換子參數</param>
+            <param name="culture">要在轉換子中使用的文化特性</param>
+            <returns></returns>
+        </member>
+        <member name="M:TEC.Core.Data.ValueConverterBase`2.convertBack(`1,System.Type,System.Object,System.Globalization.CultureInfo)">
+            <summary>
+            轉換值，由<typeparamref name="TTarget"/>轉換為<typeparamref name="TSource"/>
+            </summary>
+            <param name="value">由繫結目標所產生的值</param>
+            <param name="targetType">要轉換成的型別</param>
+            <param name="parameter">要使用的轉換子參數</param>
+            <param name="culture">要在轉換子中使用的文化特性</param>
+            <returns></returns>
+        </member>
+        <member name="M:TEC.Core.Data.ValueConverterBase`2.convertBack(`1)">
+            <summary>
+            將<typeparamref name="TTarget"/>轉換為<typeparamref name="TSource"/>
+            </summary>
+            <param name="value">要轉換的<typeparamref name="TTarget"/></param>
+            <returns>轉型完的<typeparamref name="TSource"/></returns>
+        </member>
+        <member name="M:TEC.Core.Data.ValueConverterBase`2.convertBack(`1,System.Object)">
+            <summary>
+            將<typeparamref name="TTarget"/>轉換為<typeparamref name="TSource"/>
+            </summary>
+            <param name="value">要轉換的<typeparamref name="TTarget"/></param>
+            <param name="parameter">要使用的轉換子參數</param>
+            <returns>轉型完的<typeparamref name="TSource"/></returns>
+        </member>
+        <member name="M:TEC.Core.Data.ValueConverterBase`2.convertBack(`1,System.Object,System.Globalization.CultureInfo)">
+            <summary>
+            將<typeparamref name="TTarget"/>轉換為<typeparamref name="TSource"/>
+            </summary>
+            <param name="value">要轉換的<typeparamref name="TTarget"/></param>
+            <param name="parameter">要使用的轉換子參數</param>
+            <param name="culture">要在轉換子中使用的文化特性 (Culture)</param>
+            <returns>轉型完的<typeparamref name="TSource"/></returns>
+        </member>
+        <member name="E:TEC.Core.Data.ValueConverterBase`2.OnValueConverted">
+            <summary>
+            當轉換完成時引發的事件(尚未回傳)
+            </summary>
+        </member>
+        <member name="E:TEC.Core.Data.ValueConverterBase`2.OnValueConvertedBack">
+            <summary>
+            當轉換完成時引發的事件(尚未回傳)
+            </summary>
+        </member>
+        <member name="T:TEC.Core.ObjectExtension">
+            <summary>
+            用於擴充物件型別的靜態擴充類別
+            </summary>
+        </member>
+        <member name="M:TEC.Core.ObjectExtension.fromHierarchy``1(``0,System.Func{``0,``0},System.Func{``0,System.Boolean})">
+            <summary>
+            傳回指定<typeparamref name="TSource"/>下，以階層架構為基礎，傳回<typeparamref name="TSource"/>型別的值或參考。
+            </summary>
+            <typeparam name="TSource">本體以及傳回的型別</typeparam>
+            <param name="source">來源</param>
+            <param name="nextItem">傳回下一個階層的方法封裝</param>
+            <param name="canContinue">用於判斷是否可以應該取得下一個階層型別為<typeparamref name="TSource"/>的方法封裝</param>
+            <returns>傳回所有階層下的<typeparamref name="TSource"/>集合</returns>
+            <example>
+            <code lang="C#">
+            //取得所有InnerException的方法
+            //using TEC.Core
+            public static string getaAllMessages(this Exception exception)
+            {
+                var messages = exception.fromHierarchy(ex => ex.InnerException, t => t != null)
+                    .Select(ex => ex.Message);
+                return String.Join(Environment.NewLine, messages);
+            }
+            </code>
+            </example>
+        </member>
+        <member name="M:TEC.Core.ObjectExtension.fromHierarchy``1(``0,System.Func{``0,``0})">
+            <summary>
+            傳回指定<typeparamref name="TSource"/>下，以階層架構為基礎，傳回值到最後一個階層不為<c lang="C#">null</c>參考的<typeparamref name="TSource"/>型別集合。
+            </summary>
+            <typeparam name="TSource">本體以及傳回的型別</typeparam>
+            <param name="source">來源</param>
+            <param name="nextItem">傳回下一個階層的方法封裝</param>
+            <returns>傳回最後一個不為<c lang="C#">null</c>參考的<typeparamref name="TSource"/>集合</returns>
+            <example>
+            <code lang="C#">
+            //取得所有InnerException的方法
+            //using TEC.Core
+            public static string getaAllMessages(this Exception exception)
+            {
+                var messages = exception.fromHierarchy(ex => ex.InnerException)
+                    .Select(ex => ex.Message);
+                return String.Join(Environment.NewLine, messages);
+            }
+            </code>
+            </example>
+        </member>
+        <member name="T:TEC.Core.Runtime.Serialization.ObjectExtension">
+            <summary>
+            序列化及反序列化物件的衍伸類別
+            </summary>
+        </member>
+        <member name="M:TEC.Core.Runtime.Serialization.ObjectExtension.serializeToXml(System.Object)">
+            <summary>
+            以預設的<see cref="T:System.Xml.XmlWriterSettings"/>執行個體，序列化指定的物件為XML格式
+            </summary>
+            <param name="obj">要序列化的物件</param>
+            <returns>序列化為XML格式的字串</returns>
+        </member>
+        <member name="M:TEC.Core.Runtime.Serialization.ObjectExtension.serializeToXml(System.Object,System.Xml.XmlWriterSettings)">
+            <summary>
+            序列化指定的物件為XML格式
+            </summary>
+            <param name="obj">要序列化的物件</param>
+            <param name="xmlWriterSettings">格式化XML的方式</param>
+            <returns>序列化為XML格式的字串</returns>
+        </member>
+        <member name="M:TEC.Core.Runtime.Serialization.ObjectExtension.deserializeXmlToObject``1(System.String)">
+            <summary>
+            以預設的<see cref="T:System.Xml.XmlWriterSettings"/>執行個體及<see cref="P:System.Text.Encoding.UTF8"/>編碼，從XML格式字串反序列化為指定的物件
+            </summary>
+            <typeparam name="T">目標型別</typeparam>
+            <param name="serializedString">已經序列化為XML的字串</param>
+            <returns></returns>
+        </member>
+        <member name="M:TEC.Core.Runtime.Serialization.ObjectExtension.deserializeXmlToObject``1(System.String,System.Xml.XmlReaderSettings,System.Text.Encoding)">
+            <summary>
+            從XML格式字串反序列化為指定的物件
+            </summary>
+            <typeparam name="T">目標型別</typeparam>
+            <param name="serializedString">已經序列化為XML的字串</param>
+            <param name="xmlReaderSettings">反序列化XML的方式</param>
+            <param name="encoding">反序列化的編碼方式</param>
+            <returns></returns>
+        </member>
+        <member name="T:TEC.Core.Settings.ISettingCollection`3">
+            <summary>
+            設定檔集合的介面
+            </summary>
+            <typeparam name="TKey">設定檔之索引鍵的型別。</typeparam>
+            <typeparam name="TValue"> 設定檔之值的型別。</typeparam>
+            <typeparam name="TCollectionId">設定檔索引鍵之型別</typeparam>
+        </member>
+        <member name="P:TEC.Core.Settings.ISettingCollection`3.Id">
+            <summary>
+            取得可辨識設定集合的Id
+            </summary>
+        </member>
+        <member name="T:TEC.Core.Settings.ISettingProvider`3">
+            <summary>
+            設定資料提供者的介面
+            </summary>
+            <typeparam name="TKey">字典中之索引鍵的型別。</typeparam>
+            <typeparam name="TValue"> 字典中之值的型別。</typeparam>
+            <typeparam name="TCollectionId">設定檔索引鍵之型別</typeparam>
+        </member>
+        <member name="M:TEC.Core.Settings.ISettingProvider`3.load">
+            <summary>
+            讀取相關的設定檔
+            </summary>
+        </member>
+        <member name="M:TEC.Core.Settings.ISettingProvider`3.save(TEC.Core.Settings.ISettingCollection{`0,`1,`2})">
+            <summary>
+            由設定提供者來儲存設定
+            </summary>
+            <param name="settings">設定檔資料</param>
+        </member>
+        <member name="T:TEC.Core.Text.RandomText.CharCode">
+            <summary>
+            儲存單一字元的類別(如:a,b,c,_,*,-....等)。此類別不能被繼承。
+            </summary>
+        </member>
+        <member name="M:TEC.Core.Text.RandomText.CharCode.#ctor">
+            <summary>
+            建立內容為' '的字元的物件
+            </summary>
+        </member>
+        <member name="M:TEC.Core.Text.RandomText.CharCode.#ctor(System.Char)">
+            <summary>
+            建立單一字元的物件
+            </summary>
+            <param name="character">任一字元</param>
+        </member>
+        <member name="M:TEC.Core.Text.RandomText.CharCode.#ctor(System.Char,System.Boolean)">
+            <summary>
+            建立單一字元數字的物件
+            </summary>
+            <param name="character">任一字元</param>
+            <param name="isEnable">此字元是否啟用於產生驗證碼</param>
+        </member>
+        <member name="M:TEC.Core.Text.RandomText.CharCode.notifyPropertyChanged(System.String)">
+            <summary>
+            引發屬性變更的通知
+            </summary>
+            <param name="propertyName">屬性名稱</param>
+        </member>
+        <member name="M:TEC.Core.Text.RandomText.CharCode.Equals(System.Object)">
+            <summary>
+            判斷指定的兩字元是否相等
+            </summary>
+            <param name="obj">要與目前的字元比較</param>
+            <returns>其字元是否相等</returns>
+        </member>
+        <member name="M:TEC.Core.Text.RandomText.CharCode.GetHashCode">
+            <summary>
+            做為特定型別的雜湊函式
+            </summary>
+            <returns>目前 <see cref="T:TEC.Core.Text.RandomText.CharCode"/> 的雜湊程式碼</returns>
+        </member>
+        <member name="M:TEC.Core.Text.RandomText.CharCode.op_Implicit(System.Char)~TEC.Core.Text.RandomText.CharCode">
+            <summary>
+            將字元隱含轉換成<see cref="T:TEC.Core.Text.RandomText.CharCode"/>的型別
+            </summary>
+            <param name="character">非0-9之任意字元</param>
+            <returns></returns>
+        </member>
+        <member name="M:TEC.Core.Text.RandomText.CharCode.op_Implicit(TEC.Core.Text.RandomText.CharCode)~System.Char">
+            <summary>
+            將<see cref="T:TEC.Core.Text.RandomText.CharCode"/>型別隱含轉換成字元
+            </summary>
+            <param name="charCode">要轉換的<see cref="T:TEC.Core.Text.RandomText.CharCode"/></param>
+            <returns></returns>
+        </member>
+        <member name="P:TEC.Core.Text.RandomText.CharCode.Character">
+            <summary>
+            設定或取得字元
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Text.RandomText.CharCode.IsEnabled">
+            <summary>
+            設定或取得產生驗證碼時是否要使用此數字
+            </summary>
+        </member>
+        <member name="E:TEC.Core.Text.RandomText.CharCode.PropertyChanged">
+            <summary>
+            發生於屬性值變更時
+            </summary>
+        </member>
+        <member name="T:TEC.Core.Text.RandomText.NumberCode">
+            <summary>
+            儲存單一字元數字的類別(如:1,2,3,4,...,9)，此型別可與整數相互隱含轉換。
+            此類別不能被繼承。
+            </summary>
+        </member>
+        <member name="M:TEC.Core.Text.RandomText.NumberCode.#ctor">
+            <summary>
+            建立內容為0的數字的物件
+            </summary>
+        </member>
+        <member name="M:TEC.Core.Text.RandomText.NumberCode.#ctor(System.Int32)">
+            <summary>
+            建立單一字元數字的物件
+            </summary>
+            <param name="number">0-9的數字</param>
+        </member>
+        <member name="M:TEC.Core.Text.RandomText.NumberCode.#ctor(System.Int32,System.Boolean)">
+            <summary>
+            建立單一字元數字的物件
+            </summary>
+            <param name="number">0-9的數字</param>
+            <param name="isEnable">此數字是否啟用於產生驗證碼</param>
+        </member>
+        <member name="M:TEC.Core.Text.RandomText.NumberCode.Equals(System.Object)">
+            <summary>
+            判斷指定的兩數值是否相等
+            </summary>
+            <param name="obj">要與目前的數字比較</param>
+            <returns>其數值是否相等</returns>
+        </member>
+        <member name="M:TEC.Core.Text.RandomText.NumberCode.GetHashCode">
+            <summary>
+            做為特定型別的雜湊函式
+            </summary>
+            <returns>目前 <see cref="T:TEC.Core.Text.RandomText.NumberCode"/> 的雜湊程式碼</returns>
+        </member>
+        <member name="M:TEC.Core.Text.RandomText.NumberCode.notifyPropertyChanged(System.String)">
+            <summary>
+            引發屬性變更的通知
+            </summary>
+            <param name="propertyName">屬性名稱</param>
+        </member>
+        <member name="M:TEC.Core.Text.RandomText.NumberCode.op_Equality(TEC.Core.Text.RandomText.NumberCode,TEC.Core.Text.RandomText.NumberCode)">
+            <summary>
+            比較兩<see cref="T:TEC.Core.Text.RandomText.NumberCode"/>的數字是否相等
+            </summary>
+            <param name="numberCode1">數字1</param>
+            <param name="numberCode2">數字2</param>
+            <returns>比較數字的結果</returns>
+            <exception cref="T:System.ArgumentNullException"></exception>
+        </member>
+        <member name="M:TEC.Core.Text.RandomText.NumberCode.op_Inequality(TEC.Core.Text.RandomText.NumberCode,TEC.Core.Text.RandomText.NumberCode)">
+            <summary>
+            比較兩<see cref="T:TEC.Core.Text.RandomText.NumberCode"/>的數字是否不相等
+            </summary>
+            <param name="numberCode1">數字1</param>
+            <param name="numberCode2">數字2</param>
+            <returns>比較數字的結果</returns>
+        </member>
+        <member name="M:TEC.Core.Text.RandomText.NumberCode.op_Implicit(System.Int32)~TEC.Core.Text.RandomText.NumberCode">
+            <summary>
+            將數字隱含轉換成<see cref="T:TEC.Core.Text.RandomText.NumberCode"/>的型別
+            </summary>
+            <param name="number">數字0-9</param>
+            <returns></returns>
+        </member>
+        <member name="M:TEC.Core.Text.RandomText.NumberCode.op_Implicit(TEC.Core.Text.RandomText.NumberCode)~System.Int32">
+            <summary>
+            將<see cref="T:TEC.Core.Text.RandomText.NumberCode"/>型別隱含轉換成數字
+            </summary>
+            <param name="numberCode">要轉換的<see cref="T:TEC.Core.Text.RandomText.NumberCode"/></param>
+            <returns></returns>
+        </member>
+        <member name="P:TEC.Core.Text.RandomText.NumberCode.Number">
+            <summary>
+            設定或取得數字
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Text.RandomText.NumberCode.IsEnabled">
+            <summary>
+            設定或取得產生驗證碼時是否要使用此數字
+            </summary>
+        </member>
+        <member name="E:TEC.Core.Text.RandomText.NumberCode.PropertyChanged">
+            <summary>
+            發生於屬性值變更時
+            </summary>
+        </member>
+        <member name="T:TEC.Core.Text.RandomText.RandomTextGenerator">
+            <summary>
+            隨機字串產生器，此類別不能被繼承。
+            </summary>
+        </member>
+        <member name="M:TEC.Core.Text.RandomText.RandomTextGenerator.#ctor">
+            <summary>
+            初始化隨機字串產生器
+            </summary>
+        </member>
+        <member name="M:TEC.Core.Text.RandomText.RandomTextGenerator.setUpperCaseEnabled(System.Boolean,System.Char[])">
+            <summary>
+            設定產生隨機字串是否要考量指定的大寫字元
+            </summary>
+            <param name="isEnabled">是否要用於產生隨機字串</param>
+            <param name="chars">要變更的字元(或集合)</param>
+            <example>
+            <code lang="C#">
+            RandomTextGenerator generator = new RandomTextGenerator();
+            generator.setUpperCaseEnabled(false);//不產生小寫的字元
+            generator.setUpperCaseEnabled(true, 'B');//要考慮字元'B'，因為後面才叫用，則以後來叫用的為主
+            string result = generator.generate(6);//產生長度為6的隨機字串
+            </code>
+            </example>
+        </member>
+        <member name="M:TEC.Core.Text.RandomText.RandomTextGenerator.setUpperCaseEnabled(System.Boolean)">
+            <summary>
+            設定產生隨機字串是否要考量大寫字元，本方法只會設定每個字元元素，
+            開發人員仍可在呼叫此方法後個別設定每個字元元素是否要用於產生隨機字串。
+            </summary>
+            <param name="isEnabled">是否要用於產生隨機字串</param>
+            <example>
+            <code lang="C#">
+            RandomTextGenerator generator = new RandomTextGenerator();
+            generator.setUpperCaseEnabled(false);//不產生小寫的字元
+            generator.setUpperCaseEnabled(true, 'B');//要考慮字元'B'，因為後面才叫用，則以後來叫用的為主
+            string result = generator.generate(6);//產生長度為6的隨機字串
+            </code>
+            </example>
+        </member>
+        <member name="M:TEC.Core.Text.RandomText.RandomTextGenerator.setLowerCaseEnabled(System.Boolean,System.Char[])">
+            <summary>
+            設定產生隨機字串是否要考量指定的小寫字元
+            </summary>
+            <param name="isEnabled">是否要用於產生隨機字串</param>
+            <param name="chars">要變更的字元(或集合)</param>
+            <example>
+            <code lang="C#">
+            RandomTextGenerator generator = new RandomTextGenerator();
+            generator.setLowerCaseEnabled(false);//不產生小寫的字元
+            generator.setLowerCaseEnabled(true, 'a', 'c');//要考慮字元'a','c'，因為後面才叫用，則以後來叫用的為主
+            string result = generator.generate(6);//產生長度為6的隨機字串
+            </code>
+            </example>
+        </member>
+        <member name="M:TEC.Core.Text.RandomText.RandomTextGenerator.setLowerCaseEnabled(System.Boolean)">
+            <summary>
+            設定產生隨機字串是否要考量小寫字元，本方法只會設定每個字元元素，
+            開發人員仍可在呼叫此方法後個別設定每個字元元素是否要用於產生隨機字串。
+            </summary>
+            <param name="isEnabled">是否要用於產生隨機字串</param>
+            <example>
+            <code lang="C#">
+            RandomTextGenerator generator = new RandomTextGenerator();
+            generator.setLowerCaseEnabled(false);//不產生小寫的字元
+            generator.setLowerCaseEnabled(true, 'a', 'c');//要考慮字元'a','c'，因為後面才叫用，則以後來叫用的為主
+            string result = generator.generate(6);//產生長度為6的隨機字串
+            </code>
+            </example>
+        </member>
+        <member name="M:TEC.Core.Text.RandomText.RandomTextGenerator.setCharacterEnabled(TEC.Core.Text.RandomText.CharCode[],System.Boolean,System.Char[])">
+            <summary>
+             設定指定的字元(或集合)是否要用於產生隨機字串
+            </summary>
+            <param name="charCodeArray">要變更的陣列</param>
+            <param name="isEnabled">是否要將其字元用於產生隨機字串</param>
+            <param name="chars">要變更的字元(或集合)</param>
+        </member>
+        <member name="M:TEC.Core.Text.RandomText.RandomTextGenerator.setNumberEnabled(System.Boolean)">
+            <summary>
+            設定所有數字(或集合)是否要用於產生隨機字串
+            </summary>
+            <param name="isEnabled">是否要將所有數字用於產生隨機字串</param>
+        </member>
+        <member name="M:TEC.Core.Text.RandomText.RandomTextGenerator.setNumberEnabled(System.Boolean,System.Int32[])">
+            <summary>
+            設定指定的數字(或集合)是否要用於產生隨機字串
+            </summary>
+            <param name="isEnabled">是否要將其數字用於產生隨機字串</param>
+            <param name="numbers">要變更的數字(或集合)</param>
+            <example>
+            <code lang="C#">
+            RandomTextGenerator generator = new RandomTextGenerator();
+            generator.setNumberEnabled(false, 2, 3, 5);//產生的隨機字串不要包含2,3,5
+            string result = generator.generate(4);//產生長度為4的隨機字串
+            </code>
+            </example>
+        </member>
+        <member name="M:TEC.Core.Text.RandomText.RandomTextGenerator.generate(System.Int32)">
+            <summary>
+            由目前物件的設定中產生指定長度的隨機字串
+            </summary>
+            <param name="length">隨機字串長度</param>
+            <returns>隨機字串</returns>
+        </member>
+        <member name="P:TEC.Core.Text.RandomText.RandomTextGenerator.AllEnabledNumber">
+            <summary>
+            取得所有要用於產生隨機字串的數字
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Text.RandomText.RandomTextGenerator.AllDisabledNumber">
+            <summary>
+            取得所有不用於產生隨機字串的數字
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Text.RandomText.RandomTextGenerator.AllEnabledLowerCaseChars">
+            <summary>
+            取得所有要用於產生隨機字串的小寫字母
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Text.RandomText.RandomTextGenerator.AllDisabledLowerCaseChars">
+            <summary>
+            取得所有不用於產生隨機字串的小寫字母
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Text.RandomText.RandomTextGenerator.AllEnabledUpperCaseChars">
+            <summary>
+            取得所有要用於產生隨機字串的大寫字母
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Text.RandomText.RandomTextGenerator.AllDisabledUpperCaseChars">
+            <summary>
+            取得所有不用於產生隨機字串的大寫字母
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Text.RandomText.RandomTextGenerator.CanCharacterRepeating">
+            <summary>
+            設定或取得產生隨機字串時是否有可能包含重複的字元
+            </summary>
+        </member>
+        <member name="T:TEC.Core.Text.RandomText.Resources.CharCode">
+            <summary>
+              用於查詢當地語系化字串等的強類型資源類別。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Text.RandomText.Resources.CharCode.ResourceManager">
+            <summary>
+              傳回這個類別使用的快取的 ResourceManager 執行個體。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Text.RandomText.Resources.CharCode.Culture">
+            <summary>
+              覆寫目前執行緒的 CurrentUICulture 屬性，對象是所有
+              使用這個強類型資源類別的資源查閱。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Text.RandomText.Resources.CharCode.NumberMustUsingNumberCode">
+            <summary>
+              查詢類似 Character &apos;{0}&apos; must use type &quot;{1}&quot;. 的當地語系化字串。
+            </summary>
+        </member>
+        <member name="T:TEC.Core.Text.RandomText.Resources.NumberCode">
+            <summary>
+              用於查詢當地語系化字串等的強類型資源類別。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Text.RandomText.Resources.NumberCode.ResourceManager">
+            <summary>
+              傳回這個類別使用的快取的 ResourceManager 執行個體。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Text.RandomText.Resources.NumberCode.Culture">
+            <summary>
+              覆寫目前執行緒的 CurrentUICulture 屬性，對象是所有
+              使用這個強類型資源類別的資源查閱。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Text.RandomText.Resources.NumberCode.NumberOutOfRangeException">
+            <summary>
+              查詢類似 The number parameter must be 0-9. 的當地語系化字串。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Text.RandomText.Resources.NumberCode.TypeNotNumberCode">
+            <summary>
+              查詢類似 The parameter &quot;{0}&quot; type must be NumberCode. 的當地語系化字串。
+            </summary>
+        </member>
+        <member name="T:TEC.Core.Text.RandomText.Resources.RandomTextGenerator">
+            <summary>
+              用於查詢當地語系化字串等的強類型資源類別。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Text.RandomText.Resources.RandomTextGenerator.ResourceManager">
+            <summary>
+              傳回這個類別使用的快取的 ResourceManager 執行個體。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Text.RandomText.Resources.RandomTextGenerator.Culture">
+            <summary>
+              覆寫目前執行緒的 CurrentUICulture 屬性，對象是所有
+              使用這個強類型資源類別的資源查閱。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Text.RandomText.Resources.RandomTextGenerator.CharacterNotEnoughToGenerate">
+            <summary>
+              查詢類似 You cannot generate random-string&apos;s length larger than {0}  when the CanCharacterRepeating property is set to false. 的當地語系化字串。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Text.RandomText.Resources.RandomTextGenerator.CharacterNotSupported">
+            <summary>
+              查詢類似 The character(s) &apos;{0}&apos; is/are not supported in this object, please note that if you are using lower/upper characters, you have to call corresponding method. 的當地語系化字串。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Text.RandomText.Resources.RandomTextGenerator.NothingToGrnerateString">
+            <summary>
+              查詢類似 Based on the enable status in the RandomTextGenerator object, there is nothing can be used for generating random string. 的當地語系化字串。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Text.RandomText.Resources.RandomTextGenerator.NumebrNotSupported">
+            <summary>
+              查詢類似 The number(s) &quot;{0}&quot; is/are not supported in this method. If you want to retrive number 0-9 into setNumberEnabled, please use int 0 to 9 instead char &apos;0&apos; to &apos;9&apos; as parameters. 的當地語系化字串。
+            </summary>
+        </member>
+        <member name="T:TEC.Core.Text.TextCheck.CheckRules">
+            <summary>
+            字串檢查條件
+            </summary>
+        </member>
+        <member name="F:TEC.Core.Text.TextCheck.CheckRules.Digit">
+            <summary>
+            字串中必須包含數字
+            </summary>
+        </member>
+        <member name="F:TEC.Core.Text.TextCheck.CheckRules.UpperCase">
+            <summary>
+            字串中必須包含大寫字元
+            </summary>
+        </member>
+        <member name="F:TEC.Core.Text.TextCheck.CheckRules.LowerCase">
+            <summary>
+            字串中必須包含小寫字元
+            </summary>
+        </member>
+        <member name="F:TEC.Core.Text.TextCheck.CheckRules.MixedCase">
+            <summary>
+            字串中必須包含大寫字元且小寫字元
+            </summary>
+        </member>
+        <member name="F:TEC.Core.Text.TextCheck.CheckRules.SpecialChar">
+            <summary>
+            字串中必須包含特殊字元
+            </summary>
+        </member>
+        <member name="F:TEC.Core.Text.TextCheck.CheckRules.All">
+            <summary>
+            字串必須符合所有條件
+            </summary>
+        </member>
+        <member name="F:TEC.Core.Text.TextCheck.CheckRules.LowerOrUpperCase">
+            <summary>
+            字串中必須包含一個大寫或小寫字元
+            </summary>
+        </member>
+        <member name="F:TEC.Core.Text.TextCheck.CheckRules.None">
+            <summary>
+            不檢查字串中的任何條件
+            </summary>
+        </member>
+        <member name="T:TEC.Core.Text.TextCheck.TextChecker">
+            <summary>
+            字串檢查的類別
+            </summary>
+        </member>
+        <member name="M:TEC.Core.Text.TextCheck.TextChecker.getIsTextValid(System.String,TEC.Core.Text.TextCheck.CheckRules,System.String[])">
+            <summary>
+            檢查字串是否符合指定的條件
+            </summary>
+            <param name="textToCheck">要檢查的字串</param>
+            <param name="rules">[Flag]檢查條件</param>
+            <param name="ruleOutList">不可被設定的其他字串</param>
+            <returns>是否通過檢查</returns>
+            <example>
+            <para>Program.cs</para>
+            <code lang="C#">
+            TextChecker.getIsTextValid("Hello", CheckRules.Digit, "Password", "Passw0rd");//return false
+            TextChecker.getIsTextValid("Hello", CheckRules.UpperCase, "Password", "Passw0rd");//return true
+            TextChecker.getIsTextValid("Hello", CheckRules.MixedCase, "Password", "Passw0rd");//return true
+            TextChecker.getIsTextValid("Hello", CheckRules.None, "Hello");//return false
+            TextChecker.getIsTextValid("hello", CheckRules.LowerOrUpperCase);//return true
+            TextChecker.getIsTextValid("Abc12345", CheckRules.LowerCase | CheckRules.UpperCase | CheckRules.SpecialChar, "Password", "Passw0rd");//return false
+            TextChecker.getIsTextValid("Abc12345!", CheckRules.LowerCase | CheckRules.UpperCase | CheckRules.SpecialChar, "Password", "Passw0rd");//return true
+            </code>
+            </example>
+        </member>
+        <member name="T:TEC.Core.Text.StringExtension">
+            <summary>
+            字串的擴充靜態類別
+            </summary>
+        </member>
+        <member name="M:TEC.Core.Text.StringExtension.subStringByByte(System.String,System.UInt32,System.Text.Encoding)">
+            <summary>
+            由<paramref name="encoding"/>編碼方式擷取由索引位置0起始的<paramref name="bytesCount"/>位元組單位的字串長度
+            </summary>
+            <param name="originalString">要擷取的字串</param>
+            <param name="encoding">用於計算位元組的編碼方式</param>
+            <param name="bytesCount">擷取的字串長度(以位元組為單位)</param>
+            <returns>擷取後的字串</returns>
+            <example>
+            <code lang="C#">
+            //using TEC.Core.Text
+            string str1 = "原始文字".subStringByByte(4, Encoding.GetEncoding("Big5"));//原始
+            string str2 = "原始文字".subStringByByte(5, Encoding.GetEncoding("Big5"));//原始
+            string str3 = "原始文字".subStringByByte(6, Encoding.GetEncoding("Big5"));//原始文
+            "原始文字".
+            </code>
+            </example>
+        </member>
+        <member name="M:TEC.Core.Text.StringExtension.subStringByByte(System.String,System.UInt32,System.String,System.Text.Encoding)">
+            <summary>
+            由<paramref name="encoding"/>編碼方式擷取由索引位置0起始的<paramref name="bytesCount"/>位元組單位的字串長度
+            </summary>
+            <param name="originalString">要擷取的字串</param>
+            <param name="encoding">用於計算位元組的編碼方式</param>
+            <param name="postString">當<paramref name="originalString"/>超過輸入的位元組數時，將在擷取後的文字後方加上此字串</param>
+            <param name="bytesCount">擷取的字串長度(以位元組為單位)</param>
+            <returns>擷取後的字串</returns>
+            <example>
+            <code lang="C#">
+            //using TEC.Core.Text
+            string str4 = "原始文字".subStringByByte(4, "...", Encoding.GetEncoding("Big5"));//原始...
+            string str5 = "原始文字".subStringByByte(5, "...", Encoding.GetEncoding("Big5"));//原始...
+            string str6 = "原始文字".subStringByByte(6, "...", Encoding.GetEncoding("Big5"));//原始文...
+            string str7 = "原始文字".subStringByByte(10, "...", Encoding.GetEncoding("Big5"));//原始文字
+            "原始文字".
+            </code>
+            </example>
+        </member>
+        <member name="T:TEC.Core.Text.TextMask.MaskLocation">
+            <summary>
+            要遮罩的位置
+            </summary>
+        </member>
+        <member name="F:TEC.Core.Text.TextMask.MaskLocation.Center">
+            <summary>
+            遮罩置中
+            </summary>
+        </member>
+        <member name="F:TEC.Core.Text.TextMask.MaskLocation.Left">
+            <summary>
+            遮罩置左
+            </summary>
+        </member>
+        <member name="F:TEC.Core.Text.TextMask.MaskLocation.Right">
+            <summary>
+            遮罩置右
+            </summary>
+        </member>
+        <member name="T:TEC.Core.Text.TextMask.MaskMode">
+            <summary>
+            文字遮罩模式
+            </summary>
+        </member>
+        <member name="F:TEC.Core.Text.TextMask.MaskMode.Continuous">
+            <summary>
+            連續地
+            </summary>
+        </member>
+        <member name="F:TEC.Core.Text.TextMask.MaskMode.Interval">
+            <summary>
+            間隔地
+            </summary>
+        </member>
+        <member name="T:TEC.Core.Text.TextMask.Resources.TextMasker">
+            <summary>
+              用於查詢當地語系化字串等的強類型資源類別。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Text.TextMask.Resources.TextMasker.ResourceManager">
+            <summary>
+              傳回這個類別使用的快取的 ResourceManager 執行個體。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Text.TextMask.Resources.TextMasker.Culture">
+            <summary>
+              覆寫目前執行緒的 CurrentUICulture 屬性，對象是所有
+              使用這個強類型資源類別的資源查閱。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Text.TextMask.Resources.TextMasker.MaskIndexOutOfRangeException">
+            <summary>
+              查詢類似 The index {0} you want to mask is out of range with string &quot;[1}&quot;. 的當地語系化字串。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Text.TextMask.Resources.TextMasker.MaskPercentOutOfRangeException">
+            <summary>
+              查詢類似 You can only pass {0}-{1} into MaskPercent property. 的當地語系化字串。
+            </summary>
+        </member>
+        <member name="T:TEC.Core.Text.TextMask.TextMasker">
+            <summary>
+            處理文字遮罩的類別
+            </summary>
+        </member>
+        <member name="M:TEC.Core.Text.TextMask.TextMasker.#ctor">
+            <summary>
+            初始化處理文字遮罩的物件，您可以在設定物件參考後經由屬性變更遮罩的設定。
+            </summary>
+        </member>
+        <member name="M:TEC.Core.Text.TextMask.TextMasker.mask(System.String,System.Int32[])">
+            <summary>
+            以目前設定的遮罩字元，遮罩指定的字串，並忽略<see cref="P:TEC.Core.Text.TextMask.TextMasker.MaskMode"/>、<see cref="P:TEC.Core.Text.TextMask.TextMasker.MaskLocation"/>、<see cref="P:TEC.Core.Text.TextMask.TextMasker.MaskPercent"/>的設定
+            </summary>
+            <param name="targetString">要遮罩的字串</param>
+            <param name="maskIndexes">要遮罩的字元索引</param>
+            <returns>遮罩完成後的字串</returns>
+            <exception cref="T:System.IndexOutOfRangeException">當要遮罩的字元索引超過目前字串長度時將引發的例外</exception>
+        </member>
+        <member name="M:TEC.Core.Text.TextMask.TextMasker.maskLeft(System.String,System.Int32)">
+            <summary>
+            以目前設定的遮罩字元，從左方以<see cref="P:TEC.Core.Text.TextMask.TextMasker.DisplayCharacter"/>遮罩字元，並忽略<see cref="P:TEC.Core.Text.TextMask.TextMasker.MaskMode"/>、<see cref="P:TEC.Core.Text.TextMask.TextMasker.MaskLocation"/>、<see cref="P:TEC.Core.Text.TextMask.TextMasker.MaskPercent"/>的設定
+            </summary>
+            <param name="targetString">要遮罩的字串</param>
+            <param name="maskLength">要遮罩的字元數</param>
+            <returns>遮罩完成後的字串</returns>
+            <example>
+            <code lang="C#">
+            TextMasker textMasker = new TextMasker();
+            textMasker.DisplayCharacter = '*';
+            textMasker.maskLeft("123456789", 3);//***456789
+            </code>
+            </example>
+            <exception cref="T:System.IndexOutOfRangeException">當要遮罩的字元長度超過目前字串長度時將引發的例外</exception>
+        </member>
+        <member name="M:TEC.Core.Text.TextMask.TextMasker.maskRight(System.String,System.Int32)">
+            <summary>
+            以目前設定的遮罩字元，從右方以<see cref="P:TEC.Core.Text.TextMask.TextMasker.DisplayCharacter"/>遮罩字元，並忽略<see cref="P:TEC.Core.Text.TextMask.TextMasker.MaskMode"/>、<see cref="P:TEC.Core.Text.TextMask.TextMasker.MaskLocation"/>、<see cref="P:TEC.Core.Text.TextMask.TextMasker.MaskPercent"/>的設定
+            </summary>
+            <param name="targetString">要遮罩的字串</param>
+            <param name="maskLength">要遮罩的字元數</param>
+            <returns>遮罩完成後的字串</returns>
+            <example>
+            <code lang="C#">
+            TextMasker textMasker = new TextMasker();
+            textMasker.DisplayCharacter = '*';
+            textMasker.maskRight("123456789", 3);//123456***
+            </code>
+            </example>
+            <exception cref="T:System.IndexOutOfRangeException">當要遮罩的字元長度超過目前字串長度時將引發的例外</exception>
+        </member>
+        <member name="M:TEC.Core.Text.TextMask.TextMasker.mask(System.String)">
+            <summary>
+            依照目前物件<see cref="P:TEC.Core.Text.TextMask.TextMasker.MaskMode"/>、<see cref="P:TEC.Core.Text.TextMask.TextMasker.MaskLocation"/>、<see cref="P:TEC.Core.Text.TextMask.TextMasker.MaskPercent"/>的設定的條件遮罩字串
+            </summary>
+            <param name="targetString">要遮罩的字串</param>
+            <returns>遮罩後結果</returns>
+        </member>
+        <member name="M:TEC.Core.Text.TextMask.TextMasker.notifyPropertyChanged(System.String)">
+            <summary>
+            引發屬性變更的通知
+            </summary>
+            <param name="propertyName">屬性名稱</param>
+        </member>
+        <member name="P:TEC.Core.Text.TextMask.TextMasker.MaskPercent">
+            <summary>
+            設定或取得遮罩所佔的百分比，其值為0-100
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Text.TextMask.TextMasker.DisplayCharacter">
+            <summary>
+            設定或取得遮罩後顯示的字元
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Text.TextMask.TextMasker.MaskMode">
+            <summary>
+            設定或取得要使用的遮罩模式
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Text.TextMask.TextMasker.MaskLocation">
+            <summary>
+            設定或取得遮罩的位置
+            </summary>
+        </member>
+        <member name="E:TEC.Core.Text.TextMask.TextMasker.PropertyChanged">
+            <summary>
+            發生於屬性值變更時
+            </summary>
+        </member>
+    </members>
+</doc>

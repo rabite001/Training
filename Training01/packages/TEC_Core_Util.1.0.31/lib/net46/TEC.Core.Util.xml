@@ -1,0 +1,1283 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>TEC.Core.Util</name>
+    </assembly>
+    <members>
+        <member name="T:TEC.Core.Util.AssemblyUtil.AssemblyResigner">
+            <summary>
+            用於重新簽署組件的類別
+            </summary>
+        </member>
+        <member name="M:TEC.Core.Util.AssemblyUtil.AssemblyResigner.resignAssembly(Xceed.FileSystem.AbstractFile,Xceed.FileSystem.AbstractFile[],System.Action{TEC.Core.Util.AssemblyUtil.AssemblyResignProgress},System.Action{TEC.Core.Util.AssemblyUtil.AssemblyResignProgress})">
+            <summary>
+            重新簽署檔案
+            </summary>
+            <param name="snkAbstractFile">要簽署的snk檔案</param>
+            <param name="assemblyAbstractFiles">要重新簽署的檔案(通常為dll或exe)</param>
+            <param name="executionComplete">當作業完成時要執行的方法</param>
+            <param name="executionStart">當作業起始時要執行的方法</param>
+            <returns>簽署結果的清單</returns>
+            <example>
+            <para>本範例將示範一個完整的非同步多檔簽署之作法。</para>
+            <para>ResignAssemblyPage.resx</para>
+            <code lang="XML">
+            &lt;?xml version="1.0" encoding="utf-8"?&gt;
+            &lt;root&gt;
+              &lt;xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata"&gt;
+                &lt;xsd:import namespace="http://www.w3.org/XML/1998/namespace" /&gt;
+                &lt;xsd:element name="root" msdata:IsDataSet="true"&gt;
+                  &lt;xsd:complexType&gt;
+                    &lt;xsd:choice maxOccurs="unbounded"&gt;
+                      &lt;xsd:element name="metadata"&gt;
+                        &lt;xsd:complexType&gt;
+                          &lt;xsd:sequence&gt;
+                            &lt;xsd:element name="value" type="xsd:string" minOccurs="0" /&gt;
+                          &lt;/xsd:sequence&gt;
+                          &lt;xsd:attribute name="name" use="required" type="xsd:string" /&gt;
+                          &lt;xsd:attribute name="type" type="xsd:string" /&gt;
+                          &lt;xsd:attribute name="mimetype" type="xsd:string" /&gt;
+                          &lt;xsd:attribute ref="xml:space" /&gt;
+                        &lt;/xsd:complexType&gt;
+                      &lt;/xsd:element&gt;
+                      &lt;xsd:element name="assembly"&gt;
+                        &lt;xsd:complexType&gt;
+                          &lt;xsd:attribute name="alias" type="xsd:string" /&gt;
+                          &lt;xsd:attribute name="name" type="xsd:string" /&gt;
+                        &lt;/xsd:complexType&gt;
+                      &lt;/xsd:element&gt;
+                      &lt;xsd:element name="data"&gt;
+                        &lt;xsd:complexType&gt;
+                          &lt;xsd:sequence&gt;
+                            &lt;xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" /&gt;
+                            &lt;xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" /&gt;
+                          &lt;/xsd:sequence&gt;
+                          &lt;xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" /&gt;
+                          &lt;xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" /&gt;
+                          &lt;xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" /&gt;
+                          &lt;xsd:attribute ref="xml:space" /&gt;
+                        &lt;/xsd:complexType&gt;
+                      &lt;/xsd:element&gt;
+                      &lt;xsd:element name="resheader"&gt;
+                        &lt;xsd:complexType&gt;
+                          &lt;xsd:sequence&gt;
+                            &lt;xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" /&gt;
+                          &lt;/xsd:sequence&gt;
+                          &lt;xsd:attribute name="name" type="xsd:string" use="required" /&gt;
+                        &lt;/xsd:complexType&gt;
+                      &lt;/xsd:element&gt;
+                    &lt;/xsd:choice&gt;
+                  &lt;/xsd:complexType&gt;
+                &lt;/xsd:element&gt;
+              &lt;/xsd:schema&gt;
+              &lt;resheader name="resmimetype"&gt;
+                &lt;value&gt;text/microsoft-resx&lt;/value&gt;
+              &lt;/resheader&gt;
+              &lt;resheader name="version"&gt;
+                &lt;value&gt;2.0&lt;/value&gt;
+              &lt;/resheader&gt;
+              &lt;resheader name="reader"&gt;
+                &lt;value&gt;System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089&lt;/value&gt;
+              &lt;/resheader&gt;
+              &lt;resheader name="writer"&gt;
+                &lt;value&gt;System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089&lt;/value&gt;
+              &lt;/resheader&gt;
+              &lt;data name="AssemblyFileNotSpecified" xml:space="preserve"&gt;
+                &lt;value&gt;You have to select assembly files.&lt;/value&gt;
+              &lt;/data&gt;
+              &lt;data name="Btn_SelectAssemblyFile_Text" xml:space="preserve"&gt;
+                &lt;value&gt;Select files to sign&lt;/value&gt;
+              &lt;/data&gt;
+              &lt;data name="Btn_SelectSnkFile_Text" xml:space="preserve"&gt;
+                &lt;value&gt;Select snk file&lt;/value&gt;
+              &lt;/data&gt;
+              &lt;data name="Button_Start_Resign" xml:space="preserve"&gt;
+                &lt;value&gt;Start Process&lt;/value&gt;
+              &lt;/data&gt;
+              &lt;data name="MustSelectAFolder" xml:space="preserve"&gt;
+                &lt;value&gt;You must select an output folder.&lt;/value&gt;
+              &lt;/data&gt;
+              &lt;data name="ProcessFailed" xml:space="preserve"&gt;
+                &lt;value&gt;There are {0} of {1} files failed:&lt;/value&gt;
+              &lt;/data&gt;
+              &lt;data name="Processing" xml:space="preserve"&gt;
+                &lt;value&gt;Processing...&lt;/value&gt;
+              &lt;/data&gt;
+              &lt;data name="ProcessSuccessful" xml:space="preserve"&gt;
+                &lt;value&gt;All of selected files are successfully processed.&lt;/value&gt;
+              &lt;/data&gt;
+              &lt;data name="Run_AssemblyFiles_Text1" xml:space="preserve"&gt;
+                &lt;value&gt;Assembly File: &lt;/value&gt;
+              &lt;/data&gt;
+              &lt;data name="Run_AssemblyFiles_Text2" xml:space="preserve"&gt;
+                &lt;value&gt;files.&lt;/value&gt;
+              &lt;/data&gt;
+              &lt;data name="Run_SnkFile_Text" xml:space="preserve"&gt;
+                &lt;value&gt;Snk File: &lt;/value&gt;
+              &lt;/data&gt;
+              &lt;data name="SnkFileNotSpecified" xml:space="preserve"&gt;
+                &lt;value&gt;You have to select a snk file.&lt;/value&gt;
+              &lt;/data&gt;
+              &lt;data name="SupportedAssembyExtensions" xml:space="preserve"&gt;
+                &lt;value&gt;Assemble Files (*.dll)|*.dll|Exectuable Files (*.exe)|*.exe&lt;/value&gt;
+              &lt;/data&gt;
+              &lt;data name="SupportedSignExtensions" xml:space="preserve"&gt;
+                &lt;value&gt;SNK Files (*.snk)|*.snk&lt;/value&gt;
+              &lt;/data&gt;
+              &lt;data name="TextBlock_OtherFolder" xml:space="preserve"&gt;
+                &lt;value&gt;Select an output folder&lt;/value&gt;
+              &lt;/data&gt;
+              &lt;data name="TextBlock_OverrideFile" xml:space="preserve"&gt;
+                &lt;value&gt;Override original files&lt;/value&gt;
+              &lt;/data&gt;
+              &lt;data name="TextBlock_ProcessResult_Text" xml:space="preserve"&gt;
+                &lt;value&gt;Process Result:&lt;/value&gt;
+              &lt;/data&gt;
+              &lt;data name="TextBlock_SelectDestination" xml:space="preserve"&gt;
+                &lt;value&gt;Select a assembly output destination folder:&lt;/value&gt;
+              &lt;/data&gt;
+            &lt;/root&gt;
+            </code>
+            <para>ResignAssemblyPage.xaml</para>
+            <code lang="XML">
+            &lt;Page x:Name="page" x:Class="TEC.VS.Extensions.Tools.Core.Pages.AssemblyTools.ResignAssemblyPage"
+                  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+                  xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+                  xmlns:themes="http://schemas.actiprosoftware.com/winfx/xaml/themes"	
+                  xmlns:shared="http://schemas.actiprosoftware.com/winfx/xaml/shared"	
+                  mc:Ignorable="d" 
+                  d:DesignHeight="500" d:DesignWidth="700"&gt;
+                &lt;ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"&gt;
+                    &lt;DockPanel LastChildFill="False" &gt;
+                        &lt;Border Margin="0,10" Background="{DynamicResource {x:Static themes:AssetResourceKeys.WindowBackgroundNormalBrushKey}}" 
+                                BorderBrush="{DynamicResource {x:Static themes:AssetResourceKeys.ContainerBorderNormalBrushKey}}" BorderThickness="1"
+                             DockPanel.Dock="Top"&gt;
+                            &lt;DockPanel Margin="7"&gt;
+                                &lt;TextBlock Text="{Resx ResxName=TEC.VS.Extensions.Tools.Core.Pages.AssemblyTools.ResignAssemblyPage,Key=TextBlock_SelectDestination}" DockPanel.Dock="Top"  /&gt;
+                                &lt;shared:RadioButtonList Margin="0,3,0,0" SelectedIndex="0" AutoDisableNonSelectedItemContent="True" DockPanel.Dock="Top" x:Name="RBL_OutputDestination"&gt;
+                                    &lt;TextBlock Text="{Resx ResxName=TEC.VS.Extensions.Tools.Core.Pages.AssemblyTools.ResignAssemblyPage,Key=TextBlock_OverrideFile}"  /&gt;
+                                    &lt;StackPanel Orientation="Horizontal"&gt;
+                                        &lt;Button Margin="3,0,0,0" Content="{Resx ResxName=TEC.VS.Extensions.Tools.Core.Pages.AssemblyTools.ResignAssemblyPage,Key=TextBlock_OtherFolder}" x:Name="Btn_SelectFolder" Click="Btn_SelectFolder_Click" /&gt;
+                                        &lt;TextBlock x:Name="TextBlock_DestinationLocation"&gt;&lt;/TextBlock&gt;
+                                    &lt;/StackPanel&gt;
+                                &lt;/shared:RadioButtonList&gt;
+                                &lt;StackPanel DockPanel.Dock="Top" Orientation="Vertical" Margin="0,10,0,5"&gt;
+                                    &lt;Button Content="{Resx ResxName=TEC.VS.Extensions.Tools.Core.Pages.AssemblyTools.ResignAssemblyPage,Key=Btn_SelectSnkFile_Text}" Click="Button_SelectSnk" HorizontalAlignment="Left" x:Name="Btn_SelectSnk" IsEnabled="{Binding CanStartSign, ElementName=page}" &gt;&lt;/Button&gt;
+                                    &lt;TextBlock&gt;
+                                    &lt;Run Text="{Resx ResxName=TEC.VS.Extensions.Tools.Core.Pages.AssemblyTools.ResignAssemblyPage,Key=Run_SnkFile_Text}"&gt;&lt;/Run&gt;
+                                    &lt;Run x:Name="Run_SelectedSnkFile"&gt;&lt;/Run&gt;
+                                    &lt;/TextBlock&gt;
+                                &lt;/StackPanel&gt;
+                                &lt;StackPanel DockPanel.Dock="Top" Orientation="Vertical" Margin="0,5,0,10"&gt;
+                                    &lt;Button Content="{Resx ResxName=TEC.VS.Extensions.Tools.Core.Pages.AssemblyTools.ResignAssemblyPage,Key=Btn_SelectAssemblyFile_Text}" Click="Button_SelectAssemblies" HorizontalAlignment="Left" x:Name="Btn_SelectAssemblies" IsEnabled="{Binding CanStartSign, ElementName=page}"&gt;&lt;/Button&gt;
+                                    &lt;TextBlock&gt;
+                                    &lt;Run Text="{Resx ResxName=TEC.VS.Extensions.Tools.Core.Pages.AssemblyTools.ResignAssemblyPage,Key=Run_AssemblyFiles_Text1}"&gt;&lt;/Run&gt;
+                                    &lt;Run x:Name="Run_SelectedAssembliesFilesCount"&gt;&lt;/Run&gt;
+                                    &lt;Run Text="{Resx ResxName=TEC.VS.Extensions.Tools.Core.Pages.AssemblyTools.ResignAssemblyPage,Key=Run_AssemblyFiles_Text2}"&gt;&lt;/Run&gt;
+                                    &lt;/TextBlock&gt;
+                                &lt;/StackPanel&gt;
+                            &lt;/DockPanel&gt;
+                        &lt;/Border&gt;
+                        &lt;Border Margin="0,10" Background="{DynamicResource {x:Static themes:AssetResourceKeys.WindowBackgroundNormalBrushKey}}" 
+                                BorderBrush="{DynamicResource {x:Static themes:AssetResourceKeys.ContainerBorderNormalBrushKey}}" BorderThickness="1"
+                             DockPanel.Dock="Top"&gt;
+                            &lt;DockPanel Margin="7"&gt;
+                                &lt;StackPanel DockPanel.Dock="Top" Margin="0,0,0,5" Orientation="Horizontal"&gt;
+                                    &lt;Button HorizontalAlignment="Left" Content="{Resx ResxName=TEC.VS.Extensions.Tools.Core.Pages.AssemblyTools.ResignAssemblyPage,Key=Button_Start_Resign}" x:Name="Btn_StartResign" Click="Btn_StartResign_Click" IsEnabled="{Binding CanStartSign, ElementName=page}"&gt;&lt;/Button&gt;
+                                    &lt;TextBlock x:Name="TextBlock_Progress"&gt;&lt;/TextBlock&gt;
+                                &lt;/StackPanel&gt;
+                                &lt;DockPanel DockPanel.Dock="Top"  Height="20" &gt;
+                                    &lt;TextBlock DockPanel.Dock="Right" Margin="10,0,0,0" Text="{Binding Value, ElementName=AnimatedProgressBar_CurrentProgress, StringFormat={}{0}%}" VerticalAlignment="Center" &gt;&lt;/TextBlock&gt;
+                                    &lt;shared:AnimatedProgressBar x:Name="AnimatedProgressBar_CurrentProgress" VerticalAlignment="Stretch" Height="15"  Minimum="0" Value="0"  Maximum="100" 
+                                                            IsAnimationEnabled="True" DockPanel.Dock="Left"&gt;&lt;/shared:AnimatedProgressBar&gt;
+                                &lt;/DockPanel&gt;
+                                &lt;TextBlock DockPanel.Dock="Top" Margin="0,5,0,2" Text="{Resx ResxName=TEC.VS.Extensions.Tools.Core.Pages.AssemblyTools.ResignAssemblyPage,Key=TextBlock_ProcessResult_Text}"&gt;&lt;/TextBlock&gt;
+                                &lt;TextBox IsReadOnly="True" DockPanel.Dock="Top" Height="100" x:Name="Txt_ProcessResult" VerticalScrollBarVisibility="Auto"&gt;&lt;/TextBox&gt;
+                            &lt;/DockPanel&gt;
+                        &lt;/Border&gt;
+                    &lt;/DockPanel&gt;
+                &lt;/ScrollViewer&gt;
+            &lt;/Page&gt;
+            </code>
+            <para>ResignAssemblyPage.xaml.cs</para>
+            <code lang="C#">
+            public partial class ResignAssemblyPage : Page
+            {
+                public static readonly DependencyProperty CanStartSignProperty = DependencyProperty.Register("CanStartSign", typeof(bool), typeof(ResignAssemblyPage), new PropertyMetadata(true));
+                public ResignAssemblyPage()
+                {
+                    InitializeComponent();
+                }
+                private void Button_SelectSnk(object sender, RoutedEventArgs e)
+                {
+                    OpenFileDialog openFileDialog = new OpenFileDialog();
+                    openFileDialog.Multiselect = false;
+                    openFileDialog.DefaultExt = ".snk";
+                    openFileDialog.Filter = new ResxExtension(this.GetType().FullName, "SupportedSignExtensions", "").Value.ToString();
+                    bool? openFileDialogResult = openFileDialog.ShowDialog();
+                    if (openFileDialogResult.HasValue &amp;&amp; openFileDialogResult.Value)
+                    {
+                        this.SnkAbstractFile = new DiskFile(openFileDialog.FileName);
+                        this.Run_SelectedSnkFile.Text = this.SnkAbstractFile.FullName;
+                    }
+                }
+                private void Button_SelectAssemblies(object sender, RoutedEventArgs e)
+                {
+                    OpenFileDialog openFileDialog = new OpenFileDialog();
+                    openFileDialog.Multiselect = true;
+                    openFileDialog.DefaultExt = ".dll";
+                    openFileDialog.Filter = new ResxExtension(this.GetType().FullName, "SupportedAssembyExtensions", "").Value.ToString();
+                    bool? openFileDialogResult = openFileDialog.ShowDialog();
+                    if (openFileDialogResult.HasValue &amp;&amp; openFileDialogResult.Value)
+                    {
+                        this.AssembliesToSign = openFileDialog.FileNames.Select(t =&gt; new DiskFile(t)).ToArray();
+                        this.Run_SelectedAssembliesFilesCount.Text = this.AssembliesToSign.Count().ToString();
+                    }
+                }
+                private void Btn_SelectFolder_Click(object sender, RoutedEventArgs e)
+                {
+                    System.Windows.Forms.FolderBrowserDialog folderBrowserDialog = new System.Windows.Forms.FolderBrowserDialog();
+                    System.Windows.Forms.DialogResult folderBrowserDialogResult = folderBrowserDialog.ShowDialog(new TEC.Core.ComponentModel.Win32Window(Window.GetWindow(this)));
+                    if (folderBrowserDialogResult == System.Windows.Forms.DialogResult.OK || folderBrowserDialogResult == System.Windows.Forms.DialogResult.Yes)
+                    {
+                        this.TextBlock_DestinationLocation.Text = folderBrowserDialog.SelectedPath;
+                        this.OutputAbstractFolder = new DiskFolder(folderBrowserDialog.SelectedPath);
+                    }
+                }
+                private void Btn_StartResign_Click(object sender, RoutedEventArgs e)
+                {
+                    this.TextBlock_Progress.ClearValue(TextBlock.ForegroundProperty);
+                    this.AnimatedProgressBar_CurrentProgress.IsAnimationEnabled = false;
+                    this.AnimatedProgressBar_CurrentProgress.Value = 0d;
+                    this.AnimatedProgressBar_CurrentProgress.IsAnimationEnabled = true;
+                    this.AnimatedProgressBar_CurrentProgress.State = ActiproSoftware.Windows.Controls.OperationState.Normal;
+                    int selectOutputIndex = this.RBL_OutputDestination.SelectedIndex;
+                    if (this.SnkAbstractFile == null)
+                    {
+                        ResourceKey errorTextBrushKey = ActiproSoftware.Windows.Themes.AssetResourceKeys.ProgressBarForegroundErrorBrushKey;
+                        this.TextBlock_Progress.SetResourceReference(TextBlock.ForegroundProperty, errorTextBrushKey);
+                        this.TextBlock_Progress.Text = new ResxExtension(this.GetType().FullName, "SnkFileNotSpecified", "").Value.ToString();
+                        return;
+                    }
+                    if (this.AssembliesToSign == null || this.AssembliesToSign.Length == 0)
+                    {
+                        ResourceKey errorTextBrushKey = ActiproSoftware.Windows.Themes.AssetResourceKeys.ProgressBarForegroundErrorBrushKey;
+                        this.TextBlock_Progress.SetResourceReference(TextBlock.ForegroundProperty, errorTextBrushKey);
+                        this.TextBlock_Progress.Text = new ResxExtension(this.GetType().FullName, "AssemblyFileNotSpecified", "").Value.ToString();
+                        return;
+                    }
+                    if (selectOutputIndex == 1 &amp;&amp; this.OutputAbstractFolder == null)
+                    {
+                        ResourceKey errorTextBrushKey = ActiproSoftware.Windows.Themes.AssetResourceKeys.ProgressBarForegroundErrorBrushKey;
+                        this.TextBlock_Progress.SetResourceReference(TextBlock.ForegroundProperty, errorTextBrushKey);
+                        this.TextBlock_Progress.Text = new ResxExtension(this.GetType().FullName, "MustSelectAFolder", "").Value.ToString();
+                        return;
+                    }
+                    this.AssemblyResignProgress = AssemblyResigner.resignAssembly(this.SnkAbstractFile, this.AssembliesToSign,
+                        (assemblyResignProgress) =&gt;
+                        {
+                            this.Dispatcher.BeginInvoke(new Action(() =&gt;
+                            {
+                                this.TextBlock_Progress.Text = new ResxExtension(this.GetType().FullName, "Processing", "").Value.ToString();
+                                this.CanStartSign = false;
+                            }));
+                        },
+                        (assemblyResignProgress) =&gt;
+                        {
+                            try
+                            {
+                                //處理完畢(含成功/失敗)
+                                //所有成功處理的
+                                List&lt;AssemblyResignResult&gt; successAssemblyResignResultList = assemblyResignProgress.ResignResultObservableCollection.Where(t =&gt; t.IsSuccessSigned).ToList();
+                                switch (selectOutputIndex)
+                                {
+                                    case 0://取代
+                                        successAssemblyResignResultList.ForEach(t =&gt; t.SignedAssembleFile.MoveTo(t.SourceAssembleFile, true));
+                                        break;
+                                    case 1://輸出資料夾
+                                        successAssemblyResignResultList.ForEach(t =&gt;
+                                        {
+                                            AbstractFile outputFile = this.OutputAbstractFolder.GetFile(t.SourceAssembleFile.Name);
+                                            if (outputFile.Exists)
+                                            {
+                                                string fileNameWithoutExtension = System.IO.Path.GetFileNameWithoutExtension(t.SourceAssembleFile.Name);
+                                                string fileExtension = System.IO.Path.GetExtension(t.SourceAssembleFile.Name);
+                                                outputFile = this.OutputAbstractFolder.GetFile(String.Format("{0}_Signed{2:yyyyMMddHHmmss_fff}{1}", fileNameWithoutExtension, fileExtension, DateTime.Now));
+                                            }
+                                            t.SignedAssembleFile.MoveTo(outputFile, false);
+                                        });
+                                        break;
+                                    default:
+                                        throw new NotImplementedException();
+                                }
+                                if (assemblyResignProgress.ResignResultObservableCollection.Any(t =&gt; !t.IsSuccessSigned))
+                                {
+                                    this.Dispatcher.BeginInvoke(new Action(() =&gt;
+                                    {
+                                        this.AnimatedProgressBar_CurrentProgress.State = ActiproSoftware.Windows.Controls.OperationState.Error;
+                                        //所有錯誤的
+                                        List&lt;AssemblyResignResult&gt; failAssemblyResignResultList = assemblyResignProgress.ResignResultObservableCollection.Where(t =&gt; !t.IsSuccessSigned).ToList();
+                                        this.Txt_ProcessResult.Text = String.Format(new ResxExtension(this.GetType().FullName, "ProcessFailed", "").Value.ToString(),
+                                            failAssemblyResignResultList.Count, assemblyResignProgress.TotalFilesCountToProcess);
+                                        this.Txt_ProcessResult.Text += Environment.NewLine;
+                                        this.Txt_ProcessResult.Text += String.Join(Environment.NewLine, failAssemblyResignResultList
+                                            .Select(t =&gt; String.Format("{0}{1}\t=&gt;{2}", t.SourceAssembleFile.FullName, Environment.NewLine, t.ErrorMessage)));
+                                    }));
+                                }
+                                else
+                                {
+                                    this.Dispatcher.BeginInvoke(new Action(() =&gt;
+                                    {
+                                        this.AnimatedProgressBar_CurrentProgress.State = ActiproSoftware.Windows.Controls.OperationState.Normal;
+                                        this.Txt_ProcessResult.Text = new ResxExtension(this.GetType().FullName, "ProcessSuccessful", "").Value.ToString();
+                                    }));
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                this.Dispatcher.BeginInvoke(new Action(() =&gt;
+                                {
+                                    MessageBox.Show(ex.Message);
+                                }));
+                            }
+                            this.Dispatcher.BeginInvoke(new Action(() =&gt;
+                            {
+                                this.TextBlock_Progress.Text = "";
+                                this.CanStartSign = true;
+                                this.AnimatedProgressBar_CurrentProgress.Value = 100d;
+                            }));
+                        }
+                    );
+                    this.AssemblyResignProgress.PropertyChanged += (sender_AssemblyResignProgress, e_AssemblyResignProgress) =&gt;
+                    {
+                        if (e_AssemblyResignProgress.PropertyName == "CurrentPercent")
+                        {
+                            this.Dispatcher.BeginInvoke(new Action(() =&gt;
+                            {
+                                this.AnimatedProgressBar_CurrentProgress.Value = this.AssemblyResignProgress.CurrentPercent;
+                            }));
+                        }
+                    };
+                }
+                /// &lt;summary&gt;
+                /// 設定或取得是否可以開始簽署
+                /// &lt;/summary&gt;
+                public bool CanStartSign
+                {
+                    set
+                    {
+                        this.SetValue(ResignAssemblyPage.CanStartSignProperty, value);
+                    }
+                    get
+                    {
+                        return (bool)this.GetValue(ResignAssemblyPage.CanStartSignProperty);
+                    }
+                }
+                /// &lt;summary&gt;
+                /// 設定或取得要輸出的資料夾
+                /// &lt;/summary&gt;
+                private AbstractFolder OutputAbstractFolder { set; get; }
+                /// &lt;summary&gt;
+                /// 設定或取得SNK檔案
+                /// &lt;/summary&gt;
+                private AbstractFile SnkAbstractFile { set; get; }
+                /// &lt;summary&gt;
+                /// 設定或取得要簽署的檔案
+                /// &lt;/summary&gt;
+                private AbstractFile[] AssembliesToSign { set; get; }
+                /// &lt;summary&gt;
+                /// 取得相關用於簽署進度的物件
+                /// &lt;/summary&gt;
+                internal AssemblyResignProgress AssemblyResignProgress { private set; get; }
+            }
+            </code>
+            </example>
+        </member>
+        <member name="M:TEC.Core.Util.AssemblyUtil.AssemblyResigner.convertToByteArray(System.IO.Stream)">
+            <summary>
+            將輸入的資料流轉成byte array
+            </summary>
+            <param name="input">輸入的資料流</param>
+            <returns>已轉換的byte array</returns>
+        </member>
+        <member name="T:TEC.Core.Util.AssemblyUtil.AssemblyResignProgress">
+            <summary>
+            儲存重新簽署檔案的狀態及結果的類別
+            </summary>
+        </member>
+        <member name="M:TEC.Core.Util.AssemblyUtil.AssemblyResignProgress.#ctor(System.Collections.Generic.List{Xceed.FileSystem.AbstractFile})">
+            <summary>
+            初始化重新簽署檔案的狀態及結果的物件
+            </summary>
+            <param name="assemblyListToResign">要簽署的檔案</param>
+        </member>
+        <member name="P:TEC.Core.Util.AssemblyUtil.AssemblyResignProgress.AssemblyListToResign">
+            <summary>
+            取得要處理的檔案清單
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Util.AssemblyUtil.AssemblyResignProgress.AssemblyResignStatus">
+            <summary>
+            取得簽署檔案狀態
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Util.AssemblyUtil.AssemblyResignProgress.ResignResultObservableCollection">
+            <summary>
+            取得簽署結果清單
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Util.AssemblyUtil.AssemblyResignProgress.CurrentProcessedCount">
+            <summary>
+            取得目前已經完成的數量
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Util.AssemblyUtil.AssemblyResignProgress.CurrentPercent">
+            <summary>
+            取得目前完成百分比(0-100)
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Util.AssemblyUtil.AssemblyResignProgress.TotalFilesCountToProcess">
+            <summary>
+            取得所有需要處理檔案的總數
+            </summary>
+        </member>
+        <member name="T:TEC.Core.Util.AssemblyUtil.AssemblyResignResult">
+            <summary>
+            重新簽署檔案的處理結果
+            </summary>
+        </member>
+        <member name="M:TEC.Core.Util.AssemblyUtil.AssemblyResignResult.#ctor(System.Boolean,Xceed.FileSystem.AbstractFile,Xceed.FileSystem.AbstractFile,System.String,System.Exception)">
+            <summary>
+            初始化重新簽署檔案的處理結果
+            </summary>
+            <param name="isSuccessSigned">是否成功重新簽署</param>
+            <param name="sourceAssembleFile">簽署前檔案</param>
+            <param name="signedAssembleFile">簽署後檔案</param>
+            <param name="errorMessage">錯誤訊息</param>
+            <param name="exception">處理簽署的例外狀況</param>
+        </member>
+        <member name="M:TEC.Core.Util.AssemblyUtil.AssemblyResignResult.#ctor(Xceed.FileSystem.AbstractFile,System.Exception)">
+            <summary>
+            初始化重新簽署檔案錯誤的處理結果
+            </summary>
+            <param name="sourceAssembleFile">簽署前檔案</param>
+            <param name="exception">處理簽署的例外狀況</param>
+        </member>
+        <member name="M:TEC.Core.Util.AssemblyUtil.AssemblyResignResult.#ctor(Xceed.FileSystem.AbstractFile,System.String,System.Exception)">
+            <summary>
+            初始化重新簽署檔案錯誤的處理結果
+            </summary>
+            <param name="sourceAssembleFile">簽署前檔案</param>
+            <param name="errorMessage">錯誤訊息</param>
+            <param name="exception">處理簽署的例外狀況</param>
+        </member>
+        <member name="M:TEC.Core.Util.AssemblyUtil.AssemblyResignResult.#ctor(Xceed.FileSystem.AbstractFile,System.String)">
+            <summary>
+            初始化重新簽署檔案錯誤的處理結果
+            </summary>
+            <param name="sourceAssembleFile">簽署前檔案</param>
+            <param name="errorMessage">錯誤訊息</param>
+        </member>
+        <member name="M:TEC.Core.Util.AssemblyUtil.AssemblyResignResult.#ctor(Xceed.FileSystem.AbstractFile,Xceed.FileSystem.AbstractFile)">
+            <summary>
+            初始化成功重新簽署檔案的處理結果
+            </summary>
+            <param name="sourceAssembleFile">簽署前檔案</param>
+            <param name="signedAssembleFile">簽署後檔案</param>
+        </member>
+        <member name="P:TEC.Core.Util.AssemblyUtil.AssemblyResignResult.IsSuccessSigned">
+            <summary>
+            取得是否成功簽署
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Util.AssemblyUtil.AssemblyResignResult.ErrorMessage">
+            <summary>
+            取得簽署的錯誤訊息(若有的話)
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Util.AssemblyUtil.AssemblyResignResult.Exception">
+            <summary>
+            設定或取得例外狀況(若有的話)
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Util.AssemblyUtil.AssemblyResignResult.SourceAssembleFile">
+            <summary>
+            取得原始組件
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Util.AssemblyUtil.AssemblyResignResult.SignedAssembleFile">
+            <summary>
+            取得重新簽署後的組件
+            </summary>
+        </member>
+        <member name="T:TEC.Core.Util.AssemblyUtil.AssemblyResignStatus">
+            <summary>
+            簽署狀態
+            </summary>
+        </member>
+        <member name="F:TEC.Core.Util.AssemblyUtil.AssemblyResignStatus.NotStart">
+            <summary>
+            尚未開始
+            </summary>
+        </member>
+        <member name="F:TEC.Core.Util.AssemblyUtil.AssemblyResignStatus.InProgress">
+            <summary>
+            處理中
+            </summary>
+        </member>
+        <member name="F:TEC.Core.Util.AssemblyUtil.AssemblyResignStatus.Stop">
+            <summary>
+            已結束
+            </summary>
+        </member>
+        <member name="T:TEC.Core.Util.AssemblyUtil.Resources.AssemblyResigner">
+            <summary>
+              用於查詢當地語系化字串等的強類型資源類別。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Util.AssemblyUtil.Resources.AssemblyResigner.ResourceManager">
+            <summary>
+              傳回這個類別使用的快取的 ResourceManager 執行個體。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Util.AssemblyUtil.Resources.AssemblyResigner.Culture">
+            <summary>
+              覆寫目前執行緒的 CurrentUICulture 屬性，對象是所有
+              使用這個強類型資源類別的資源查閱。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Util.AssemblyUtil.Resources.AssemblyResigner.SignAssemblyFailed_Unknown">
+            <summary>
+              查詢類似 Sing the assembly failed, unknown error occured. 的當地語系化字串。
+            </summary>
+        </member>
+        <member name="T:TEC.Core.Util.Job.JobExecuteType">
+            <summary>
+            排程器執行模式
+            </summary>
+        </member>
+        <member name="F:TEC.Core.Util.Job.JobExecuteType.Daily">
+            <summary>
+            每天定時執行
+            </summary>
+        </member>
+        <member name="F:TEC.Core.Util.Job.JobExecuteType.Interval">
+            <summary>
+            定期執行
+            </summary>
+        </member>
+        <member name="T:TEC.Core.Util.Job.JobGlobal">
+            <summary>
+            全域共用靜態類別
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Util.Job.JobGlobal.DefaultTimerManager">
+            <summary>
+            取得預設的排程管理物件
+            </summary>
+        </member>
+        <member name="T:TEC.Core.Util.Job.JobServiceBase">
+            <summary>
+            排程器服務的基底型別，用於定義一項定期執行的工作。
+            </summary>
+            <example>
+            <para>
+            ExampleServiceGlobal.cs
+            </para>
+            <code lang="C#">
+            internal static class ExampleServiceGlobal
+            {
+                private static MemoryCacheSettingProvider&lt;JobSettingCollection, JobSettingEnum, object, Guid&gt; exampleSettingProvider = null;
+                private static readonly object sync_obj = new object();
+                static ExampleServiceGlobal()
+                {
+                }
+                /// &lt;summary&gt;
+                /// 取得用於設定"測試服務"的設定檔集合
+                /// &lt;/summary&gt;
+                internal static MemoryCacheSettingProvider&lt;JobSettingCollection, JobSettingEnum, object, Guid&gt; ExampleService_SettingProvider
+                {
+                    get
+                    {
+                        if (ExampleServiceGlobal.exampleSettingProvider == null)
+                        {
+                            lock (ExampleServiceGlobal.sync_obj)
+                            {
+                                if (ExampleServiceGlobal.exampleSettingProvider == null)
+                                {
+                                    ExampleServiceGlobal.exampleSettingProvider = new MemoryCacheSettingProvider&lt;JobSettingCollection, JobSettingEnum, object, Guid&gt;("ExampleService_SettingProvider",
+                                        () =&gt;
+                                        {
+                                            JobSettingCollection jobSettingCollection = new JobSettingCollection(new Guid("0E5D7294-0841-41BA-8FCC-2895E0D42398"));
+                                            jobSettingCollection[JobSettingEnum.ExecuteTimePeriod] = new TimeSpan(0, 0, 10);//多久跑一次
+                                            jobSettingCollection[JobSettingEnum.IsStandalone] = false;
+                                            jobSettingCollection[JobSettingEnum.JobExecuteType] = JobExecuteType.Interval;
+                                            jobSettingCollection[JobSettingEnum.NextTimeEvaluationType] = NextTimeEvaluationType.ExecutionEndTime;
+                                            jobSettingCollection[JobSettingEnum.ValidExecutionTimePeriodCollection] =
+                                                new TimePeriodCollection(new[] { new TimeRange(DateTime.Now.Date, DateTime.MaxValue) });
+                                            return new Tuple&lt;CacheItemPolicy, JobSettingCollection&gt;(new CacheItemPolicy()
+                                            {
+                                                //AbsoluteExpiration = DateTimeOffset.Now.AddSeconds(5),// 要測試快取清除，取消註解本程式碼，並註解下行程式
+                                                AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(3),//3分後清除
+                                                Priority = CacheItemPriority.Default
+                                            }, jobSettingCollection);
+                                        }, true);
+                                }
+                            }
+                        }
+                        return ExampleServiceGlobal.exampleSettingProvider;
+                    }
+                }
+            }
+            </code>
+            <para>
+            ExampleTimerEvent.cs
+            </para>
+            <code lang="C#">
+            /// &lt;summary&gt;
+            /// 需要定期執行的事件
+            /// &lt;/summary&gt;
+            public class ExampleTimerEvent : ITimerEvent
+            {
+                public void execute()
+                {
+                    //每次排程要執行的內容
+                }
+                public void Dispose()
+                {
+                    //釋放此排程相關的資源
+                }
+            }
+            </code>
+            <para>
+            ExampleService.cs
+            </para>
+            <code lang="C#">
+            /// &lt;summary&gt;
+            /// 範例 Windows 服務，可以手動呼叫&lt;c&gt;this.Start()&lt;/c&gt;或由Service自動呼叫來啟動排程
+            /// &lt;/summary&gt;
+            public partial class ExampleService : Util.Job.JobServiceBase
+            {
+                public ExampleService()
+                    : base(new Guid("AEEB442D-5C71-44E8-924D-F3444F1E3899"), new ExampleTimerEvent(), ExampleServiceGlobal.ExampleService_SettingProvider)
+                {
+                    InitializeComponent();
+                    base.OnUnhandledExceptionThrew += this.ExampleService_OnUnhandledExceptionThrew;
+                }
+                protected override void OnStart(string[] args)
+                {
+                    //重要，複寫時不可以移除此行，否則排程器不會執行
+                    base.OnStart(args);
+                }
+                protected override void OnStop()
+                {
+                    //重要，複寫時不可以移除此行，否則排程器不會停止
+                    base.OnStop();
+                }
+                private void ExampleService_OnUnhandledExceptionThrew(object sender, UnhandledExceptionEventArgs e)
+                {
+                }
+            }
+            partial class ExampleService
+            {
+                /// &lt;summary&gt; 
+                /// 設計工具所需的變數。
+                /// &lt;/summary&gt;
+                private System.ComponentModel.IContainer components = null;
+                /// &lt;summary&gt;
+                /// 清除任何使用中的資源。
+                /// &lt;/summary&gt;
+                /// &lt;param name="disposing"&gt;如果應該處置 Managed 資源則為 true，否則為 false。&lt;/param&gt;
+                protected override void Dispose(bool disposing)
+                {
+                    if (disposing &amp;&amp; (components != null))
+                    {
+                        components.Dispose();
+                    }
+                    base.Dispose(disposing);
+                }
+                #region 元件設計工具產生的程式碼
+                /// &lt;summary&gt; 
+                /// 此為設計工具支援所需的方法 - 請勿使用程式碼編輯器
+                /// 修改這個方法的內容。
+                /// &lt;/summary&gt;
+                private void InitializeComponent()
+                {
+                    components = new System.ComponentModel.Container();
+                    this.ServiceName = "Service1";
+                }
+                #endregion
+            }
+            </code>
+            </example>
+        </member>
+        <member name="M:TEC.Core.Util.Job.JobServiceBase.#ctor(System.Guid,TEC.Core.Scheduler.Timers.TimerManager,TEC.Core.Scheduler.Timers.ITimerEvent,TEC.Core.Settings.Providers.ObjectCacheSettingProvider{TEC.Core.Util.Job.JobSettingCollection,TEC.Core.Util.Job.JobSettingEnum,System.Object,System.Guid})">
+            <summary>
+            初始化排程器服務基底型別
+            </summary>
+            <param name="jobId">關於此排程器的ID</param>
+            <param name="timerManager">用於管理排程器的<see cref="P:TEC.Core.Util.Job.JobServiceBase.TimerManager"/></param>
+            <param name="timerEvent">排程器事件</param>
+            <param name="objectCacheSettingProvider">用於快取設定檔的快取提供者，在每次快取更新過後，將自動更新相關屬性</param>
+            <exception cref="T:System.ArgumentNullException">當必要欄位沒有填入資訊時擲出</exception>
+        </member>
+        <member name="M:TEC.Core.Util.Job.JobServiceBase.#ctor(System.Guid,TEC.Core.Scheduler.Timers.ITimerEvent,TEC.Core.Settings.Providers.ObjectCacheSettingProvider{TEC.Core.Util.Job.JobSettingCollection,TEC.Core.Util.Job.JobSettingEnum,System.Object,System.Guid})">
+            <summary>
+            使用預設排程管理物件，初始化排程器服務基底型別
+            </summary>
+            <param name="jobId">關於此排程器的ID</param>
+            <param name="timerEvent">排程器事件</param>
+            <param name="objectCacheSettingProvider">用於快取設定檔的快取提供者，在每次快取更新過後，將自動更新相關屬性</param>
+            <exception cref="T:System.ArgumentNullException">當必要欄位沒有填入資訊時擲出</exception>
+        </member>
+        <member name="M:TEC.Core.Util.Job.JobServiceBase.OnStart(System.String[])">
+            <summary>
+             在衍生類別中實作時，當服務控制管理員 (SCM) 傳送啟動命令至服務或當作業系統啟動 (自動啟動服務) 時執行。 指定在服務啟動時所要執行的動作。
+            </summary>
+            <param name="args">啟動命令所傳遞的資料</param>
+        </member>
+        <member name="M:TEC.Core.Util.Job.JobServiceBase.OnStop">
+            <summary>
+            當服務控制管理員 (SCM) 傳送停止命令至服務時執行。 指定在服務停止執行時所要執行的動作
+            </summary>
+        </member>
+        <member name="M:TEC.Core.Util.Job.JobServiceBase.Dispose(System.Boolean)">
+            <summary>
+            處置 (Dispose) <see cref="T:System.ServiceProcess.ServiceBase"/> 所使用的資源 (除了記憶體之外)
+            </summary>
+            <param name="disposing"><c>true</c> 表示會同時釋放 Managed 和 Unmanaged 資源，<c>false</c> 則表示只釋放 Unmanaged 資源。</param>
+        </member>
+        <member name="M:TEC.Core.Util.Job.JobServiceBase.configureTimers(TEC.Core.Util.Job.JobSettingCollection)">
+            <summary>
+            依照工作排程設定檔組態目前的排程器
+            </summary>
+            <param name="jobSettingCollection">設定檔集合</param>
+        </member>
+        <member name="M:TEC.Core.Util.Job.JobServiceBase.JobServiceBase_OnUnhandledExceptionThrew(System.Object,System.UnhandledExceptionEventArgs)">
+            <summary>
+            在執行排程事件時，有未處理的例外狀況發生時引發
+            </summary>
+            <param name="sender"></param>
+            <param name="e"></param>
+        </member>
+        <member name="M:TEC.Core.Util.Job.JobServiceBase.Start(System.String[])">
+            <summary>
+            手動啟動服務內容
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Util.Job.JobServiceBase.ReadOnlySettingDictionary">
+            <summary>
+            取得目前工作設定檔的唯讀字典，當關於此服務的設定檔集合變更時，將觸發此屬性的變更事件。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Util.Job.JobServiceBase.JobId">
+            <summary>
+            取得與此排程器服務相關的Job ID
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Util.Job.JobServiceBase.TimerStorageBase">
+            <summary>
+            取得與此服務相關聯的排程器執行個體，當排程器設定檔有變更時，將會產生新的排程器執行個體。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Util.Job.JobServiceBase.TimerEvent">
+            <summary>
+            設定或取得要執行的事件
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Util.Job.JobServiceBase.TimerManager">
+            <summary>
+            設定或取得排程器管理物件
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Util.Job.JobServiceBase.CurrentJobSettingCollection">
+            <summary>
+            設定或取得用於此排程器的設定檔
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Util.Job.JobServiceBase.ObjectCacheSettingProvider">
+            <summary>
+            設定或取得用於讀取快取設定檔的提供者
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Util.Job.JobServiceBase.IsTerminated">
+            <summary>
+            設定或取得是否中斷執行
+            </summary>
+        </member>
+        <member name="E:TEC.Core.Util.Job.JobServiceBase.OnTimerStorageCreated">
+            <summary>
+            當排程器被建立時發生
+            </summary>
+        </member>
+        <member name="E:TEC.Core.Util.Job.JobServiceBase.OnJobSettingCollectionChanged">
+            <summary>
+            當此服務的排程設定檔中的值有發生變更時引發
+            </summary>
+        </member>
+        <member name="E:TEC.Core.Util.Job.JobServiceBase.OnUnhandledExceptionThrew">
+            <summary>
+            當事件執行發生有未處理的例外狀況發生時引發
+            </summary>
+        </member>
+        <member name="E:TEC.Core.Util.Job.JobServiceBase.PropertyChanged">
+            <summary>
+            告知用戶端，屬性值已變更
+            </summary>
+        </member>
+        <member name="T:TEC.Core.Util.Job.JobSettingCollection">
+            <summary>
+            排程器設定檔集合
+            </summary>
+        </member>
+        <member name="M:TEC.Core.Util.Job.JobSettingCollection.#ctor(System.Guid)">
+            <summary>
+            初始化排程器設定檔集合
+            </summary>
+            <param name="jobSettingId">排程器設定檔Id</param>
+        </member>
+        <member name="M:TEC.Core.Util.Job.JobSettingCollection.getDefaultValue(TEC.Core.Util.Job.JobSettingEnum)">
+            <summary>
+            呼叫此方法必定擲出例外，請在設定檔初始化時就指定好所有的設定值。
+            </summary>
+            <param name="key"></param>
+            <returns></returns>
+            <exception cref="T:System.NotSupportedException">必定擲出此例外，若要避免，請直接在初始化此集合時就給定所有的值。</exception>
+        </member>
+        <member name="T:TEC.Core.Util.Job.JobSettingCollectionChangedEventArgs">
+            <summary>
+            當服務中的工作排程設定檔資料被更新時引發的事件相關參數
+            </summary>
+        </member>
+        <member name="M:TEC.Core.Util.Job.JobSettingCollectionChangedEventArgs.#ctor(System.Collections.Generic.List{System.Collections.Generic.KeyValuePair{TEC.Core.Util.Job.JobSettingEnum,System.Object}},System.Collections.Generic.List{System.Collections.Generic.KeyValuePair{TEC.Core.Util.Job.JobSettingEnum,System.Object}})">
+            <summary>
+            初始化服務中的工作排程設定檔資料被更新時引發的事件相關參數
+            </summary>
+            <param name="changedValues">被變更的參數清單</param>
+            <param name="originalValues">被變更前的設定檔清單</param>
+        </member>
+        <member name="P:TEC.Core.Util.Job.JobSettingCollectionChangedEventArgs.ChangedValueList">
+            <summary>
+            取得被變更的設定檔清單
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Util.Job.JobSettingCollectionChangedEventArgs.OriginalValueList">
+            <summary>
+            取得被變更前的設定檔清單(只會取得之後被變更的索引鍵資料)，若資料第一次被建立時，此清單中所引鍵對應的值皆為<c>null</c>
+            </summary>
+        </member>
+        <member name="T:TEC.Core.Util.Job.JobSettingEnum">
+            <summary>
+            排程器設定檔列舉
+            </summary>
+        </member>
+        <member name="F:TEC.Core.Util.Job.JobSettingEnum.ValidExecutionTimePeriodCollection">
+            <summary>
+            有效執行區間，屬於<see cref="T:Itenso.TimePeriod.ITimePeriodCollection"/>
+            </summary>
+        </member>
+        <member name="F:TEC.Core.Util.Job.JobSettingEnum.ExecuteTimePeriod">
+            <summary>
+            執行間隔/固定時間，若<see cref="T:TEC.Core.Util.Job.JobExecuteType"/>為<see cref="F:TEC.Core.Util.Job.JobExecuteType.Daily"/>時
+            ，代表何時要執行；若為<see cref="F:TEC.Core.Util.Job.JobExecuteType.Interval"/>時，代表多久間隔執行一次。屬於<see cref="T:System.TimeSpan"/>
+            </summary>
+        </member>
+        <member name="F:TEC.Core.Util.Job.JobSettingEnum.NextTimeEvaluationType">
+            <summary>
+            指定用於預估下次執行排程時間的依據，屬於<see cref="T:TEC.Core.Scheduler.Timers.NextTimeEvaluationType"/>
+            </summary>
+        </member>
+        <member name="F:TEC.Core.Util.Job.JobSettingEnum.IsStandalone">
+            <summary>
+            是否以獨立模式執行工作，不受其他同工作項目影響，屬於<see cref="T:System.Boolean"/>
+            </summary>
+        </member>
+        <member name="F:TEC.Core.Util.Job.JobSettingEnum.JobExecuteType">
+            <summary>
+            工作執行模式，屬於<see cref="T:TEC.Core.Util.Job.JobExecuteType"/>
+            </summary>
+        </member>
+        <member name="T:TEC.Core.Util.Job.Resources.JobSettingCollection">
+            <summary>
+              用於查詢當地語系化字串等的強類型資源類別。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Util.Job.Resources.JobSettingCollection.ResourceManager">
+            <summary>
+              傳回這個類別使用的快取的 ResourceManager 執行個體。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Util.Job.Resources.JobSettingCollection.Culture">
+            <summary>
+              覆寫目前執行緒的 CurrentUICulture 屬性，對象是所有
+              使用這個強類型資源類別的資源查閱。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Util.Job.Resources.JobSettingCollection.CannotGetDefaultValue">
+            <summary>
+              查詢類似 Cannot get the default value directly, please assign all of the values of this setting collection when initialized. 的當地語系化字串。
+            </summary>
+        </member>
+        <member name="T:TEC.Core.Util.Job.TimerStorageCreatedEventArgs">
+            <summary>
+            當排程器被建立時引發的事件參數
+            </summary>
+        </member>
+        <member name="M:TEC.Core.Util.Job.TimerStorageCreatedEventArgs.#ctor(TEC.Core.Scheduler.Timers.TimerStorageBase)">
+            <summary>
+            初始化排程器被建立時的事件參數
+            </summary>
+            <param name="timerStorage">被建立的排程器</param>
+        </member>
+        <member name="P:TEC.Core.Util.Job.TimerStorageCreatedEventArgs.TimerStorage">
+            <summary>
+            取得被建立的排程器物件
+            </summary>
+        </member>
+        <member name="T:TEC.Core.Util.Net.NetworkAdapterHelper">
+            <summary>
+            處理網路卡資訊的輔助類別
+            </summary>
+        </member>
+        <member name="M:TEC.Core.Util.Net.NetworkAdapterHelper.getNetworkAdapterConfigurations(System.String,System.Boolean)">
+            <summary>
+            取得指定電腦名稱的網路卡資訊
+            </summary>
+            <param name="machineName">遠端/近端電腦名稱</param>
+            <param name="filterOwnedIpOnly">是否只取得有IP的網卡資料</param>
+            <returns></returns>
+            <example>
+            <code lang="C#">
+            NetworkAdapterHelper.getNetworkAdapterConfigurations(Environment.MachineName, true);
+            </code>
+            </example>
+        </member>
+        <member name="M:TEC.Core.Util.Net.NetworkAdapterHelper.getConnectableNetworkAdapter(System.String,System.Net.IPAddress[],System.Int32)">
+            <summary>
+            取得可以用於連線至<paramref name="targetIPAddresses"/>:<paramref name="targetPort"/>的網路卡資料以及成功連線的網路位址(<see cref="T:System.Net.IPAddress"/>)
+            </summary>
+            <param name="machineName">用於取得網路卡資料的機器名稱</param>
+            <param name="targetIPAddresses">連線的目標</param>
+            <param name="targetPort">遠端埠號</param>
+            <returns></returns>
+            <example>
+            <code lang="C#">
+            Dictionary&lt;Win32_NetworkAdapterConfiguration, IPAddress[]&gt; connectableNetworkAdapterDictionaryFromFQDN =
+              NetworkAdapterHelper.getConnectableNetworkAdapter(Environment.MachineName, "google.com", 443);
+            </code>
+            </example>
+        </member>
+        <member name="M:TEC.Core.Util.Net.NetworkAdapterHelper.getConnectableNetworkAdapter(System.String,System.String,System.Int32)">
+            <summary>
+            取得可以用於連線至<paramref name="remoteAddress"/>:<paramref name="targetPort"/>的網路卡資料以及成功連線的網路位址(<see cref="T:System.Net.IPAddress"/>)
+            </summary>
+            <param name="machineName">用於取得網路卡資料的機器名稱</param>
+            <param name="remoteAddress">連線的目標</param>
+            <param name="targetPort">遠端埠號</param>
+            <returns></returns>
+            <example>
+            <code lang="C#">
+            Dictionary&lt;Win32_NetworkAdapterConfiguration, IPAddress[]&gt; connectableNetworkAdapterDictionaryFromFQDN =
+              NetworkAdapterHelper.getConnectableNetworkAdapter(Environment.MachineName, new[] { IPAddress.Parse("8.8.8.8") }, 53);
+            </code>
+            </example>
+        </member>
+        <member name="T:TEC.Core.Util.ServiceProcess.ServiceProcessObservableCollection">
+            <summary>
+            提供<see cref="T:TEC.Core.ServiceProcess.ServiceInformation"/>的統一管理集合，此集合為執行緒安全(Thread-Safe)。
+            </summary>
+            <example>
+            <para>Program.cs</para>
+            <code lang="C#">
+             public static void main()
+                {
+                    Scheduler.Timers.TimerManager timersTimer = new Scheduler.Timers.TimerManager();
+                    //System.ServiceProcess.dll
+                    ServiceProcessObservableCollection serviceProcessObservableCollection = new ServiceProcessObservableCollection(
+                        System.ServiceProcess.ServiceController.GetServices()
+                            .Select(serviceController =&gt; new TEC.Core.ServiceProcess.ServiceInformation(serviceController.ServiceName, serviceController.MachineName)),
+                        timersTimer,
+                        TimeSpan.FromSeconds(5),//5秒更新一次所有元素
+                        false);//初始化完先不要開始自動更新的排程
+                    serviceProcessObservableCollection.ToList().ForEach(serviceInformation =&gt;
+                    {
+                        //繫結安裝狀態變更的事件
+                        serviceInformation.InstallStatusChanged += (sender, e) =&gt;
+                        {
+                            TEC.Core.ServiceProcess.ServiceInformation service = sender as TEC.Core.ServiceProcess.ServiceInformation;
+                            Console.WriteLine(@"Service:{0},Property:{1}, From {2} to {3}", service.ServiceName, "ServiceInstallStatus", e.OldValue.ToString(), e.NewValue.ToString());
+                        };
+                        //繫結服務狀態變更的事件
+                        serviceInformation.ServiceControllerStatusChanged += (sender, e) =&gt;
+                        {
+                            TEC.Core.ServiceProcess.ServiceInformation service = sender as TEC.Core.ServiceProcess.ServiceInformation;
+                            Console.WriteLine(@"Service:{0},Property:{1}, From {2} to {3}", service.ServiceName, "ServiceControllerStatus",
+                                e.OldValue.HasValue ? e.OldValue.Value.ToString() : "Unknown", e.NewValue.HasValue ? e.NewValue.Value.ToString() : "Unknown");
+                        };
+                    });
+                    serviceProcessObservableCollection.ScheduleTimer.start();
+                    Console.ReadKey();//輸入任何鍵以繼續
+                }
+            }
+            </code>
+            </example>
+        </member>
+        <member name="M:TEC.Core.Util.ServiceProcess.ServiceProcessObservableCollection.#ctor(System.Collections.Generic.IEnumerable{TEC.Core.ServiceProcess.ServiceInformation},TEC.Core.Scheduler.Timers.TimerManager,System.TimeSpan,System.Boolean)">
+            <summary>
+            初始化提供<see cref="T:TEC.Core.ServiceProcess.ServiceInformation"/>的統一管理集合
+            </summary>
+            <param name="timerManager">要建立排程器的排程器管理員</param>
+            <param name="interval">更新間隔</param>
+            <param name="collection">要預先加入此物件的服務集合</param>
+            <param name="startOnInitialized">在執行個體初始化完成時，隨即開始更新服務狀態的排程。當輸入的值為<c>false</c>時，請在適當的時機呼叫<see cref="P:TEC.Core.Util.ServiceProcess.ServiceProcessObservableCollection.ScheduleTimer"/>的
+            <see cref="M:TEC.Core.Scheduler.Timers.TimerStorageBase.start"/>以啟動排程</param>
+        </member>
+        <member name="M:TEC.Core.Util.ServiceProcess.ServiceProcessObservableCollection.#ctor(TEC.Core.Scheduler.Timers.TimerManager,System.TimeSpan,System.Boolean)">
+            <summary>
+            初始化提供<see cref="T:TEC.Core.ServiceProcess.ServiceInformation"/>的統一管理集合
+            </summary>
+            <param name="timerManager">要建立排程器的排程器管理員</param>
+            <param name="interval">更新間隔</param>
+            <param name="startOnInitialized">在執行個體初始化完成時，隨即開始更新服務狀態的排程。當輸入的值為<c>false</c>時，請在適當的時機呼叫<see cref="P:TEC.Core.Util.ServiceProcess.ServiceProcessObservableCollection.ScheduleTimer"/>的
+            <see cref="M:TEC.Core.Scheduler.Timers.TimerStorageBase.start"/>以啟動排程</param>
+        </member>
+        <member name="M:TEC.Core.Util.ServiceProcess.ServiceProcessObservableCollection.Finalize">
+            <summary>
+            解構物件
+            </summary>
+        </member>
+        <member name="M:TEC.Core.Util.ServiceProcess.ServiceProcessObservableCollection.Dispose(System.Boolean)">
+            <summary>
+            釋放目前物件的資源
+            </summary>
+            <param name="isDisposing">是否開始處理物件的資源釋放行為</param>
+        </member>
+        <member name="M:TEC.Core.Util.ServiceProcess.ServiceProcessObservableCollection.Dispose">
+            <summary>
+            執行與釋放 (Free)、釋放 (Release) 或重設 Unmanaged 資源相關聯之應用程式定義的工作。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Util.ServiceProcess.ServiceProcessObservableCollection.ScheduleTimer">
+            <summary>
+            取得用於排程更新所有服務物件狀態的排程器
+            </summary>
+        </member>
+        <member name="T:TEC.Core.Util.ServiceProcess.UpdateServiceInformationTimerEvent">
+            <summary>
+            用於更新<see cref="P:TEC.Core.Util.ServiceProcess.UpdateServiceInformationTimerEvent.ServiceProcessObservableCollection"/>的事件類別
+            </summary>
+        </member>
+        <member name="M:TEC.Core.Util.ServiceProcess.UpdateServiceInformationTimerEvent.#ctor(TEC.Core.Util.ServiceProcess.ServiceProcessObservableCollection)">
+            <summary>
+            初始化更新<see cref="P:TEC.Core.Util.ServiceProcess.UpdateServiceInformationTimerEvent.ServiceProcessObservableCollection"/>的事件
+            </summary>
+            <param name="serviceProcessObservableCollection">用於更新的執行緒資訊集合</param>
+        </member>
+        <member name="M:TEC.Core.Util.ServiceProcess.UpdateServiceInformationTimerEvent.Finalize">
+            <summary>
+            解構物件
+            </summary>
+        </member>
+        <member name="M:TEC.Core.Util.ServiceProcess.UpdateServiceInformationTimerEvent.Dispose(System.Boolean)">
+            <summary>
+            釋放目前物件的資源
+            </summary>
+            <param name="isDisposing">是否開始處理物件的資源釋放行為</param>
+        </member>
+        <member name="M:TEC.Core.Util.ServiceProcess.UpdateServiceInformationTimerEvent.execute">
+            <summary>
+            執行排定的動作內容
+            </summary>
+        </member>
+        <member name="M:TEC.Core.Util.ServiceProcess.UpdateServiceInformationTimerEvent.Dispose">
+            <summary>
+            執行與釋放 (Free)、釋放 (Release) 或重設 Unmanaged 資源相關聯之應用程式定義的工作。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Util.ServiceProcess.UpdateServiceInformationTimerEvent.ServiceProcessObservableCollection">
+            <summary>
+            設定或取得儲存服務資訊的<see cref="P:TEC.Core.Util.ServiceProcess.UpdateServiceInformationTimerEvent.ServiceProcessObservableCollection"/>集合
+            </summary>
+        </member>
+        <member name="T:TEC.Core.Util.Transactions.Tasks.FileTransactionInfo">
+            <summary>
+            描述檔案進行交易變更時的相關資訊
+            </summary>
+        </member>
+        <member name="M:TEC.Core.Util.Transactions.Tasks.FileTransactionInfo.#ctor(System.Boolean)">
+            <summary>
+            初始化<see cref="T:TEC.Core.Util.Transactions.Tasks.FileTransactionInfo"/>的執行個體
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Util.Transactions.Tasks.FileTransactionInfo.SourceAbstractFile">
+            <summary>
+            設定或取得來源檔案
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Util.Transactions.Tasks.FileTransactionInfo.DestinationAbstractFile">
+            <summary>
+            設定或取得目標檔案，若要刪除檔案，請將此參考設定為 <c>null</c> 參考。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Util.Transactions.Tasks.FileTransactionInfo.Override">
+            <summary>
+            設定或取得當目標檔案已經存在時，是否要覆蓋
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Util.Transactions.Tasks.FileTransactionInfo.FileCommitAction">
+            <summary>
+            設定或取得用於認可檔案的動作(來源,目標(可能為 <c>null</c> 參考，依照出入的<see cref="P:TEC.Core.Util.Transactions.Tasks.FileTransactionInfo.DestinationAbstractFile"/>參考而定))，
+            若此值輸入<c>null</c>參考，則預設為移動檔案並且依照<see cref="P:TEC.Core.Util.Transactions.Tasks.FileTransactionInfo.Override"/>的設定來決定當目標檔案已經存在時的動作。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Util.Transactions.Tasks.FileTransactionInfo.DeleteSourceFileOnRollback">
+            <summary>
+            取得是否於Rollback發生時刪除來源檔案
+            </summary>
+        </member>
+        <member name="T:TEC.Core.Util.Transactions.Tasks.FileTransactionTask">
+            <summary>
+            當在交易作業中，將檔案變更設定為二階段交易認可的作業。
+            </summary>
+            <remarks>
+            針對檔案作業&lt;br/&gt;
+            1. 一開始要決定好Temp檔案(當交易完成時要變成正式檔案的來源)&lt;br/&gt;
+            2. 接著把正式檔案複製一份為備用，並刪除正式檔案&lt;br/&gt;
+            3. 把Temp檔案經過處理後儲存為正式檔案的名稱&lt;br/&gt;
+            4. 刪除第2步改名後的檔案(也可以保留，依照FileTransactionInfo的Override屬性決定)&lt;br/&gt;
+            &lt;br/&gt;
+            P. 當Rollback時&lt;br/&gt;
+            P1.檢查備用檔案是否存在，若存在則把正式檔案刪除，再把備用檔案取代回正式檔案；若不存在則忽略&lt;br/&gt;
+            P2.將除了正式檔案外的所有檔案都刪除
+            </remarks>
+            <seealso cref="T:TEC.Core.Transactions.SequentialTransactionManager"/>
+            <example>
+            <para>Program.cs</para>
+            <code lang="C#">
+            public static void main()
+            {
+                //using System.Transactions
+                //using TEC.Core.Transactions
+                //using TEC.Core.Collections
+                //using Xceed.FileSystem
+                SequentialTransactionManager sequentialTransactionManager = new SequentialTransactionManager();
+                //要在一 TransactionScope 中進行檔案交易的作業
+                FileTransactionTask fileTransactionTask = new FileTransactionTask();
+                //設定每一個檔案的來源/目的
+                fileTransactionTask.FileTransactionInfoCollection.Add(new FileTransactionInfo(true)
+                {
+                    SourceAbstractFile = new DiskFile(@"D:\Test\123.txt"),
+                    //此屬性設定為 null 時代表交易的目標為刪除檔案
+                    DestinationAbstractFile = new DiskFile(@"D:\Test\456.txt"),
+                    Override = false,
+                    //預設行為
+                    FileCommitAction = null
+                });
+                sequentialTransactionManager.EnlistmentNotificationCollection.Add(fileTransactionTask);
+                using (TransactionScope transactionScope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions()
+                {
+                    IsolationLevel = IsolationLevel.Serializable//Default Isolation Level
+                }))
+                {
+                    sequentialTransactionManager.enlistVolatile();
+                    transactionScope.Complete();
+                }
+            }
+            </code>
+            </example>
+        </member>
+        <member name="M:TEC.Core.Util.Transactions.Tasks.FileTransactionTask.#ctor">
+            <summary>
+            初始化在交易作業中，將檔案變更設定為二階段交易認可的作業。
+            </summary>
+        </member>
+        <member name="M:TEC.Core.Util.Transactions.Tasks.FileTransactionTask.executeInternal">
+            <summary>
+            執行指定的交易內容，此交易必定於<see cref="T:System.Transactions.TransactionScope"/>中執行，其<see cref="P:TEC.Core.Transactions.TransactionUtility.IsInTransactionScope"/>為<c>true</c>。
+            </summary>
+        </member>
+        <member name="M:TEC.Core.Util.Transactions.Tasks.FileTransactionTask.prepareInternal">
+            <summary>
+            告知登記的物件正在準備認可交易，此方法允許擲出例外以準備復原所有交易。其<see cref="P:TEC.Core.Transactions.TransactionUtility.IsInTransactionScope"/>為<c>false</c>。
+            </summary>
+            <exception cref="T:System.ArgumentNullException">當來源檔案為 <c>null</c> 參考時擲出</exception>
+            <exception cref="T:System.IO.FileNotFoundException">當找不到來源檔案時擲出</exception>
+        </member>
+        <member name="M:TEC.Core.Util.Transactions.Tasks.FileTransactionTask.commitInternal">
+            <summary>
+            目前的交易已經允許認可，其<see cref="P:TEC.Core.Transactions.TransactionUtility.IsInTransactionScope"/>為<c>false</c>。
+            </summary>
+        </member>
+        <member name="M:TEC.Core.Util.Transactions.Tasks.FileTransactionTask.rollbackInternal">
+            <summary>
+            復原(中止)目前的交易。其<see cref="P:TEC.Core.Transactions.TransactionUtility.IsInTransactionScope"/>為<c>false</c>。
+            </summary>
+        </member>
+        <member name="M:TEC.Core.Util.Transactions.Tasks.FileTransactionTask.FileTransactionInfoCollection_CollectionChanging_CheckDuplicateElement(System.Object,TEC.Core.Collections.CollectionChangingEventArgs)">
+            <summary>
+            當集合發生變更時，檢查是否重複加入元素
+            </summary>
+            <param name="sender"></param>
+            <param name="e"></param>
+        </member>
+        <member name="M:TEC.Core.Util.Transactions.Tasks.FileTransactionTask.FileTransactionInfoCollection_CollectionChanging_ThrowErrorOnChanging(System.Object,TEC.Core.Collections.CollectionChangingEventArgs)">
+            <summary>
+            當集合發生變更時，檢查是否正在進行二階段交易
+            </summary>
+            <param name="sender"></param>
+            <param name="e"></param>
+        </member>
+        <member name="M:TEC.Core.Util.Transactions.Tasks.FileTransactionTask.FileTransactionInfoCollection_CollectionChanged(System.Object,System.Collections.Specialized.NotifyCollectionChangedEventArgs)">
+            <summary>
+            當要交易的檔案集合發生變更時引發
+            </summary>
+            <param name="sender"></param>
+            <param name="e"></param>
+        </member>
+        <member name="P:TEC.Core.Util.Transactions.Tasks.FileTransactionTask.FileTransactionInfoCollection">
+            <summary>
+            取得用於交易的檔案集合
+            </summary>
+            <exception cref="T:System.NotSupportedException">開始進行二階段交易時，嘗試修改集合時擲出</exception>
+            <exception cref="T:System.ArgumentException">當重複加入元素時擲出</exception>
+        </member>
+        <member name="P:TEC.Core.Util.Transactions.Tasks.FileTransactionTask.TempFileInfoDictionary">
+            <summary>
+            設定或取得臨時檔案的檔案資訊字典。用於在交易發生變更且尚未確認前，用於儲存舊檔案資料的檔案資訊。
+            </summary>
+        </member>
+        <member name="T:TEC.Core.Util.Transactions.Tasks.Resources.FileTransactionTask">
+            <summary>
+              用於查詢當地語系化字串等的強類型資源類別。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Util.Transactions.Tasks.Resources.FileTransactionTask.ResourceManager">
+            <summary>
+              傳回這個類別使用的快取的 ResourceManager 執行個體。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Util.Transactions.Tasks.Resources.FileTransactionTask.Culture">
+            <summary>
+              覆寫目前執行緒的 CurrentUICulture 屬性，對象是所有
+              使用這個強類型資源類別的資源查閱。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Util.Transactions.Tasks.Resources.FileTransactionTask.CollectionChangedWhenTransactionExecuting">
+            <summary>
+              查詢類似 You cannot change {0} when the current file transaction is executing. 的當地語系化字串。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Util.Transactions.Tasks.Resources.FileTransactionTask.FileTransactionInfoIsAlreadyExist">
+            <summary>
+              查詢類似 The {0} is currently in {1}. 的當地語系化字串。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Util.Transactions.Tasks.Resources.FileTransactionTask.SourceFileNotFound">
+            <summary>
+              查詢類似 The source file &quot;{0}&quot; is not found when preparing transaction. 的當地語系化字串。
+            </summary>
+        </member>
+    </members>
+</doc>

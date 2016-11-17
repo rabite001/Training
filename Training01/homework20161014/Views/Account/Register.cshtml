@@ -1,0 +1,17 @@
+﻿
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<form method="post" action="@Url.Action("Register")">
+    <div>
+        帳號:<input type="text" name="account" />
+    </div>
+    <div>
+        密碼:<input type="password" name="password" />
+    </div>
+    <div>
+        姓名:<input type="text" name="name" />
+    </div>
+    <input type="submit" value="註冊" />
+</form>

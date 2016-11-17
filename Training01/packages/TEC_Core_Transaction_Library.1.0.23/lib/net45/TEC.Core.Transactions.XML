@@ -1,0 +1,445 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>TEC.Core.Transactions</name>
+    </assembly>
+    <members>
+        <member name="T:TEC.Core.Transactions.EnlistmentNotifications.EnlistmentNotificationBase">
+            <summary>
+            用於描述一項交易在登記參與時，為此交易提供兩階段交易認可 (Two-Phase Commit) 告知回呼 (Callback)的作業。
+            </summary>
+            <remarks>方法執行相關順序為 <see cref="M:TEC.Core.Transactions.EnlistmentNotifications.EnlistmentNotificationBase.executeInternal"/>、<see cref="M:TEC.Core.Transactions.EnlistmentNotifications.EnlistmentNotificationBase.prepareInternal"/>、<see cref="M:TEC.Core.Transactions.EnlistmentNotifications.EnlistmentNotificationBase.commitInternal"/>；
+            <see cref="M:TEC.Core.Transactions.EnlistmentNotifications.EnlistmentNotificationBase.executeInternal"/>、<see cref="M:TEC.Core.Transactions.EnlistmentNotifications.EnlistmentNotificationBase.prepareInternal"/>、<see cref="M:TEC.Core.Transactions.EnlistmentNotifications.EnlistmentNotificationBase.inDoubtInternal"/>。</remarks>
+            <seealso cref="T:TEC.Core.Transactions.SequentialTransactionManager"/>
+        </member>
+        <member name="M:TEC.Core.Transactions.EnlistmentNotifications.EnlistmentNotificationBase.System#Transactions#IEnlistmentNotification#Commit(System.Transactions.Enlistment)">
+            <summary>
+            告知登記的物件正在認可交易
+            </summary>
+            <param name="enlistment"><see cref="T:System.Transactions.Enlistment"/>物件，用來傳送回應給交易管理員。</param>
+        </member>
+        <member name="M:TEC.Core.Transactions.EnlistmentNotifications.EnlistmentNotificationBase.System#Transactions#IEnlistmentNotification#InDoubt(System.Transactions.Enlistment)">
+            <summary>
+            告知登記的物件交易的狀態不確定。
+            </summary>
+            <param name="enlistment"><see cref="T:System.Transactions.Enlistment"/>物件，用來傳送回應給交易管理員。</param>
+        </member>
+        <member name="M:TEC.Core.Transactions.EnlistmentNotifications.EnlistmentNotificationBase.System#Transactions#IEnlistmentNotification#Prepare(System.Transactions.PreparingEnlistment)">
+            <summary>
+            告知登記的物件正在準備認可交易。
+            </summary>
+            <param name="preparingEnlistment"><see cref="T:System.Transactions.PreparingEnlistment"/>物件，用來傳送回應給交易管理員。</param>
+        </member>
+        <member name="M:TEC.Core.Transactions.EnlistmentNotifications.EnlistmentNotificationBase.System#Transactions#IEnlistmentNotification#Rollback(System.Transactions.Enlistment)">
+            <summary>
+            告知登記的物件正在復原 (中止) 交易，正在交易中的作業會優先執行此方法，接著將依註冊順序依序呼叫此復原作業。
+            </summary>
+            <param name="enlistment"><see cref="T:System.Transactions.Enlistment"/>物件，用來傳送回應給交易管理員。</param>
+        </member>
+        <member name="M:TEC.Core.Transactions.EnlistmentNotifications.EnlistmentNotificationBase.TEC#Core#Transactions#EnlistmentNotifications#IExecutable#execute">
+            <summary>
+            執行目前交易的內容
+            </summary>
+        </member>
+        <member name="M:TEC.Core.Transactions.EnlistmentNotifications.EnlistmentNotificationBase.inDoubtInternal">
+            <summary>
+            在登記的物件交易的狀態不確定所執行的方法，其<see cref="P:TEC.Core.Transactions.TransactionUtility.IsInTransactionScope"/>為<c>false</c>。
+            </summary>
+            <remarks>此時交易已經結束，並已進入二階段交易認可。</remarks>
+        </member>
+        <member name="M:TEC.Core.Transactions.EnlistmentNotifications.EnlistmentNotificationBase.commitInternal">
+            <summary>
+            目前的交易已經允許認可，其<see cref="P:TEC.Core.Transactions.TransactionUtility.IsInTransactionScope"/>為<c>false</c>。
+            </summary>
+            <remarks>此時交易已經結束，並已進入二階段交易認可</remarks>
+        </member>
+        <member name="M:TEC.Core.Transactions.EnlistmentNotifications.EnlistmentNotificationBase.rollbackInternal">
+            <summary>
+            復原(中止)目前的交易。其<see cref="P:TEC.Core.Transactions.TransactionUtility.IsInTransactionScope"/>為<c>false</c>。
+            </summary>
+            <remarks>此時交易已經結束，並已進入二階段交易認可</remarks>
+        </member>
+        <member name="M:TEC.Core.Transactions.EnlistmentNotifications.EnlistmentNotificationBase.prepareInternal">
+            <summary>
+            告知登記的物件正在準備認可交易，此方法允許擲出例外以準備復原所有交易。其<see cref="P:TEC.Core.Transactions.TransactionUtility.IsInTransactionScope"/>為<c>false</c>。
+            </summary>
+            <remarks>
+            <para>
+            此時交易已經結束，並準備進入二階段交易認可，但若在此程式擲出例外時，仍會讓<see cref="M:TEC.Core.Transactions.EnlistmentNotifications.EnlistmentNotificationBase.executeInternal"/>執行的內容復原。
+            </para>
+            <para>
+            注意: 當在此處撰寫相關邏輯時，都應於 Rollback 周全得考慮相關的逆向邏輯(包含此處有可能撰寫的 SQL Statement)。
+            換句話說，此處影響資料庫的資料，若沒有在其他交易範圍時，將直接寫入資料庫而不須經過認可。
+            </para>
+            </remarks>
+        </member>
+        <member name="M:TEC.Core.Transactions.EnlistmentNotifications.EnlistmentNotificationBase.setContextValue(System.String,System.Object)">
+            <summary>
+            設定指定的共享資料索引鍵的值，若先前已經設定過，將直接覆蓋目前的值。在呼叫此方法之前，請確定已經呼叫包含此作業的交易管理員的<see cref="M:TEC.Core.Transactions.SequentialTransactionManager.enlistVolatile(System.Transactions.EnlistmentOptions)"/>方法。
+            </summary>
+            <param name="key">要設定至共享資料的索引鍵</param>
+            <param name="value">相對應的值</param>
+            <exception cref="T:System.NullReferenceException">當目前執行個體沒有加入到任何交易管理員就設定此交易共享資料時發生。</exception>
+        </member>
+        <member name="M:TEC.Core.Transactions.EnlistmentNotifications.EnlistmentNotificationBase.getContextValue(System.String,System.Boolean)">
+            <summary>
+            取得指定共享資料索引鍵的值，若值不存在則傳回<c>null</c>參考或擲出
+            <see cref="T:System.Collections.Generic.KeyNotFoundException"/>例外(依<paramref name="throwKeyNotFoundException"/>輸入參數不同而定)。
+            在呼叫此方法之前，請確定已經呼叫包含此作業的交易管理員的<see cref="M:TEC.Core.Transactions.SequentialTransactionManager.enlistVolatile(System.Transactions.EnlistmentOptions)"/>方法。
+            </summary>
+            <param name="key">要從共享資料取得值的索引鍵</param>
+            <param name="throwKeyNotFoundException">當不包含此索引鍵時，是否要擲出<see cref="T:System.Collections.Generic.KeyNotFoundException"/>例外。</param>
+            <returns>傳回相對應的值，若先前沒有設定過其值，則傳回<c>null</c>參考或擲出<see cref="T:System.Collections.Generic.KeyNotFoundException"/>
+            例外(依<paramref name="throwKeyNotFoundException"/>輸入參數不同而定)。</returns>
+            <exception cref="T:System.NullReferenceException">當目前執行個體沒有加入到任何交易管理員就取得此交易共享資料時發生。</exception>
+        </member>
+        <member name="P:TEC.Core.Transactions.EnlistmentNotifications.EnlistmentNotificationBase.ContextDictionary">
+            <summary>
+            設定或取得當交易在進行中時，同一個<see cref="T:TEC.Core.Transactions.SequentialTransactionManager"/>所共用的交易共享資料
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Transactions.EnlistmentNotifications.EnlistmentNotificationBase.ContextKeys">
+            <summary>
+            傳回目前交易共享資料的所有索引鍵
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Transactions.EnlistmentNotifications.EnlistmentNotificationBase.ContextValues">
+            <summary>
+            傳回目前交易共享資料的所有值
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Transactions.EnlistmentNotifications.EnlistmentNotificationBase.ExceptionObject">
+            <summary>
+            取得執行此作業時(任何階段)最後發生的例外狀況
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Transactions.EnlistmentNotifications.EnlistmentNotificationBase.TransactionManager">
+            <summary>
+            取得與此交易作業相關的交易管理員，若沒有加入至任何交易管理員中，將傳回<c lang="C#">null</c>參考
+            </summary>
+        </member>
+        <member name="M:TEC.Core.Transactions.EnlistmentNotifications.EnlistmentNotificationBase.executeInternal">
+            <summary>
+            執行指定的交易內容，此交易必定於<see cref="T:System.Transactions.TransactionScope"/>中執行，其<see cref="P:TEC.Core.Transactions.TransactionUtility.IsInTransactionScope"/>為<c>true</c>。
+            </summary>
+            <remarks>此方法發生錯誤時允許擲出例外，但是會造就此交易強制復原。</remarks>
+        </member>
+        <member name="T:TEC.Core.Transactions.EnlistmentNotifications.EnlistmentNotificationExecuteEventArgs">
+            <summary>
+            當交易作業執行狀態變更時引發
+            </summary>
+        </member>
+        <member name="M:TEC.Core.Transactions.EnlistmentNotifications.EnlistmentNotificationExecuteEventArgs.#ctor(TEC.Core.Transactions.EnlistmentNotifications.EnlistmentNotificationBase)">
+            <summary>
+            初始化當交易作業執行狀態變更時引發的事件參數
+            </summary>
+            <param name="enlistmentNotificationBase">相關的交易作業</param>
+        </member>
+        <member name="P:TEC.Core.Transactions.EnlistmentNotifications.EnlistmentNotificationExecuteEventArgs.EnlistmentNotification">
+            <summary>
+            取得相關的交易作業
+            </summary>
+        </member>
+        <member name="T:TEC.Core.Transactions.EnlistmentNotifications.IExecutable">
+            <summary>
+            描述類別擁有可執行的方法
+            </summary>
+        </member>
+        <member name="M:TEC.Core.Transactions.EnlistmentNotifications.IExecutable.execute">
+            <summary>
+            執行方法
+            </summary>
+        </member>
+        <member name="T:TEC.Core.Transactions.EnlistmentNotifications.Resources.EnlistmentNotificationBase">
+            <summary>
+              用於查詢當地語系化字串等的強類型資源類別。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Transactions.EnlistmentNotifications.Resources.EnlistmentNotificationBase.ResourceManager">
+            <summary>
+              傳回這個類別使用的快取的 ResourceManager 執行個體。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Transactions.EnlistmentNotifications.Resources.EnlistmentNotificationBase.Culture">
+            <summary>
+              覆寫目前執行緒的 CurrentUICulture 屬性，對象是所有
+              使用這個強類型資源類別的資源查閱。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Transactions.EnlistmentNotifications.Resources.EnlistmentNotificationBase.ContextDictionaryIsNull">
+            <summary>
+              查詢類似 You cannot access(get or set) the context from the instance which inherited &quot;{0}&quot;. 1. If you want to set or get initial values for current transaction, please call &quot;{1}, {5}&quot; method in &quot;{2}&quot; instance. 2. If the transaction is began, please make sure that the instance({3}) is added to the &quot;{4}&quot; collection within the transaction manager({3}). 的當地語系化字串。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Transactions.EnlistmentNotifications.Resources.EnlistmentNotificationBase.ContextKeyNotFound">
+            <summary>
+              查詢類似 There is no such key &quot;{0}&quot; in the current transaction context. 的當地語系化字串。
+            </summary>
+        </member>
+        <member name="T:TEC.Core.Transactions.Resources.SequentialTransactionManager">
+            <summary>
+              用於查詢當地語系化字串等的強類型資源類別。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Transactions.Resources.SequentialTransactionManager.ResourceManager">
+            <summary>
+              傳回這個類別使用的快取的 ResourceManager 執行個體。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Transactions.Resources.SequentialTransactionManager.Culture">
+            <summary>
+              覆寫目前執行緒的 CurrentUICulture 屬性，對象是所有
+              使用這個強類型資源類別的資源查閱。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Transactions.Resources.SequentialTransactionManager.ChangingTransactionCollectionInTransaction">
+            <summary>
+              查詢類似 You cannot modify TransactionsCollection&apos;s elements when a transaction is executing. 的當地語系化字串。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Transactions.Resources.SequentialTransactionManager.ContextKeyNotFound">
+            <summary>
+              查詢類似 There is no such key &quot;{0}&quot; in the current transaction context. 的當地語系化字串。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Transactions.Resources.SequentialTransactionManager.EnlistmentNotificationBelongAnotherTransactionManager">
+            <summary>
+              查詢類似 The EnlistmentNotification you add to the transaction manager is already added to another transaction manager. 的當地語系化字串。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Transactions.Resources.SequentialTransactionManager.NotInTransaction">
+            <summary>
+              查詢類似 Please ensure that the caller is in a transaction scope. 的當地語系化字串。
+            </summary>
+        </member>
+        <member name="T:TEC.Core.Transactions.SequentialTransactionManager">
+            <summary>
+            依順序執行交易作業的管理類別
+            </summary>
+            <example>
+            <code lang="C#">
+            [TestMethod]
+            public void setTransactionContextTest()
+            {
+                SequentialTransactionManager sequentialTransactionManager = new SequentialTransactionManager();
+                sequentialTransactionManager.OnEnlistingVolatile += (sender, e) =&gt;
+                {
+                    //交易前的作業(共用參數、共用驗證)等可以在此事件中處理
+                    (sender as SequentialTransactionManager).setContextValue("SharedValue1", "SomeValue1");
+                };
+                sequentialTransactionManager.OnEnlistedVolatile += (sender, e) =&gt;
+                {
+                    //當所有作業都已登錄後發生
+                };
+                sequentialTransactionManager.OnEnlistmentNotificationExecuting += (sender, e) =&gt;
+                {
+                    //當開始執行某交易作業時引發
+                    //取得相關的交易作業
+                    EnlistmentNotificationBase enlistmentNotificationBase = e.EnlistmentNotification;
+                };
+                sequentialTransactionManager.OnEnlistmentNotificationExecuted += (sender, e) =&gt;
+                {
+                    //當某交易作業執行完成時引發
+                    //取得相關的交易作業
+                    EnlistmentNotificationBase enlistmentNotificationBase = e.EnlistmentNotification;
+                };
+                //之後註冊的交易作業，都可以共用下方所設定的值
+                sequentialTransactionManager.setContextValue("Test1", "Value1");
+                sequentialTransactionManager.setContextValue("Test2", 2);
+                TestEnlistmentNotification testEnlistmentNotification1 = new TestEnlistmentNotification();
+                TestEnlistmentNotification2 testEnlistmentNotification2 = new TestEnlistmentNotification2();
+                //加入的工作有先後順序之分
+                sequentialTransactionManager.EnlistmentNotificationCollection.Add(testEnlistmentNotification1);
+                sequentialTransactionManager.EnlistmentNotificationCollection.Add(testEnlistmentNotification2);
+                using (TransactionScope transactionScope = new TransactionScope())
+                {
+                    //在交易開始時指定值
+                    testEnlistmentNotification1.setContextValue("123", "45");
+                    //登錄並執行所有作業
+                    sequentialTransactionManager.enlistVolatile();
+                    Assert.IsTrue(testEnlistmentNotification1.getContextValue("Test1").ToString().Equals("Value1"));
+                    Assert.IsTrue((int)testEnlistmentNotification2.getContextValue("Test2") == 2);
+                    Assert.IsTrue(testEnlistmentNotification1.getContextValue("123").ToString().Equals("45"));
+                    Assert.IsTrue(testEnlistmentNotification1.getContextValue("SharedValue1").ToString().Equals("SomeValue1"));
+                    Assert.IsTrue(testEnlistmentNotification2.getContextValue("SharedValue1").ToString().Equals("SomeValue1"));
+                    transactionScope.Complete();
+                }
+            }
+            /// &lt;summary&gt;
+            /// 允許用於交易的作業 1
+            /// &lt;/summary&gt;
+            private class TestEnlistmentNotification : EnlistmentNotificationBase
+            {
+                protected override void executeInternal()
+                {
+                    //設定Execute1的值
+                    base.setContextValue("Execute1", "123");
+                    //針對此作業的執行內容
+                    //此內容將於 prepareInternal() 方法之前執行。
+                }
+                protected override void prepareInternal()
+                {
+                    //此邏輯的內容都應該實作相對應的 Rollback 邏輯(包含此處撰寫的 SQL Script) 
+                    //針對此作業的準備認可交易的內容，視需要複寫
+                    //當準備認可期間有發生邏輯衝突時，可直接擲出例外以進行交易復原
+                    base.prepareInternal();
+                }
+                protected override void commitInternal()
+                {
+                    //設定Commit1的值，視需要複寫
+                    base.setContextValue("Commit1", "123");
+                    //針對此作業的認可內容
+                    base.commitInternal();
+                }
+                protected override void inDoubtInternal()
+                {
+                    //當交易不確定時要執行的內容，視需要複寫
+                    base.inDoubtInternal();
+                }
+                protected override void rollbackInternal()
+                {
+                    //針對此作業的復原內容，視需要複寫
+                    base.rollbackInternal();
+                }
+            }
+            /// &lt;summary&gt;
+            /// 允許用於交易的作業 2
+            /// &lt;/summary&gt;
+            private class TestEnlistmentNotification2 : EnlistmentNotificationBase
+            {
+                protected override void executeInternal()
+                {
+                    //取得Execute1的值
+                    string validate1 = base.getContextValue("Execute1", true).ToString();
+                    //針對此作業的執行內容
+                    //此內容將於 prepareInternal() 方法之前執行。
+                }
+                protected override void prepareInternal()
+                {
+                    //針對此作業的準備認可交易的內容，視需要複寫
+                    //當準備認可期間有發生邏輯衝突時，可直接擲出例外以進行交易復原
+                    base.prepareInternal();
+                }
+                protected override void commitInternal()
+                {
+                    //取得Commit1的值，視需要複寫
+                    string commit1 = base.getContextValue("Commit1", true).ToString();
+                    //針對此作業的認可內容
+                    base.commitInternal();
+                }
+                protected override void inDoubtInternal()
+                {
+                    //當交易不確定時要執行的內容，視需要複寫
+                    base.inDoubtInternal();
+                }
+                protected override void rollbackInternal()
+                {
+                    //針對此作業的復原內容，視需要複寫
+                    base.rollbackInternal();
+                }
+            }
+            </code>
+            </example>
+            <remarks>在交易進行中時，不可以再加入新的作業。</remarks>
+            <seealso cref="T:TEC.Core.Transactions.EnlistmentNotifications.EnlistmentNotificationBase"/>
+        </member>
+        <member name="M:TEC.Core.Transactions.SequentialTransactionManager.#ctor">
+            <summary>
+            初始化依順序執行交易作業的管理物件
+            </summary>
+        </member>
+        <member name="M:TEC.Core.Transactions.SequentialTransactionManager.enlistVolatile(System.Transactions.EnlistmentOptions)">
+            <summary>
+            將所有已經登錄的交易作業登記支援兩階段交易認可的暫時性 (Volatile) 資源管理員以參與交易。當作業登錄完成後，將逐項執行<see cref="M:TEC.Core.Transactions.EnlistmentNotifications.EnlistmentNotificationBase.executeInternal"/>。
+            </summary>
+            <param name="enlistmentOptions">如果資源管理員要在準備階段執行其他工作，則為 <see cref="F:System.Transactions.EnlistmentOptions.EnlistDuringPrepareRequired"/></param>
+            <exception cref="T:System.InvalidOperationException">當不在任何一個交易中呼叫此方法時擲出。</exception>
+        </member>
+        <member name="M:TEC.Core.Transactions.SequentialTransactionManager.setContextValue(System.String,System.Object)">
+            <summary>
+            設定指定的共享資料索引鍵的值，若先前已經設定過，將直接覆蓋目前的值
+            </summary>
+            <param name="key">要設定至共享資料的索引鍵</param>
+            <param name="value">相對應的值</param>
+        </member>
+        <member name="M:TEC.Core.Transactions.SequentialTransactionManager.getContextValue(System.String,System.Boolean)">
+            <summary>
+            取得指定共享資料索引鍵的值，若值不存在則傳回<c>null</c>參考或擲出
+            <see cref="T:System.Collections.Generic.KeyNotFoundException"/>例外(依<paramref name="throwKeyNotFoundException"/>輸入參數不同而定)。
+            </summary>
+            <param name="key">要從共享資料取得值的索引鍵</param>
+            <param name="throwKeyNotFoundException">當不包含此索引鍵時，是否要擲出<see cref="T:System.Collections.Generic.KeyNotFoundException"/>例外。</param>
+            <returns>傳回相對應的值，若先前沒有設定過其值，則傳回<c>null</c>參考或擲出<see cref="T:System.Collections.Generic.KeyNotFoundException"/>
+            例外(依<paramref name="throwKeyNotFoundException"/>輸入參數不同而定)。</returns>
+        </member>
+        <member name="P:TEC.Core.Transactions.SequentialTransactionManager.ContextKeys">
+            <summary>
+            傳回目前交易共享資料的所有索引鍵
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Transactions.SequentialTransactionManager.ContextValues">
+            <summary>
+            傳回目前交易共享資料的所有值
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Transactions.SequentialTransactionManager.ContextDictionary">
+            <summary>
+            取得當交易在進行中時，所共用的交易共享資料
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Transactions.SequentialTransactionManager.EnlistmentNotificationCollection">
+            <summary>
+            取得目前已經登錄的交易作業
+            </summary>
+        </member>
+        <member name="E:TEC.Core.Transactions.SequentialTransactionManager.OnEnlistingVolatile">
+            <summary>
+            當開始登錄交易作業之前發生
+            </summary>
+        </member>
+        <member name="E:TEC.Core.Transactions.SequentialTransactionManager.OnEnlistedVolatile">
+            <summary>
+            當所有交易作業登錄完成後發生
+            </summary>
+        </member>
+        <member name="E:TEC.Core.Transactions.SequentialTransactionManager.OnEnlistmentNotificationExecuting">
+            <summary>
+            在交易作業執行前引發
+            </summary>
+        </member>
+        <member name="E:TEC.Core.Transactions.SequentialTransactionManager.OnEnlistmentNotificationExecuted">
+            <summary>
+            在交易作業執行完成後引發
+            </summary>
+        </member>
+        <member name="T:TEC.Core.Transactions.TransactionUtility">
+            <summary>
+            用於交易相關的工具類別
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Transactions.TransactionUtility.IsInTransactionScope">
+            <summary>
+            取得程式碼是否在<see cref="T:System.Transactions.TransactionScope"/>中執行
+            </summary>
+            <example>
+            <code lang="C#">
+            public void IsInTransactionScopeTest()
+            {
+                bool result1 = TransactionUtility.IsInTransactionScope;//false
+                using (new TransactionScope())
+                {
+                    bool result2 = TransactionUtility.IsInTransactionScope;//true
+                }
+                 bool result3 = TransactionUtility.IsInTransactionScope;//false
+            }
+            </code>
+            </example>
+        </member>
+        <member name="M:TEC.Core.Transactions.TransactionUtility.createGetCurrentScopeDelegate">
+            <summary>
+            建立取得目前scope的方法委派
+            </summary>
+            <returns></returns>
+        </member>
+    </members>
+</doc>

@@ -1,0 +1,926 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>TEC.Core.OData.Core</name>
+    </assembly>
+    <members>
+        <member name="T:TEC.Core.OData.Core.Data.CacheProvider.AbstractFileUpdatedEventArgs">
+            <summary>
+            當快取檔案完成更新時引發的事件參數
+            </summary>
+        </member>
+        <member name="M:TEC.Core.OData.Core.Data.CacheProvider.AbstractFileUpdatedEventArgs.#ctor(Xceed.FileSystem.AbstractFile)">
+            <summary>
+            初始化快取檔案完成更新時引發的事件參數
+            </summary>
+            <param name="abstractFile">完成更新後的檔案</param>
+        </member>
+        <member name="P:TEC.Core.OData.Core.Data.CacheProvider.AbstractFileUpdatedEventArgs.AbstractFile">
+            <summary>
+            取得更新後的快取檔案
+            </summary>
+        </member>
+        <member name="T:TEC.Core.OData.Core.Data.CacheProvider.SingleFileIntervalODataCacheProviderBase">
+             <summary>
+             用於以單一檔案作為快取資料來源的OData快取提供者基底型別，並在指定時間間隔自動更新資料來源。
+             此型別允許在檔案快取到期後直到下次OData資料載入完成之前，皆以舊檔案之資料為快取來源，並在新檔案建立完成時引發事件通知。
+             </summary>
+             <remarks>
+             1. 在繼承此方法時做類別之前，請謹慎考慮多執行緒會重複呼叫產生檔案的問題，建議在衍伸的子類別中使用單一執行個體模式(獨體模式;Singleton Pattern)&lt;br/&gt;
+             2. 排程器於自動產生檔案期間發生的例外僅會以<see cref="E:TEC.Core.OData.Core.Data.CacheProvider.SingleFileIntervalODataCacheProviderBase.OnUnhandledExceptionThrew"/>事件引發，不會擲出例外。
+             </remarks>
+             <example>
+             <para>
+             實作此範例之前，請先完成<see cref="T:TEC.Core.OData.Core.Definition.CacheProvider.MemoryODataDefinitionCacheProvider"/>之範例
+             </para>
+             <para>GeneralWeather36HoursData.cs</para>
+             <code lang="C#">
+             /// &lt;summary&gt;
+             /// 今明36小時縣市天氣預報的資料，此類別不可以被繼承。
+             /// &lt;/summary&gt;
+             public sealed class GeneralWeather36HoursData : SingleFileIntervalODataCacheProviderBase
+             {
+                 private static readonly object syncObj = new object();
+                 private static GeneralWeather36HoursData instance = null;
+                 /// &lt;summary&gt;
+                 /// 初始化今明36小時縣市天氣預報資料的執行個體
+                 /// &lt;/summary&gt;
+                 private GeneralWeather36HoursData()
+                     : base(Global.TawianGovODataDefinitionCacheProvider, "一般天氣預報-今明36小時天氣預報",
+                         new DiskFile(@"X:\Folder\CacheFile.Extension"),
+                         new TimePeriodCollection(new[] { new TimeRange(DateTime.Now, DateTime.MaxValue, true) }),
+                         //60分鐘定時更新一次
+                         60 * 60 * 1000) { }
+                 /// &lt;summary&gt;
+                 /// 取得今明36小時縣市天氣預報資訊
+                 /// &lt;/summary&gt;
+                 /// &lt;returns&gt;&lt;/returns&gt;
+                 public WeatherDataSetModel getWeatherDataSetModel()
+                 {
+                     return JsonConvert.DeserializeObject&lt;WeatherDataSetModel&gt;(File.ReadAllText(base.getCurrentAbstractFile(true).FullName));
+                 }
+                 /// &lt;summary&gt;
+                 /// 產生用於快取的資訊，並將其內容寫入至&lt;paramref name="abstractFile"/&gt;中
+                 /// &lt;/summary&gt;
+                 /// &lt;param name="abstractFile"&gt;寫入資訊的目標檔案&lt;/param&gt;
+                 /// &lt;returns&gt;已儲存快取資料的&lt;see cref="Xceed.FileSystem.AbstractFile"/&gt;物件&lt;/returns&gt;
+                 protected override async Task writeCacheAbstractFileAsync(AbstractFile abstractFile)
+                 {
+                     HttpClient httpClient = new HttpClient();
+                     var weatherResponseMessage = await httpClient.GetAsync(this.ODataDefinitionLazy.Value.Uri).ConfigureAwait(false);
+                     #region 分析取得的檔案內容
+                     XDocument document = XDocument.Load(await weatherResponseMessage.Content.ReadAsStreamAsync().ConfigureAwait(false));
+                     string xmlNameSpaceTemplate = String.Format(@"{{{{{0}}}}}{{0}}", document.Root.Name.Namespace);
+                     WeatherDataSetModel result = new WeatherDataSetModel();
+                     XElement cwbopendataElement = document.Descendants(String.Format(xmlNameSpaceTemplate, "cwbopendata")).FirstOrDefault();
+                     result.Identifier = new Guid(cwbopendataElement.Element(String.Format(xmlNameSpaceTemplate, "identifier")).Value);
+                     result.Sender = cwbopendataElement.Element(String.Format(xmlNameSpaceTemplate, "sender")).Value;
+                     result.SendTime = DateTime.Parse(cwbopendataElement.Element(String.Format(xmlNameSpaceTemplate, "sent")).Value);
+                     result.Status = cwbopendataElement.Element(String.Format(xmlNameSpaceTemplate, "status")).Value;
+                     result.MessageType = cwbopendataElement.Element(String.Format(xmlNameSpaceTemplate, "msgType")).Value;
+                     result.Source = cwbopendataElement.Element(String.Format(xmlNameSpaceTemplate, "source")).Value;
+                     result.DataId = cwbopendataElement.Element(String.Format(xmlNameSpaceTemplate, "dataid")).Value;
+                     result.Scope = cwbopendataElement.Element(String.Format(xmlNameSpaceTemplate, "scope")).Value;
+            
+                     XElement datasetElement = cwbopendataElement.Element(String.Format(xmlNameSpaceTemplate, "dataset"));
+                     result.Description = datasetElement.Element(String.Format(xmlNameSpaceTemplate, "datasetInfo")).Element(String.Format(xmlNameSpaceTemplate, "datasetDescription")).Value;
+                     result.IssueTime = DateTime.Parse(datasetElement.Element(String.Format(xmlNameSpaceTemplate, "datasetInfo")).Element(String.Format(xmlNameSpaceTemplate, "issueTime")).Value);
+                     result.UpdateTime = DateTime.Parse(datasetElement.Element(String.Format(xmlNameSpaceTemplate, "datasetInfo")).Element(String.Format(xmlNameSpaceTemplate, "update")).Value);
+            
+                     result.LocationList = datasetElement.Descendants(String.Format(xmlNameSpaceTemplate, "location"))
+                           .Select(locationElenemt =&gt;
+                           {
+                               LocationModel locationModel = new LocationModel();
+                               locationModel.Name = locationElenemt.Element(String.Format(xmlNameSpaceTemplate, "locationName")).Value;
+                               //天氣狀態
+                               locationModel.WeatherStatus = locationElenemt.Descendants(String.Format(xmlNameSpaceTemplate, "weatherElement"))
+                                   .First(weatherElement =&gt; weatherElement.Element(String.Format(xmlNameSpaceTemplate, "elementName")).Value == "Wx")
+                                   .Descendants(String.Format(xmlNameSpaceTemplate, "time"))
+                                   .Select(timeElement =&gt;
+                                   {
+                                       WeatherStatusModel weatherStatusModel = new WeatherStatusModel();
+                                       weatherStatusModel.StatusName = timeElement.Element(String.Format(xmlNameSpaceTemplate, "parameter")).Element(String.Format(xmlNameSpaceTemplate, "parameterName")).Value;
+                                       weatherStatusModel.StatusValue = timeElement.Element(String.Format(xmlNameSpaceTemplate, "parameter")).Element(String.Format(xmlNameSpaceTemplate, "parameterValue")).Value;
+                                       weatherStatusModel.TimeRange = new Itenso.TimePeriod.TimeRange(
+                                           DateTime.Parse(timeElement.Element(String.Format(xmlNameSpaceTemplate, "startTime")).Value),
+                                           DateTime.Parse(timeElement.Element(String.Format(xmlNameSpaceTemplate, "endTime")).Value), true);
+                                       return weatherStatusModel;
+                                   }).ToList();
+                               //最高溫
+                               locationModel.MaxTemperature = locationElenemt.Descendants(String.Format(xmlNameSpaceTemplate, "weatherElement"))
+                                   .First(weatherElement =&gt; weatherElement.Element(String.Format(xmlNameSpaceTemplate, "elementName")).Value == "MaxT")
+                                   .Descendants(String.Format(xmlNameSpaceTemplate, "time"))
+                                   .Select(timeElement =&gt;
+                                   {
+                                       TemperatureModel temperatureModel = new TemperatureModel();
+                                       temperatureModel.Temperature = Double.Parse(timeElement.Element(String.Format(xmlNameSpaceTemplate, "parameter")).Element(String.Format(xmlNameSpaceTemplate, "parameterName")).Value);
+                                       temperatureModel.Unit = timeElement.Element(String.Format(xmlNameSpaceTemplate, "parameter")).Element(String.Format(xmlNameSpaceTemplate, "parameterUnit")).Value;
+                                       temperatureModel.TimeRange = new Itenso.TimePeriod.TimeRange(
+                                           DateTime.Parse(timeElement.Element(String.Format(xmlNameSpaceTemplate, "startTime")).Value),
+                                           DateTime.Parse(timeElement.Element(String.Format(xmlNameSpaceTemplate, "endTime")).Value), true);
+                                       return temperatureModel;
+                                   }).ToList();
+                               //最低溫
+                               locationModel.MinTemperature = locationElenemt.Descendants(String.Format(xmlNameSpaceTemplate, "weatherElement"))
+                                   .First(weatherElement =&gt; weatherElement.Element(String.Format(xmlNameSpaceTemplate, "elementName")).Value == "MinT")
+                                   .Descendants(String.Format(xmlNameSpaceTemplate, "time"))
+                                   .Select(timeElement =&gt;
+                                   {
+                                       TemperatureModel temperatureModel = new TemperatureModel();
+                                       temperatureModel.Temperature = Double.Parse(timeElement.Element(String.Format(xmlNameSpaceTemplate, "parameter")).Element(String.Format(xmlNameSpaceTemplate, "parameterName")).Value);
+                                       temperatureModel.Unit = timeElement.Element(String.Format(xmlNameSpaceTemplate, "parameter")).Element(String.Format(xmlNameSpaceTemplate, "parameterUnit")).Value;
+                                       temperatureModel.TimeRange = new Itenso.TimePeriod.TimeRange(
+                                           DateTime.Parse(timeElement.Element(String.Format(xmlNameSpaceTemplate, "startTime")).Value),
+                                           DateTime.Parse(timeElement.Element(String.Format(xmlNameSpaceTemplate, "endTime")).Value), true);
+                                       return temperatureModel;
+                                   }).ToList();
+                               //舒適度
+                               locationModel.ConfortInfomation = locationElenemt.Descendants(String.Format(xmlNameSpaceTemplate, "weatherElement"))
+                                   .First(weatherElement =&gt; weatherElement.Element(String.Format(xmlNameSpaceTemplate, "elementName")).Value == "CI")
+                                   .Descendants(String.Format(xmlNameSpaceTemplate, "time"))
+                                   .Select(timeElement =&gt;
+                                   {
+                                       ConfortInfomationModel confortInfomationModel = new ConfortInfomationModel();
+                                       confortInfomationModel.Name = timeElement.Element(String.Format(xmlNameSpaceTemplate, "parameter")).Element(String.Format(xmlNameSpaceTemplate, "parameterName")).Value;
+                                       confortInfomationModel.TimeRange = new Itenso.TimePeriod.TimeRange(
+                                           DateTime.Parse(timeElement.Element(String.Format(xmlNameSpaceTemplate, "startTime")).Value),
+                                           DateTime.Parse(timeElement.Element(String.Format(xmlNameSpaceTemplate, "endTime")).Value), true);
+                                       return confortInfomationModel;
+                                   }).ToList();
+                               //降雨機率
+                               locationModel.POP = locationElenemt.Descendants(String.Format(xmlNameSpaceTemplate, "weatherElement"))
+                                   .First(weatherElement =&gt; weatherElement.Element(String.Format(xmlNameSpaceTemplate, "elementName")).Value == "PoP")
+                                   .Descendants(String.Format(xmlNameSpaceTemplate, "time"))
+                                   .Select(timeElement =&gt;
+                                   {
+                                       ProbabilityOfPrecipitationModel probabilityOfPrecipitationModel = new ProbabilityOfPrecipitationModel();
+                                       probabilityOfPrecipitationModel.Probability = Double.Parse(timeElement.Element(String.Format(xmlNameSpaceTemplate, "parameter")).Element(String.Format(xmlNameSpaceTemplate, "parameterName")).Value);
+                                       probabilityOfPrecipitationModel.Unit = timeElement.Element(String.Format(xmlNameSpaceTemplate, "parameter")).Element(String.Format(xmlNameSpaceTemplate, "parameterUnit")).Value;
+                                       probabilityOfPrecipitationModel.TimeRange = new Itenso.TimePeriod.TimeRange(
+                                           DateTime.Parse(timeElement.Element(String.Format(xmlNameSpaceTemplate, "startTime")).Value),
+                                           DateTime.Parse(timeElement.Element(String.Format(xmlNameSpaceTemplate, "endTime")).Value), true);
+                                       return probabilityOfPrecipitationModel;
+                                   }).ToList();
+                               return locationModel;
+                           }).ToList();
+                     #endregion
+                     using (Stream stream = abstractFile.OpenWrite(true))
+                     {
+                         StreamWriter streamWriter = new StreamWriter(stream);
+                         streamWriter.Write(JsonConvert.SerializeObject(result));
+                         streamWriter.Flush();//otherwise you are risking empty stream
+                         stream.Seek(0, SeekOrigin.Begin);
+                     }
+                 }
+                 /// &lt;summary&gt;
+                 /// 取得唯一的&lt;see cref="GeneralWeather36HoursData"/&gt;執行個體
+                 /// &lt;/summary&gt;
+                 public static GeneralWeather36HoursData Instance
+                 {
+                     get
+                     {
+                         if (GeneralWeather36HoursData.instance == null)
+                         {
+                             lock (GeneralWeather36HoursData.syncObj)
+                             {
+                                 if (GeneralWeather36HoursData.instance == null)
+                                 {
+                                     GeneralWeather36HoursData.instance = new GeneralWeather36HoursData();
+                                 }
+                             }
+                         }
+                         return GeneralWeather36HoursData.instance;
+                     }
+                 }
+             }
+             </code>
+             </example>
+             <seealso cref="T:TEC.Core.OData.Core.Definition.CacheProvider.ODataDefinitionCacheProviderBase"/>
+             <seealso cref="T:TEC.Core.OData.Core.Data.CacheProvider.SingleFileODataCacheProviderBase"/>
+        </member>
+        <member name="F:TEC.Core.OData.Core.Data.CacheProvider.SingleFileIntervalODataCacheProviderBase.isDisposed">
+            <summary>
+            物件是否已經完成清理
+            </summary>
+        </member>
+        <member name="M:TEC.Core.OData.Core.Data.CacheProvider.SingleFileIntervalODataCacheProviderBase.#ctor(System.Func{TEC.Core.OData.Core.Definition.ODataDefinition},Xceed.FileSystem.AbstractFile,Itenso.TimePeriod.ITimePeriodCollection,System.Int32)">
+            <summary>
+            初始化以排程更新的單一檔案作為快取資料來源的OData快取提供者基底型別
+            </summary>
+            <param name="oDataDefinitionFunc">取得定義資料的方法封裝</param>
+            <param name="targetFile">快取檔案資訊</param>
+            <param name="interval">在有效時間內執行的間隔毫秒數，當每次毫秒數耗盡時，會自動更新資料來源</param>
+            <param name="timePeriodCollection">指定自動更新檔案來源的有效執行區間集合</param>
+            <exception cref="T:System.ArgumentNullException">當<paramref name="targetFile"/>為<c>null</c>參考時擲出</exception>
+        </member>
+        <member name="M:TEC.Core.OData.Core.Data.CacheProvider.SingleFileIntervalODataCacheProviderBase.#ctor(TEC.Core.OData.Core.Definition.CacheProvider.ODataDefinitionCacheProviderBase,System.String,Xceed.FileSystem.AbstractFile,Itenso.TimePeriod.ITimePeriodCollection,System.Int32)">
+            <summary>
+            初始化以排程更新的單一檔案作為快取資料來源的OData快取提供者基底型別
+            </summary>
+            <param name="oDataDefinitionCacheProvider">定義快取提供者</param>
+            <param name="name">用於辨識定義的名稱</param>
+            <param name="targetFile">快取檔案資訊</param>
+            <param name="interval">在有效時間內執行的間隔毫秒數，當每次毫秒數耗盡時，會自動更新資料來源</param>
+            <param name="timePeriodCollection">指定自動更新檔案來源的有效執行區間集合</param>
+            <exception cref="T:System.ArgumentNullException">當<paramref name="targetFile"/>為<c>null</c>參考時擲出</exception>
+        </member>
+        <member name="M:TEC.Core.OData.Core.Data.CacheProvider.SingleFileIntervalODataCacheProviderBase.#ctor(TEC.Core.OData.Core.Definition.CacheProvider.ODataDefinitionCacheProviderBase,System.Func{System.Collections.Generic.List{TEC.Core.OData.Core.Definition.ODataDefinition},TEC.Core.OData.Core.Definition.ODataDefinition},Xceed.FileSystem.AbstractFile,Itenso.TimePeriod.ITimePeriodCollection,System.Int32)">
+            <summary>
+            初始化以排程更新的單一檔案作為快取資料來源的OData快取提供者基底型別
+            </summary>
+            <param name="oDataDefinitionCacheProvider">定義快取提供者</param>
+            <param name="oDataDefinitionSelector">在所有定義中取得此個體所使用的定義物件</param>
+            <param name="targetFile">快取檔案資訊</param>
+            <param name="interval">在有效時間內執行的間隔毫秒數，當每次毫秒數耗盡時，會自動更新資料來源</param>
+            <param name="timePeriodCollection">指定自動更新檔案來源的有效執行區間集合</param>
+            <exception cref="T:System.ArgumentNullException">當<paramref name="targetFile"/>為<c>null</c>參考時擲出</exception>
+        </member>
+        <member name="M:TEC.Core.OData.Core.Data.CacheProvider.SingleFileIntervalODataCacheProviderBase.initializeInstance(Xceed.FileSystem.AbstractFile,Itenso.TimePeriod.ITimePeriodCollection,System.Int32)">
+            <summary>
+            初始化執行個體
+            </summary>
+            <param name="abstractFile">用於儲存快取的檔案</param>
+            <param name="interval">在有效時間內執行的間隔毫秒數，當每次毫秒數耗盡時，會自動更新資料來源</param>
+            <param name="timePeriodCollection">指定自動更新檔案來源的有效執行區間集合</param>
+        </member>
+        <member name="M:TEC.Core.OData.Core.Data.CacheProvider.SingleFileIntervalODataCacheProviderBase.getIsCurrentAbstractFileExpired(Xceed.FileSystem.AbstractFile)">
+            <summary>
+            取得目前暫存的檔案是否已經超過暫存標準
+            </summary>
+            <param name="abstractFile">要判斷的檔案</param>
+            <returns>判斷是否已經超過暫存時限或違反標準</returns>
+        </member>
+        <member name="M:TEC.Core.OData.Core.Data.CacheProvider.SingleFileIntervalODataCacheProviderBase.Dispose(System.Boolean)">
+            <summary>
+            釋放目前物件的資源
+            </summary>
+            <param name="isDisposing">是否開始處理物件的資源釋放行為</param>
+        </member>
+        <member name="P:TEC.Core.OData.Core.Data.CacheProvider.SingleFileIntervalODataCacheProviderBase.Interval">
+            <summary>
+            設定或取得執行的間隔毫秒
+            </summary>
+        </member>
+        <member name="P:TEC.Core.OData.Core.Data.CacheProvider.SingleFileIntervalODataCacheProviderBase.TimerStatus">
+            <summary>
+            取得目前的排程器狀態
+            </summary>
+        </member>
+        <member name="P:TEC.Core.OData.Core.Data.CacheProvider.SingleFileIntervalODataCacheProviderBase.NextUpdateDateTime">
+            <summary>
+            取得下次執行時間
+            </summary>
+        </member>
+        <member name="P:TEC.Core.OData.Core.Data.CacheProvider.SingleFileIntervalODataCacheProviderBase.SchedulerTimersTimerStorage">
+            <summary>
+            設定或取得關於自動更新資料來源的排程器
+            </summary>
+        </member>
+        <member name="E:TEC.Core.OData.Core.Data.CacheProvider.SingleFileIntervalODataCacheProviderBase.OnUnhandledExceptionThrew">
+            <summary>
+            當在執行排程事件時，有未處理的例外狀況發生時引發
+            </summary>
+        </member>
+        <member name="T:TEC.Core.OData.Core.Data.CacheProvider.SingleFileODataCacheProviderBase">
+            <summary>
+            用於以單一檔案作為快取資料來源的OData快取提供者基底型別。
+            此型別允許在檔案快取到期後直到下次OData資料載入完成之前，皆以舊檔案之資料為快取來源，並在新檔案建立完成時引發事件通知。
+            </summary>
+            <remarks>
+            在繼承此方法時做類別之前，請謹慎考慮多執行緒會重複呼叫產生檔案的問題，建議在衍伸的子類別中使用單一執行個體模式(獨體模式;Singleton Pattern)
+            </remarks>
+            <example>
+            <para>
+            實作此範例之前，請先完成<see cref="T:TEC.Core.OData.Core.Definition.CacheProvider.MemoryODataDefinitionCacheProvider"/>之範例
+            </para>
+            <para>Zip32Data.cs</para>
+            <code lang="C#">
+            /// &lt;summary&gt;
+            /// 3+2碼郵遞區號的資料，此類別不可以被繼承。
+            /// &lt;/summary&gt;
+            public sealed class Zip32Data : SingleFileODataCacheProviderBase
+            {
+                private static readonly object syncObj = new object();
+                private static Zip32Data instance = null;
+                /// &lt;summary&gt;
+                /// 初始化3+2碼郵遞區號資料的執行個體
+                /// &lt;/summary&gt;
+                private Zip32Data()
+                    : base(Global.TawianGovODataDefinitionCacheProvider, "3+2碼郵遞區號",
+                        //您可以儲存在任何磁碟位置
+                        new DiskFile(@"X:\Folder\File.Extension") { }
+                /// &lt;summary&gt;
+                /// 取得3+2郵遞區號地址資訊
+                /// &lt;/summary&gt;
+                /// &lt;returns&gt;&lt;/returns&gt;
+                public List&lt;AddressModel&gt; getAddressModelList()
+                {
+                    return JsonConvert.DeserializeObject&lt;List&lt;AddressModel&gt;&gt;(File.ReadAllText(base.getCurrentAbstractFile(false).FullName));
+                }
+                /// &lt;summary&gt;
+                /// 產生用於快取的資訊，並將其內容寫入至&lt;paramref name="abstractFile"/&gt;中
+                /// &lt;/summary&gt;
+                /// &lt;param name="abstractFile"&gt;寫入資訊的目標檔案&lt;/param&gt;
+                /// &lt;returns&gt;已儲存快取資料的&lt;see cref="Xceed.FileSystem.AbstractFile"/&gt;物件&lt;/returns&gt;
+                protected override async Task writeCacheAbstractFileAsync(AbstractFile abstractFile)
+                {
+                    HttpClient httpClient = new HttpClient();
+                    var zip32ResponseMessage = await httpClient.GetAsync(this.ODataDefinitionLazy.Value.Uri);
+                    //分析取得的檔案內容
+                    using (Stream stream = abstractFile.OpenWrite(true))
+                    {
+                        StreamWriter streamWriter = new StreamWriter(stream);
+                        streamWriter.Write(
+                            JsonConvert.SerializeObject((await zip32ResponseMessage.Content.ReadAsStringAsync().ConfigureAwait(false))
+                            .Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries)
+                            .Select(rawString =&gt; OrderedMemberFormatter.deserializeObject&lt;AddressModel&gt;(rawString, this.ODataDefinitionLazy.Value.DataEncoding[0]))));
+                        streamWriter.Flush();//otherwise you are risking empty stream
+                        stream.Seek(0, SeekOrigin.Begin);
+                    }
+                }
+                /// &lt;summary&gt;
+                /// 取得目前暫存的檔案是否已經超過暫存標準
+                /// &lt;/summary&gt;
+                /// &lt;param name="abstractFile"&gt;要判斷的檔案&lt;/param&gt;
+                /// &lt;returns&gt;判斷是否已經超過暫存時限或違反標準&lt;/returns&gt;
+                protected override bool getIsCurrentAbstractFileExpired(AbstractFile abstractFile)
+                {
+                    //以建立時間往後推算6小時到期
+                    return abstractFile.CreationDateTime.AddHours(6).CompareTo(DateTime.Now) &lt;= 0;
+                }
+                /// &lt;summary&gt;
+                /// 取得唯一的&lt;see cref="Zip32Data"/&gt;執行個體
+                /// &lt;/summary&gt;
+                public static Zip32Data Instance
+                {
+                    get
+                    {
+                        if (Zip32Data.instance == null)
+                        {
+                            lock (Zip32Data.syncObj)
+                            {
+                                if (Zip32Data.instance == null)
+                                {
+                                    Zip32Data.instance = new Zip32Data();
+                                }
+                            }
+                        }
+                        return Zip32Data.instance;
+                    }
+                }
+            }
+            </code>
+            </example>
+            <seealso cref="T:TEC.Core.OData.Core.Definition.CacheProvider.ODataDefinitionCacheProviderBase"/>
+        </member>
+        <member name="F:TEC.Core.OData.Core.Data.CacheProvider.SingleFileODataCacheProviderBase.isDisposed">
+            <summary>
+            物件是否已經完成清理
+            </summary>
+        </member>
+        <member name="M:TEC.Core.OData.Core.Data.CacheProvider.SingleFileODataCacheProviderBase.#ctor(System.Func{TEC.Core.OData.Core.Definition.ODataDefinition},Xceed.FileSystem.AbstractFile)">
+            <summary>
+            初始化以單一檔案作為快取資料來源的OData快取提供者基底型別
+            </summary>
+            <param name="oDataDefinitionFunc">產生定義資料的方法封裝</param>
+            <param name="targetFile">快取檔案資訊</param>
+            <exception cref="T:System.ArgumentNullException">當<paramref name="targetFile"/>為<c>null</c>參考時擲出</exception>
+        </member>
+        <member name="M:TEC.Core.OData.Core.Data.CacheProvider.SingleFileODataCacheProviderBase.#ctor(TEC.Core.OData.Core.Definition.CacheProvider.ODataDefinitionCacheProviderBase,System.String,Xceed.FileSystem.AbstractFile)">
+            <summary>
+            初始化以單一檔案作為快取資料來源的OData快取提供者基底型別
+            </summary>
+            <param name="oDataDefinitionCacheProvider">定義快取提供者</param>
+            <param name="name">用於辨識定義的名稱</param>
+            <param name="targetFile">快取檔案資訊</param>
+            <exception cref="T:System.ArgumentNullException">當<paramref name="targetFile"/>為<c>null</c>參考時擲出</exception>
+        </member>
+        <member name="M:TEC.Core.OData.Core.Data.CacheProvider.SingleFileODataCacheProviderBase.#ctor(TEC.Core.OData.Core.Definition.CacheProvider.ODataDefinitionCacheProviderBase,System.Func{System.Collections.Generic.List{TEC.Core.OData.Core.Definition.ODataDefinition},TEC.Core.OData.Core.Definition.ODataDefinition},Xceed.FileSystem.AbstractFile)">
+            <summary>
+            初始化以單一檔案作為快取資料來源的OData快取提供者基底型別
+            </summary>
+            <param name="oDataDefinitionCacheProvider">定義快取提供者</param>
+            <param name="oDataDefinitionSelector">在所有定義中取得此個體所使用的定義物件</param>
+            <param name="targetFile">快取檔案資訊</param>
+            <exception cref="T:System.ArgumentNullException">當<paramref name="targetFile"/>為<c>null</c>參考時擲出</exception>
+        </member>
+        <member name="M:TEC.Core.OData.Core.Data.CacheProvider.SingleFileODataCacheProviderBase.writeCacheAbstractFileAsync(Xceed.FileSystem.AbstractFile)">
+            <summary>
+            產生用於快取的資訊，並將其內容寫入至<paramref name="abstractFile"/>中
+            </summary>
+            <param name="abstractFile">寫入資訊的目標檔案</param>
+            <returns>已儲存快取資料的<see cref="T:Xceed.FileSystem.AbstractFile"/>物件</returns>
+            <remarks>請勿在此方法中(或因為此方法觸發的同步事件)中操作<see cref="M:TEC.Core.OData.Core.Data.CacheProvider.SingleFileODataCacheProviderBase.getCurrentAbstractFile(System.Boolean)"/>的結果，以免發生檔案衝突。
+            若有需要在檔案產生後值行後續操作，請考慮使用<see cref="T:TEC.Core.OData.Core.Data.CacheProvider.AbstractFileUpdatedEventArgs"/>事件</remarks>
+        </member>
+        <member name="M:TEC.Core.OData.Core.Data.CacheProvider.SingleFileODataCacheProviderBase.getIsCurrentAbstractFileExpired(Xceed.FileSystem.AbstractFile)">
+            <summary>
+            取得目前暫存的檔案是否已經超過暫存標準
+            </summary>
+            <param name="abstractFile">要判斷的檔案</param>
+            <returns>判斷是否已經超過暫存時限或違反標準</returns>
+        </member>
+        <member name="M:TEC.Core.OData.Core.Data.CacheProvider.SingleFileODataCacheProviderBase.generateCandidateAbstractFile">
+            <summary>
+            建立快取檔案並儲存於此執行個體中
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:TEC.Core.OData.Core.Data.CacheProvider.SingleFileODataCacheProviderBase.forceUpdateFileAsync">
+            <summary>
+            強制更新快取檔案的內容，若正在更新檔案內容，將會忽略此動作
+            </summary>
+        </member>
+        <member name="M:TEC.Core.OData.Core.Data.CacheProvider.SingleFileODataCacheProviderBase.getCurrentAbstractFile(System.Boolean)">
+            <summary>
+            取得目前已儲存的單一檔案快取，若沒有檔案快取時，將會在建立快取之後回傳。
+            </summary>
+            <param name="guaranteeGetNewFile">如果檔案已存在，且正在進行檔案更新時，是否要等待檔案更新完成後再回傳。
+            當值為<c>true</c>時，如果檔案尚未逾期，就直接傳回檔案，否則都會等到檔案更新完成時才回傳；當值為<c>false</c>時，
+            只有在檔案尚未建立時才回等待，若檔案存在時，不論是否判斷為逾期，都會取得該檔案。</param>
+        </member>
+        <member name="P:TEC.Core.OData.Core.Data.CacheProvider.SingleFileODataCacheProviderBase.CurrentGeneratAbstractFileTask">
+            <summary>
+            取得目前用於背景產生快取檔案的作業
+            </summary>
+        </member>
+        <member name="P:TEC.Core.OData.Core.Data.CacheProvider.SingleFileODataCacheProviderBase.CandidateAbstractFile">
+            <summary>
+            設定或取得目前在前端應取得的檔案快取
+            </summary>
+        </member>
+        <member name="M:TEC.Core.OData.Core.Data.CacheProvider.SingleFileODataCacheProviderBase.Dispose(System.Boolean)">
+            <summary>
+            釋放目前物件的資源
+            </summary>
+            <param name="isDisposing">是否開始處理物件的資源釋放行為</param>
+        </member>
+        <member name="M:TEC.Core.OData.Core.Data.CacheProvider.SingleFileODataCacheProviderBase.Dispose">
+            <summary>
+            釋放目前物件的資源
+            </summary>
+        </member>
+        <member name="P:TEC.Core.OData.Core.Data.CacheProvider.SingleFileODataCacheProviderBase.UpdatedSourceDateTime">
+            <summary>
+            取得快取資料來源最後更新時間，若尚未更新則值為<c>DateTime.MinValue</c>
+            </summary>
+        </member>
+        <member name="P:TEC.Core.OData.Core.Data.CacheProvider.SingleFileODataCacheProviderBase.IsGeneratingAbstractFile">
+            <summary>
+            取得是否正在產生用於快取的檔案
+            </summary>
+        </member>
+        <member name="E:TEC.Core.OData.Core.Data.CacheProvider.SingleFileODataCacheProviderBase.CurrentAbstractFileUpdated">
+            <summary>
+            當快取檔案變更完成時發生
+            </summary>
+        </member>
+        <member name="T:TEC.Core.OData.Core.Data.CacheProvider.WriteCacheAbstractFileTimerEvent">
+            <summary>
+            用於排程產生快取資料的定時排程事件
+            </summary>
+        </member>
+        <member name="M:TEC.Core.OData.Core.Data.CacheProvider.WriteCacheAbstractFileTimerEvent.#ctor(TEC.Core.OData.Core.Data.CacheProvider.SingleFileODataCacheProviderBase)">
+            <summary>
+            初始化產生快取資料的排程事件
+            </summary>
+            <param name="singleFileODataCacheProviderBase">相關的單一檔案快取提供者</param>
+            <exception cref="T:System.ArgumentNullException">當<paramref name="singleFileODataCacheProviderBase"/>為<c>null</c>參考時擲出</exception>
+        </member>
+        <member name="M:TEC.Core.OData.Core.Data.CacheProvider.WriteCacheAbstractFileTimerEvent.execute">
+            <summary>
+            執行排定的動作內容
+            </summary>
+        </member>
+        <member name="M:TEC.Core.OData.Core.Data.CacheProvider.WriteCacheAbstractFileTimerEvent.Dispose">
+            <summary>
+            執行與釋放 (Free)、釋放 (Release) 或重設 Unmanaged 資源相關聯之應用程式定義的工作。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.OData.Core.Data.CacheProvider.WriteCacheAbstractFileTimerEvent.SingleFileODataCacheProvider">
+            <summary>
+            設定或取得與此排程事件相關的<see cref="T:TEC.Core.OData.Core.Data.CacheProvider.SingleFileODataCacheProviderBase"/>
+            </summary>
+        </member>
+        <member name="T:TEC.Core.OData.Core.Data.ODataDefinitionLoadedEventArgs">
+            <summary>
+            當資料定義載入完成時引發的事件參數
+            </summary>
+        </member>
+        <member name="M:TEC.Core.OData.Core.Data.ODataDefinitionLoadedEventArgs.#ctor(TEC.Core.OData.Core.Definition.ODataDefinition)">
+            <summary>
+            初始化資料定義載入完成時引發的事件參數
+            </summary>
+            <param name="oDataDefinition">相關的OData定義</param>
+        </member>
+        <member name="P:TEC.Core.OData.Core.Data.ODataDefinitionLoadedEventArgs.ODataDefinition">
+            <summary>
+            取得已載入的OData定義
+            </summary>
+        </member>
+        <member name="T:TEC.Core.OData.Core.Data.ODataBase">
+            <summary>
+            用於OData資料的基底型別
+            </summary>
+            <example>
+            <para>
+            實作此範例之前，請先完成<see cref="T:TEC.Core.OData.Core.Definition.CacheProvider.MemoryODataDefinitionCacheProvider"/>之範例
+            </para>
+            <para>AddressModel.cs</para>
+            <code lang="C#">
+            /// &lt;summary&gt;
+            /// 儲存地址資料的Model
+            /// &lt;/summary&gt;
+            public class AddressModel
+            {
+                /// &lt;summary&gt;
+                /// 設定或取得郵遞區號三碼部分
+                /// &lt;/summary&gt;
+                [OrderedFormatMember(0), PaddingStringFormat(' ', 3, PaddingDirection.PadRight)]
+                public string ZipCode3 { set; get; }
+                /// &lt;summary&gt;
+                /// 設定或取得郵遞區號二碼部分
+                /// &lt;/summary&gt;
+                [OrderedFormatMember(1), PaddingStringFormat(' ', 2, PaddingDirection.PadRight)]
+                public string ZipCode2 { set; get; }
+                /// &lt;summary&gt;
+                /// 設定或取得縣市名
+                /// &lt;/summary&gt;
+                [OrderedFormatMember(2), PaddingStringFormat(' ', 6, PaddingDirection.PadRight)]
+                public string City { set; get; }
+                /// &lt;summary&gt;
+                /// 設定或取得鄉鎮名
+                /// &lt;/summary&gt;
+                [OrderedFormatMember(3), PaddingStringFormat(' ', 8, PaddingDirection.PadRight)]
+                public string Area { set; get; }
+                /// &lt;summary&gt;
+                /// 設定或取得街、路段巷名
+                /// &lt;/summary&gt;
+                [OrderedFormatMember(4), PaddingStringFormat(' ', 22, PaddingDirection.PadRight)]
+                public string Road { set; get; }
+                /// &lt;summary&gt;
+                /// 設定或取得號弄名
+                /// &lt;/summary&gt;
+                [OrderedFormatMember(5), PaddingStringFormat(' ', 30, PaddingDirection.PadRight)]
+                public string Scope { set; get; }
+            }
+            </code>
+            <para>Zip32Data.cs</para>
+            <code lang="C#">
+            /// &lt;summary&gt;
+            /// 3+2碼郵遞區號的資料
+            /// &lt;/summary&gt;
+            public class Zip32Data : ODataBase
+            {
+                /// &lt;summary&gt;
+                /// 初始化3+2碼郵遞區號資料的執行個體
+                /// &lt;/summary&gt;
+                public Zip32Data() : base(Global.TawianGovODataDefinitionCacheProvider, "3+2碼郵遞區號") { }
+                /// &lt;summary&gt;
+                /// 取得3+2郵遞區號地址資訊
+                /// &lt;/summary&gt;
+                /// &lt;returns&gt;&lt;/returns&gt;
+                public async Task&lt;List&lt;AddressModel&gt;&gt; getAddressModelListAsync()
+                {
+                    HttpClient httpClient = new HttpClient();
+                    var zip32ResponseMessage = await httpClient.GetAsync(this.ODataDefinitionLazy.Value.Uri).ConfigureAwait(false);
+                    //分析取得的檔案內容
+                    string zip32JsonString = JsonConvert.SerializeObject((await zip32ResponseMessage.Content.ReadAsStringAsync().ConfigureAwait(false))
+                        .Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries)
+                        .Select(rawString =&gt; OrderedMemberFormatter.deserializeObject&lt;AddressModel&gt;(rawString, this.ODataDefinitionLazy.Value.DataEncoding[0])));
+                    return JsonConvert.DeserializeObject&lt;List&lt;AddressModel&gt;&gt;(zip32JsonString);
+                }
+            }
+            </code>
+            </example>
+            <remarks>
+            建議: 繼承此類別的基底型別中的方法應使用非同步運算子(async/await)處理資料內容。
+            </remarks>
+            <seealso cref="T:TEC.Core.OData.Core.Definition.CacheProvider.ODataDefinitionCacheProviderBase"/>
+        </member>
+        <member name="M:TEC.Core.OData.Core.Data.ODataBase.#ctor(System.Func{TEC.Core.OData.Core.Definition.ODataDefinition})">
+            <summary>
+            初始化OData資料的基底型別
+            </summary>
+            <param name="oDataDefinitionFunc">取得定義資料的方法委派</param>
+        </member>
+        <member name="M:TEC.Core.OData.Core.Data.ODataBase.#ctor(TEC.Core.OData.Core.Definition.CacheProvider.ODataDefinitionCacheProviderBase,System.String)">
+            <summary>
+            初始化OData資料的基底型別
+            </summary>
+            <param name="oDataDefinitionCacheProvider">定義快取提供者</param>
+            <param name="name">用於辨識定義的名稱</param>
+        </member>
+        <member name="M:TEC.Core.OData.Core.Data.ODataBase.#ctor(TEC.Core.OData.Core.Definition.CacheProvider.ODataDefinitionCacheProviderBase,System.Func{System.Collections.Generic.List{TEC.Core.OData.Core.Definition.ODataDefinition},TEC.Core.OData.Core.Definition.ODataDefinition})">
+            <summary>
+            初始化OData資料的基底型別
+            </summary>
+            <param name="oDataDefinitionCacheProvider">定義快取提供者</param>
+            <param name="oDataDefinitionSelector">在所有定義中取得此個體所使用的定義物件</param>
+        </member>
+        <member name="P:TEC.Core.OData.Core.Data.ODataBase.ODataDefinitionLazy">
+            <summary>
+            取得OData 定義資料
+            </summary>
+        </member>
+        <member name="E:TEC.Core.OData.Core.Data.ODataBase.ODataDefinitionLoaded">
+            <summary>
+            當取得OData定義資料的延遲初始設定式取得定義完成時發生
+            </summary>
+        </member>
+        <member name="T:TEC.Core.OData.Core.Definition.CacheProvider.MemoryODataDefinitionCacheProvider">
+            <summary>
+            記憶體快取的OData定義提供者
+            </summary>
+            <see cref="T:TEC.Core.OData.Core.Definition.IODataDefinitionProvider"/>
+            <example>
+            <para>ODataDefinitionProvider.cs</para>
+            <code lang="C#">
+            /// &lt;summary&gt;
+            /// 台灣政府公開資料的來源提供者
+            /// &lt;/summary&gt;
+            public class ODataDefinitionProvider : IODataDefinitionProvider
+            {
+                /// &lt;summary&gt;
+                /// 取得台灣政府開放平台資料清單的定義
+                /// &lt;/summary&gt;
+                /// &lt;returns&gt;&lt;/returns&gt;
+                public async Task&lt;List&lt;ODataDefinition&gt;&gt; getODataDefinitionList()
+                {
+                    Uri definitionUri = new Uri("http://file.data.gov.tw/opendatafile/政府資料開放平臺資料集清單.xml", UriKind.Absolute);
+                    HttpClient httpClient = new HttpClient();
+                    //取得xml檔案
+                    XDocument xDocument = XDocument.Parse(await (await httpClient.GetAsync(definitionUri)).Content.ReadAsStringAsync());
+                    return xDocument.Descendants("RECORD")
+                        .Select(record =&gt;
+                        {
+                            return new ODataDefinition()
+                            {
+                                //設定物件屬性
+                            };
+                        })
+                        .ToList();
+                }
+            }
+            </code>
+            <para>Global.cs</para>
+            <code lang="C#">
+            /// &lt;summary&gt;
+            /// 全域類別
+            /// &lt;/summary&gt;
+            internal static class Global
+            {
+                internal static ODataDefinitionCacheProviderBase TawianGovODataDefinitionCacheProvider = new MemoryODataDefinitionCacheProvider(
+                            new ODataDefinitionProvider(),
+                            "TaiwanGovODataDefinition",
+                            () =&gt;
+                            {
+                                return new CacheItemPolicy()
+                                {
+                                    //300分鐘清除一次快取
+                                    AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(300),
+                                    Priority = CacheItemPriority.Default
+                                };
+                            });
+            }
+            </code>
+            <para>
+            Code Usage
+            </para>
+            <code lang="C#">
+            ODataDefinition oDataDefinition = Global.TawianGovODataDefinitionCacheProvider.getDataDefinitionListAsync().Result;
+            </code>
+            </example>
+        </member>
+        <member name="M:TEC.Core.OData.Core.Definition.CacheProvider.MemoryODataDefinitionCacheProvider.#ctor(TEC.Core.OData.Core.Definition.IODataDefinitionProvider,System.Runtime.Caching.MemoryCache,System.String,System.Func{System.Runtime.Caching.CacheItemPolicy})">
+            <summary>
+            初始化記憶體快取的OData定義提供者
+            </summary>
+            <param name="oDataDefinitionProvider">OData定義提供者</param>
+            <param name="cachedKeyName">用於快取的索引鍵</param>
+            <param name="memoryCache">可實作記憶體內部快取的型別</param>
+            <param name="cacheItemPolicyFunc">當沒有快取資料時，用於產生快取原則的封裝，傳回的結果不可以為<c>null</c>參考</param>
+            <exception cref="T:System.ArgumentNullException">當<paramref name="oDataDefinitionProvider"/>參數為<c>null</c>時發生</exception>
+            <exception cref="T:System.ArgumentNullException">當<paramref name="cacheItemPolicyFunc"/>參數為<c>null</c>時發生</exception>
+            <exception cref="T:System.ArgumentNullException">當<paramref name="cachedKeyName"/>參數為<c>null</c>或<c>String.Empty</c>時發生</exception>
+            <exception cref="T:System.ArgumentNullException">當<paramref name="memoryCache"/>參數為<c>null</c>時發生</exception>
+        </member>
+        <member name="M:TEC.Core.OData.Core.Definition.CacheProvider.MemoryODataDefinitionCacheProvider.#ctor(TEC.Core.OData.Core.Definition.IODataDefinitionProvider,System.String,System.Func{System.Runtime.Caching.CacheItemPolicy})">
+            <summary>
+            初始化記憶體快取的OData定義提供者
+            </summary>
+            <param name="oDataDefinitionProvider">OData定義提供者</param>
+            <param name="cachedKeyName">用於快取的索引鍵</param>
+            <param name="cacheItemPolicyFunc">當沒有快取資料時，用於產生快取原則的封裝，傳回的結果不可以為<c>null</c>參考</param>
+            <exception cref="T:System.ArgumentNullException">當<paramref name="oDataDefinitionProvider"/>參數為<c>null</c>時發生</exception>
+            <exception cref="T:System.ArgumentNullException">當<paramref name="cacheItemPolicyFunc"/>參數為<c>null</c>時發生</exception>
+            <exception cref="T:System.ArgumentNullException">當<paramref name="cachedKeyName"/>參數為<c>null</c>或<c>String.Empty</c>時發生</exception>
+        </member>
+        <member name="M:TEC.Core.OData.Core.Definition.CacheProvider.MemoryODataDefinitionCacheProvider.getDataDefinitionListAsync">
+            <summary>
+            取得記憶體快取中的OData定義，若無相關定義將由資料來源中取得後傳回
+            </summary>
+        </member>
+        <member name="M:TEC.Core.OData.Core.Definition.CacheProvider.MemoryODataDefinitionCacheProvider.Dispose(System.Boolean)">
+            <summary>
+            釋放目前物件的資源
+            </summary>
+            <param name="isDisposing">是否開始處理物件的資源釋放行為</param>
+        </member>
+        <member name="P:TEC.Core.OData.Core.Definition.CacheProvider.MemoryODataDefinitionCacheProvider.MemoryCache">
+            <summary>
+            取得用於此提供者的快取資訊
+            </summary>
+        </member>
+        <member name="P:TEC.Core.OData.Core.Definition.CacheProvider.MemoryODataDefinitionCacheProvider.CachedKeyName">
+            <summary>
+            取得用於快取的索引鍵
+            </summary>
+        </member>
+        <member name="P:TEC.Core.OData.Core.Definition.CacheProvider.MemoryODataDefinitionCacheProvider.CacheItemPolicyFunc">
+            <summary>
+            設定或取得產生設定檔的方法封裝
+            </summary>
+        </member>
+        <member name="T:TEC.Core.OData.Core.Definition.CacheProvider.ODataDefinitionCacheProviderBase">
+            <summary>
+            定義可用於儲存OData定義於快取的提供者基底型別
+            </summary>
+        </member>
+        <member name="F:TEC.Core.OData.Core.Definition.CacheProvider.ODataDefinitionCacheProviderBase.isDisposed">
+            <summary>
+            物件是否已經完成清理
+            </summary>
+        </member>
+        <member name="M:TEC.Core.OData.Core.Definition.CacheProvider.ODataDefinitionCacheProviderBase.#ctor(TEC.Core.OData.Core.Definition.IODataDefinitionProvider)">
+            <summary>
+            初始化儲存OData定義於快取的提供者
+            </summary>
+            <param name="oDataDefinitionProvider">OData定義提供者</param>
+            <exception cref="T:System.ArgumentNullException">當<paramref name="oDataDefinitionProvider"/>參數為<c>null</c>時發生</exception>
+        </member>
+        <member name="M:TEC.Core.OData.Core.Definition.CacheProvider.ODataDefinitionCacheProviderBase.getDataDefinitionListAsync">
+            <summary>
+            取得快取中的OData定義，若無相關定義將由資料來源中取得後傳回
+            </summary>
+            <returns>OData定義清單</returns>
+        </member>
+        <member name="M:TEC.Core.OData.Core.Definition.CacheProvider.ODataDefinitionCacheProviderBase.Dispose(System.Boolean)">
+            <summary>
+            釋放目前物件的資源
+            </summary>
+            <param name="isDisposing">是否開始處理物件的資源釋放行為</param>
+        </member>
+        <member name="M:TEC.Core.OData.Core.Definition.CacheProvider.ODataDefinitionCacheProviderBase.Dispose">
+            <summary>
+            釋放目前物件的資源
+            </summary>
+        </member>
+        <member name="P:TEC.Core.OData.Core.Definition.CacheProvider.ODataDefinitionCacheProviderBase.ODataDefinitionProvider">
+            <summary>
+            取得擷取OData定義的提供者
+            </summary>
+        </member>
+        <member name="P:TEC.Core.OData.Core.Definition.CacheProvider.ODataDefinitionCacheProviderBase.UpdatedSourceDateTime">
+            <summary>
+            取得快取資料來源最後更新時間，若尚未更新則值為<c>DateTime.MinValue</c>
+            </summary>
+        </member>
+        <member name="T:TEC.Core.OData.Core.Definition.CacheProvider.Resources.MemoryODataDefinitionCacheProvider">
+            <summary>
+              用於查詢當地語系化字串等的強類型資源類別。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.OData.Core.Definition.CacheProvider.Resources.MemoryODataDefinitionCacheProvider.ResourceManager">
+            <summary>
+              傳回這個類別使用的快取的 ResourceManager 執行個體。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.OData.Core.Definition.CacheProvider.Resources.MemoryODataDefinitionCacheProvider.Culture">
+            <summary>
+              覆寫目前執行緒的 CurrentUICulture 屬性，對象是所有
+              使用這個強類型資源類別的資源查閱。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.OData.Core.Definition.CacheProvider.Resources.MemoryODataDefinitionCacheProvider.CachedIsRemovedAfterSetting">
+            <summary>
+              查詢類似 The &quot;{0}&quot; is successfully generated, but it is removed right away after adding to memory cache, please check cache item policy(CacheItemPolicy)  to solve this problem. 的當地語系化字串。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.OData.Core.Definition.CacheProvider.Resources.MemoryODataDefinitionCacheProvider.CacheItemPolicyIsNull">
+            <summary>
+              查詢類似 The encapsulate method for generating &quot;{0}&quot; cannot return a null reference. 的當地語系化字串。
+            </summary>
+        </member>
+        <member name="T:TEC.Core.OData.Core.Definition.IODataDefinitionProvider">
+            <summary>
+            取得OData定義的提供者
+            </summary>
+            <seealso cref="T:TEC.Core.OData.Core.Definition.CacheProvider.MemoryODataDefinitionCacheProvider"/>
+            <example>
+            若要使用記憶體快取定義之範例，請參考<see cref="T:TEC.Core.OData.Core.Definition.CacheProvider.MemoryODataDefinitionCacheProvider"/>之範例部分
+            </example>
+        </member>
+        <member name="M:TEC.Core.OData.Core.Definition.IODataDefinitionProvider.getODataDefinitionList">
+            <summary>
+            取得OData定義清單
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:TEC.Core.OData.Core.Definition.ODataColumnDefinition">
+            <summary>
+            欄位定義
+            </summary>
+        </member>
+        <member name="P:TEC.Core.OData.Core.Definition.ODataColumnDefinition.ColumnName">
+            <summary>
+            設定或取得欄位名稱
+            </summary>
+        </member>
+        <member name="T:TEC.Core.OData.Core.Definition.ODataDefinition">
+            <summary>
+            每個OData的定義
+            </summary>
+        </member>
+        <member name="P:TEC.Core.OData.Core.Definition.ODataDefinition.Name">
+            <summary>
+            設定或取得資料集名稱
+            </summary>
+        </member>
+        <member name="P:TEC.Core.OData.Core.Definition.ODataDefinition.SourceType">
+            <summary>
+            設定或取得資料來源類型
+            </summary>
+        </member>
+        <member name="P:TEC.Core.OData.Core.Definition.ODataDefinition.Uri">
+            <summary>
+            設定或取得網址
+            </summary>
+        </member>
+        <member name="P:TEC.Core.OData.Core.Definition.ODataDefinition.AdditionalDataType">
+            <summary>
+            設定或取得資料集類型
+            </summary>
+        </member>
+        <member name="P:TEC.Core.OData.Core.Definition.ODataDefinition.Description">
+            <summary>
+            設定或取得資料集描述
+            </summary>
+        </member>
+        <member name="P:TEC.Core.OData.Core.Definition.ODataDefinition.Columns">
+            <summary>
+            設定或取得欄位
+            </summary>
+        </member>
+        <member name="P:TEC.Core.OData.Core.Definition.ODataDefinition.Organization">
+            <summary>
+            設定或取得資料提供機關
+            </summary>
+        </member>
+        <member name="P:TEC.Core.OData.Core.Definition.ODataDefinition.UpdateFrequency">
+            <summary>
+            設定或取得資料更新頻率
+            </summary>
+        </member>
+        <member name="P:TEC.Core.OData.Core.Definition.ODataDefinition.AuthorizationType">
+            <summary>
+            設定或取得授權方式
+            </summary>
+        </member>
+        <member name="P:TEC.Core.OData.Core.Definition.ODataDefinition.AuthorizationUri">
+            <summary>
+            設定或取得授權網址
+            </summary>
+        </member>
+        <member name="P:TEC.Core.OData.Core.Definition.ODataDefinition.DataEncoding">
+            <summary>
+            設定或取得資料集相關編碼方式
+            </summary>
+        </member>
+        <member name="P:TEC.Core.OData.Core.Definition.ODataDefinition.ContractName">
+            <summary>
+            設定或取得資料集來源聯繫人
+            </summary>
+        </member>
+        <member name="P:TEC.Core.OData.Core.Definition.ODataDefinition.ContractPhone">
+            <summary>
+            設定或取得資料集來源聯繫電話
+            </summary>
+        </member>
+        <member name="P:TEC.Core.OData.Core.Definition.ODataDefinition.Remark">
+            <summary>
+            設定或取得備註
+            </summary>
+        </member>
+        <member name="T:TEC.Core.OData.Core.Global">
+            <summary>
+            全域類別
+            </summary>
+        </member>
+        <member name="P:TEC.Core.OData.Core.Global.TimerManager">
+            <summary>
+            取得此類別庫所使用的排程管理物件
+            </summary>
+        </member>
+    </members>
+</doc>

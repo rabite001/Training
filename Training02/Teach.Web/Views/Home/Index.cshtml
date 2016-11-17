@@ -1,0 +1,10 @@
+﻿
+@{
+    ViewBag.Title = "Index";
+}
+@model Teach.Web.Models.Home.IndexModel
+<form action="@Url.Action("Index")" method="post">
+    <input name="account" value="@this.Model.Account" type="text" />
+    <input name="password" value="@this.Model.Password" type="password" />
+    <input type="submit" value="Login" />
+</form>

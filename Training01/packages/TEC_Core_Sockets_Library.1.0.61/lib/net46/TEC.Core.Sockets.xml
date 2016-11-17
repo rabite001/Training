@@ -1,0 +1,1915 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>TEC.Core.Sockets</name>
+    </assembly>
+    <members>
+        <member name="T:TEC.Core.Sockets.Client.ConnectedEventArgs">
+            <summary>
+            Connect 的 Socket 作業完成時引發的事件參數
+            </summary>
+        </member>
+        <member name="M:TEC.Core.Sockets.Client.ConnectedEventArgs.#ctor(TEC.Core.Sockets.Client.UserTokens.ConnectOperationUserToken,TEC.Core.Sockets.Client.UserTokens.DataHoldingUserToken)">
+            <summary>
+            初始化 Connect 的 Socket 作業完成時引發的事件參數
+            </summary>
+            <param name="connectOperationUserToken">用於連接至遠端伺服器的<see cref="P:TEC.Core.Sockets.Client.ConnectedEventArgs.ConnectOperationUserToken"/></param>
+            <param name="dataHoldingUserToken">用於準備傳送/接收連線的<see cref="P:TEC.Core.Sockets.Client.ConnectedEventArgs.DataHoldingUserToken"/></param>
+        </member>
+        <member name="P:TEC.Core.Sockets.Client.ConnectedEventArgs.ConnectOperationUserToken">
+            <summary>
+            取得用於連接遠端伺服器的<see cref="P:TEC.Core.Sockets.Client.ConnectedEventArgs.ConnectOperationUserToken"/>
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Client.ConnectedEventArgs.DataHoldingUserToken">
+            <summary>
+            取得用於準備傳送/接收連線的<see cref="P:TEC.Core.Sockets.Client.ConnectedEventArgs.DataHoldingUserToken"/>
+            </summary>
+        </member>
+        <member name="T:TEC.Core.Sockets.Client.DataHoldingEventArgs">
+            <summary>
+            當引發 Socket 事件時，保有<see cref="T:TEC.Core.Sockets.Client.UserTokens.DataHoldingUserToken"/>的事件參數
+            </summary>
+        </member>
+        <member name="M:TEC.Core.Sockets.Client.DataHoldingEventArgs.#ctor(TEC.Core.Sockets.Client.UserTokens.DataHoldingUserToken)">
+            <summary>
+            初始化引發 Socket 事件時，保有<see cref="T:TEC.Core.Sockets.Client.UserTokens.DataHoldingUserToken"/>的事件參數
+            </summary>
+            <param name="dataHoldingUserToken">與此事件相關的資料儲存物件</param>
+        </member>
+        <member name="P:TEC.Core.Sockets.Client.DataHoldingEventArgs.DataHoldingUserToken">
+            <summary>
+            取得與此事件參數相關的<see cref="T:TEC.Core.Sockets.Client.UserTokens.DataHoldingUserToken"/>
+            </summary>
+        </member>
+        <member name="T:TEC.Core.Sockets.Client.IClientMediator`1">
+            <summary>
+            用於處理傳送/接收資料使用的處理器介面
+            </summary>
+            <see cref="T:TEC.Core.Sockets.Server.IServerMediator`1"/>
+            <seealso cref="T:TEC.Core.Sockets.Core.DataHolderBase"/>
+            <example>
+            <para>
+            Mediator.cs
+            </para>
+            <code lang="C#">
+            /// &lt;summary&gt;
+            /// 處理傳送及接收資料的中介類別，通常整個訊息處理結束準備送出資料時，都可以由此類別取得或設定相關資料。
+            /// &lt;/summary&gt;
+            public class Mediator : IServerMediator&lt;DataHolder&gt;, IClientMediator&lt;DataHolder&gt;
+            {
+                #region Core
+                /// &lt;summary&gt;
+                /// 將要傳送的資料經過指定格式運算後，設定至[SocketAsyncEventArgs]以準備傳送作業
+                /// &lt;/summary&gt;
+                /// &lt;param name="dataToSend"&gt;要送出的原始資料&lt;/param&gt;
+                /// &lt;param name="dataHolder"&gt;用於送出資料的[TEC.Core.Sockets.Server.DataHolderBase]&lt;/param&gt;
+                /// &lt;param name="bufferSizeForEachSendOperation"&gt;傳送的緩稱區大小&lt;/param&gt;
+                public void prepareOutgoingData(byte[] dataToSend, DataHolder dataHolder, int bufferSizeForEachSendOperation, ref int messageId)
+                {
+                    dataHolder.OriginalDataToSend = dataToSend;
+                    Encoding encoding = Encoding.UTF8;
+                    // 第一則
+                    // 1. 0-4 byte =&gt; 固定字 HEAD
+                    // 2. 5-8 byte =&gt; 訊息 ID
+                    // 3. 9-12 byte =&gt; 訊息總長度
+                    // 4. 13~ =&gt; 訊息內文
+                    // 第二則以後
+                    // 1. 0-4 byte =&gt; 訊息 ID
+                    // 2. 5~ =&gt; 訊息內文
+                    // 每一則訊息的緩衝區
+                    //指定此訊息的ID
+                    int currentMessgaeId = Interlocked.Increment(ref messageId);
+                    //儲存準備發送的資料
+                    List&lt;byte&gt; finalMessageList = new List&lt;byte&gt;();
+                    #region 處理Header
+                    //放入HEAD字串
+                    foreach (byte textByte in encoding.GetBytes("HEAD"))
+                    {
+                        finalMessageList.Add(textByte);
+                    }
+                    #endregion
+                    #region 計算總送出的位元組
+                    // 1. 第一則實際內文長度 = bufferSizeForEachSendOperation - 4 bytes(HEAD 字串) - 4bytes(Total Message Length) - 4bytes(ID)
+                    int firstContextLength = bufferSizeForEachSendOperation - 12;
+                    // 2. 非第一則實際內文長度 = bufferSizeForEachSendOperation -  4bytes(ID)
+                    int nonFirstContextLength = bufferSizeForEachSendOperation - 4;
+                    #endregion
+                    #region 開始填入位元組
+                    int currentHandleIndex = 0;
+                    byte[] messageIdByteArray = BitConverter.GetBytes(currentMessgaeId);
+                    //填入ID
+                    finalMessageList.AddRange(messageIdByteArray);
+                    //先塞空的，之後會補上訊息總長度
+                    finalMessageList.Add(0);
+                    finalMessageList.Add(0);
+                    finalMessageList.Add(0);
+                    finalMessageList.Add(0);
+                    //處理第一則訊息，輸入第一則訊息應包含的資料 (firstContextLength 位元組)
+                    for (; currentHandleIndex &lt; firstContextLength &amp;&amp; currentHandleIndex &lt; dataToSend.Length; currentHandleIndex++)
+                    {
+                        finalMessageList.Add(dataToSend[currentHandleIndex]);
+                    }
+                    for (int currentIndex = 0; currentHandleIndex &lt; dataToSend.Length; currentIndex++, currentHandleIndex++)
+                    {
+                        if (currentIndex == nonFirstContextLength)
+                        {
+                            currentIndex = 0;
+                        }
+                        if (currentIndex == 0)
+                        {
+                            //訊息的第一個 byte ，加入標頭
+                            finalMessageList.AddRange(messageIdByteArray);
+                        }
+                        finalMessageList.Add(dataToSend[currentHandleIndex]);
+                    }
+                    #endregion
+                    #region 總長度計算
+                    byte[] lengthOfCurrentOutgoingMessageByteArray = BitConverter.GetBytes(dataToSend.Length);
+                    finalMessageList.RemoveRange(8, 4);
+                    finalMessageList.InsertRange(8, lengthOfCurrentOutgoingMessageByteArray);
+                    #endregion
+                    #region 計算填補字元(補上最後一則訊息不滿位元組的部分)
+                    int padingCount = bufferSizeForEachSendOperation - (finalMessageList.Count % bufferSizeForEachSendOperation);
+                    if (padingCount == bufferSizeForEachSendOperation)
+                    {
+                        padingCount = 0;
+                    }
+                    for (int index = 0; index &lt; padingCount; index++)
+                    {
+                        finalMessageList.Add(0);
+                    }
+                    #endregion
+                    //設定要傳送的資料
+                    dataHolder.Data = finalMessageList.ToArray();
+                }
+                /// &lt;summary&gt;
+                /// 處理接收到的資料，並傳回此訊息是否已接收完成。
+                /// &lt;/summary&gt;
+                /// &lt;param name="receivedData"&gt;已接收到的資料&lt;/param&gt;
+                /// &lt;param name="dataHolder"&gt;儲存資料的物件參考&lt;/param&gt;
+                /// &lt;returns&gt;&lt;c&gt;true&lt;/c&gt;:訊息已接收完成；&lt;c&gt;false&lt;/c&gt;:訊息尚未接收完成&lt;/returns&gt;
+                public bool handleData(byte[] receivedData, DataHolder dataHolder)
+                {
+                    Encoding encoding = Encoding.UTF8;
+                    bool isHead = String.Compare(encoding.GetString(receivedData.Take(4).ToArray()), "HEAD", false) == 0;
+                    int messageId;
+                    if (isHead)
+                    {
+                        byte[] dataByteArray;
+                        try
+                        {
+                            dataByteArray = new byte[BitConverter.ToInt32(receivedData.Skip(8).Take(4).ToArray(), 0)];
+                            messageId = BitConverter.ToInt32(receivedData.Skip(4).Take(4).ToArray(), 0);
+                        }
+                        catch (Exception ex)
+                        {
+                            //有發生錯誤則停止接收資料
+                            dataHolder.LastError = ex;
+                            return true;
+                        }
+                        dataHolder.switchData(messageId);
+                        dataHolder.Data = dataByteArray;
+                        //開始處理第一則訊息的內文
+                        dataHolder.LastWriteDataOffset = receivedData.Length - 12;
+                        if (dataHolder.LastWriteDataOffset &gt; dataHolder.Data.Length)
+                        {
+                            //第一則就已經是完整訊息
+                            Buffer.BlockCopy(receivedData, 12, dataHolder.Data, 0, dataHolder.Data.Length);
+                            return true;
+                        }
+                        Buffer.BlockCopy(receivedData, 12, dataHolder.Data, 0, dataHolder.LastWriteDataOffset);
+                        //回傳false以繼續接收新的資料
+                        return false;
+                    }
+                    else
+                    {
+                        //第二則內文的前4個byte是 ID
+                        try
+                        {
+                            messageId = BitConverter.ToInt32(receivedData.Take(4).ToArray(), 0);
+                        }
+                        catch (Exception ex)
+                        {
+                            //有發生錯誤則停止接收資料
+                            dataHolder.LastError = ex;
+                            return true;
+                        }
+                        messageId = BitConverter.ToInt32(receivedData.Take(4).ToArray(), 0);
+                        if (dataHolder.PendingDataDictionary.ContainsKey(messageId))
+                        {
+                            dataHolder.switchData(messageId);
+                        }
+                        else if (dataHolder.MessageId != messageId)
+                        {
+                            return true;
+                        }
+                        //計算本次應寫入多少位元組
+                        int bytesCountToWrite = receivedData.Length - 4;//扣掉ID 的 位元組陣列
+                        if (bytesCountToWrite &gt; dataHolder.Data.Length - dataHolder.LastWriteDataOffset)
+                        {
+                            //若有傳輸超過的狀況，捨棄多出來的位元組(已經溝通好多的部分補0的情況)
+                            bytesCountToWrite = dataHolder.Data.Length - dataHolder.LastWriteDataOffset;
+                        }
+                        Buffer.BlockCopy(receivedData, 4, dataHolder.Data, dataHolder.LastWriteDataOffset, bytesCountToWrite);
+                        dataHolder.LastWriteDataOffset += bytesCountToWrite;
+                        if (dataHolder.LastWriteDataOffset &gt;= dataHolder.Data.Length)
+                        {
+                            //已接收完成
+                            return true;
+                        }
+                        return false;
+                    }
+                }
+                #endregion
+                #region ServerSide
+                private int serverMessgaeId = 0;
+                /// &lt;summary&gt;
+                /// 將要傳送的資料經過指定格式運算後，設定至[SocketAsyncEventArgs]以準備傳送作業
+                /// &lt;/summary&gt;
+                /// &lt;param name="dataToSend"&gt;要送出的原始資料&lt;/param&gt;
+                /// &lt;param name="dataHolder"&gt;用於送出資料的[TEC.Core.Sockets.Server.DataHolderBase]&lt;/param&gt;
+                /// &lt;param name="readOnlySocketSettingDictionary"&gt;準備發送訊息的相關設定檔唯讀字典&lt;/param&gt;
+                public void prepareOutgoingData(byte[] dataToSend, DataHolder dataHolder, IReadOnlyDictionary&lt;SocketServerSettingEnum, object&gt; readOnlySocketSettingDictionary)
+                {
+                    this.prepareOutgoingData(dataToSend, dataHolder, (int)readOnlySocketSettingDictionary[SocketServerSettingEnum.OperationBufferSize], ref this.serverMessgaeId);
+                }
+                /// &lt;summary&gt;
+                /// 處理接收到的資料，並傳回此訊息是否已接收完成。
+                /// &lt;/summary&gt;
+                /// &lt;param name="receivedData"&gt;已接收到的資料&lt;/param&gt;
+                /// &lt;param name="dataHolder"&gt;儲存資料的物件參考&lt;/param&gt;
+                /// &lt;param name="readOnlySocketSettingDictionary"&gt;接收訊息的相關設定檔唯讀字典&lt;/param&gt;
+                /// &lt;returns&gt;&lt;c&gt;true&lt;/c&gt;:訊息已接收完成；&lt;c&gt;false&lt;/c&gt;:訊息尚未接收完成&lt;/returns&gt;
+                public bool handleData(byte[] receivedData, DataHolder dataHolder, IReadOnlyDictionary&lt;SocketServerSettingEnum, object&gt; readOnlySocketSettingDictionary)
+                {
+                    return this.handleData(receivedData, dataHolder);
+                }
+                #endregion
+                #region ClientSide
+                private int clientMessageId = 0;
+                /// &lt;summary&gt;
+                /// 將要傳送的資料經過指定格式運算後，設定至[SocketAsyncEventArgs]以準備傳送作業
+                /// &lt;/summary&gt;
+                /// &lt;param name="dataToSend"&gt;要送出的原始資料&lt;/param&gt;
+                /// &lt;param name="dataHolder"&gt;用於送出資料的[TEC.Core.Sockets.Server.DataHolderBase]&lt;/param&gt;
+                /// &lt;param name="readOnlySocketSettingDictionary"&gt;準備發送訊息的相關設定檔唯讀字典&lt;/param&gt;
+                public void prepareOutgoingData(byte[] dataToSend, DataHolder dataHolder, IReadOnlyDictionary&lt;SocketClientSettingEnum, object&gt; readOnlySocketSettingDictionary)
+                {
+                    this.prepareOutgoingData(dataToSend, dataHolder, (int)readOnlySocketSettingDictionary[SocketClientSettingEnum.OperationBufferSize], ref this.clientMessageId);
+                }
+                /// &lt;summary&gt;
+                /// 處理接收到的資料，並傳回此訊息是否已接收完成。
+                /// &lt;/summary&gt;
+                /// &lt;param name="receivedData"&gt;已接收到的資料&lt;/param&gt;
+                /// &lt;param name="dataHolder"&gt;儲存資料的物件參考&lt;/param&gt;
+                /// &lt;param name="readOnlySocketSettingDictionary"&gt;接收訊息的相關設定檔唯讀字典&lt;/param&gt;
+                /// &lt;returns&gt;&lt;c&gt;true&lt;/c&gt;:訊息已接收完成；&lt;c&gt;false&lt;/c&gt;:訊息尚未接收完成&lt;/returns&gt;
+                public bool handleData(byte[] receivedData, DataHolder dataHolder, IReadOnlyDictionary&lt;SocketClientSettingEnum, object&gt; readOnlySocketSettingDictionary)
+                {
+                    return this.handleData(receivedData, dataHolder);
+                }
+                #endregion
+            }
+            </code>
+            </example>
+        </member>
+        <member name="M:TEC.Core.Sockets.Client.IClientMediator`1.prepareOutgoingData(System.Byte[],`0,System.Collections.Generic.IReadOnlyDictionary{TEC.Core.Sockets.Client.SocketClientSettingEnum,System.Object})">
+            <summary>
+            將要傳送的資料經過指定格式運算後，設定至<paramref name="dataHolder"/>的<see cref="P:TEC.Core.Sockets.Core.DataHolderBase.Data"/>屬性以準備傳送作業
+            </summary>
+            <param name="dataToSend">要送出的原始資料</param>
+            <param name="dataHolder">用於送出資料的<see cref="T:TEC.Core.Sockets.Core.DataHolderBase"/></param>
+            <param name="readOnlySocketSettingDictionary">準備發送訊息的相關設定檔唯讀字典</param>
+        </member>
+        <member name="M:TEC.Core.Sockets.Client.IClientMediator`1.handleData(System.Byte[],`0,System.Collections.Generic.IReadOnlyDictionary{TEC.Core.Sockets.Client.SocketClientSettingEnum,System.Object})">
+            <summary>
+            處理接收到的資料，並傳回此訊息是否已接收完成。
+            </summary>
+            <param name="receivedData">已接收到的資料</param>
+            <param name="dataHolder">儲存資料的物件參考</param>
+            <param name="readOnlySocketSettingDictionary">接收訊息的相關設定檔唯讀字典</param>
+            <returns><c>true</c>:訊息已接收完成；<c>false</c>:訊息尚未接收完成</returns>
+            <remarks>通常這些資料會被設定至<paramref name="dataHolder"/>的<see cref="P:TEC.Core.Sockets.Core.DataHolderBase.Data"/>屬性中。</remarks>
+        </member>
+        <member name="T:TEC.Core.Sockets.Client.Resources.SocketClient">
+            <summary>
+              用於查詢當地語系化字串等的強類型資源類別。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Client.Resources.SocketClient.ResourceManager">
+            <summary>
+              傳回這個類別使用的快取的 ResourceManager 執行個體。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Client.Resources.SocketClient.Culture">
+            <summary>
+              覆寫目前執行緒的 CurrentUICulture 屬性，對象是所有
+              使用這個強類型資源類別的資源查閱。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Client.Resources.SocketClient.LastOperationNotSupported">
+            <summary>
+              查詢類似 The &quot;{0}&quot; value({1}) is not supported for this event. Possible values:&quot;{2}&quot;. 的當地語系化字串。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Client.Resources.SocketClient.SocketClientAlreadyInitialized">
+            <summary>
+              查詢類似 The socket client is already initialized. 的當地語系化字串。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Client.Resources.SocketClient.SocketClientMustBeInitialized">
+            <summary>
+              查詢類似 The socket client must be initialized by calling &quot;{0}&quot; method. 的當地語系化字串。
+            </summary>
+        </member>
+        <member name="T:TEC.Core.Sockets.Client.SocketClient`1">
+            <summary>
+            處理 Socket 客戶端相關作業的類別，此類別無法被繼承
+            </summary>
+            <typeparam name="T">用於儲存資料的類型</typeparam>
+            <example>
+            <para>SocketClientTest.cs</para>
+            <code lang="C#">
+            public class SocketClientTest
+            {
+                private static SocketClientSettingCollection socketSettingCollection = new SocketClientSettingCollection();
+                public static void main()
+                {
+                    IPEndPoint remoteEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 12281);
+                    socketSettingCollection[SocketClientSettingEnum.MaxConnections] = 30;
+                    socketSettingCollection[SocketClientSettingEnum.MaxSimultaneousConnectOperation] = 10;
+                    socketSettingCollection[SocketClientSettingEnum.OperationBufferSize] = 25;
+                    SocketClient&lt;DataHolder&gt; socketClient = new SocketClient&lt;DataHolder&gt;(new Mediator(), SocketClientTest.socketSettingCollection, false);
+                    socketClient.OnConnected += SocketClientTest.SocketClient_OnConnected;
+                    socketClient.OnClosingSocket += SocketClientTest.SocketClient_OnClosingSocket;
+                    socketClient.OnConnectError += SocketClientTest.SocketClient_OnConnectError;
+                    socketClient.OnDataReceived += SocketClientTest.SocketClient_OnDataReceived;
+                    socketClient.OnReceivedMessage += SocketClientTest.SocketClient_OnReceivedMessage;
+                    socketClient.OnReceiveEmptyData += SocketClientTest.SocketClient_OnReceiveEmptyData;
+                    socketClient.OnReceiveError += SocketClientTest.SocketClient_OnReceiveError;
+                    socketClient.OnDataSent += SocketClientTest.SocketClient_OnDataSent;
+                    socketClient.OnSendCompleted += SocketClientTest.SocketClient_OnSendCompleted;
+                    socketClient.OnSendError += SocketClientTest.SocketClient_OnSendError;
+                    socketClient.OnStartingReceive += SocketClientTest.SocketClient_OnStartingReceive;
+                    socketClient.OnStartingSend += SocketClientTest.SocketClient_OnStartingSend;
+                    ((System.Collections.Specialized.INotifyCollectionChanged)socketClient.ReadOnlyConnectedTokenIdCollection).CollectionChanged += SocketClientTest.SocketClientTest_CollectionChanged;
+                    socketClient.inital();
+                    socketClient.connectToServer(remoteEndPoint, null);
+                    while (true)
+                    {
+                        string data = Console.ReadLine();
+                        socketClient.ReadOnlyConnectedTokenIdCollection.ToList().ForEach(tokenId =&gt;
+                        {
+                            //傳送訊息至伺服器
+                            Console.WriteLine($"已佇列傳送資料至 Token: {tokenId}，發送的訊息 Token 為:{socketClient.sendDataAsync(tokenId, System.Text.Encoding.UTF8.GetBytes(data)).Result}");
+                        });
+                    }
+                }
+                private static void SocketClient_OnSendError(object sender, SocketErrorEventArgs e)
+                {
+                    Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")}- 傳送作業發生錯誤，Token ID: {e.UserToken.TokenId}，原因: {e.SocketError.ToString()}");
+                }
+                private static void SocketClient_OnDataSent(object sender, DataHoldingEventArgs e)
+                {
+                    Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")}- 已傳送完整訊息，Token ID: {e.DataHoldingUserToken.TokenId}，訊息: { System.Text.Encoding.UTF8.GetString(e.DataHoldingUserToken.DataHolder.Data)}");
+                }
+                private static void SocketClient_OnSendCompleted(object sender, DataHoldingEventArgs e)
+                {
+                    Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")}- Send 操作已完成，Token ID: {e.DataHoldingUserToken.TokenId}");
+                }
+                private static void SocketClient_OnReceiveError(object sender, SocketErrorEventArgs e)
+                {
+                    Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")}- 接收作業發生錯誤，Token ID: {e.UserToken.TokenId}，原因: {e.SocketError.ToString()}");
+                }
+                private static void SocketClient_OnReceiveEmptyData(object sender, DataHoldingEventArgs e)
+                {
+                    Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")}- 接收到空白資料，Token ID: {e.DataHoldingUserToken.TokenId}");
+                }
+                private static void SocketClient_OnReceivedMessage(object sender, DataHoldingEventArgs e)
+                {
+                    Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")}- 已完成一次 Receive 作業，目前結果:  {(e.DataHoldingUserToken.DataHolder.Data == null ? "尚未建立或已傳送完畢" : System.Text.Encoding.UTF8.GetString(e.DataHoldingUserToken.DataHolder.Data))}");
+                }
+                private static void SocketClient_OnDataReceived(object sender, DataReceivedEventArgs e)
+                {
+                    Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")}- 已接收到一次完整訊息，資料: {(e.DataHolder.Data == null ? "尚未建立" : System.Text.Encoding.UTF8.GetString(e.DataHolder.Data))}，來源:{e.RemoteEndPoint}");
+                }
+                private static void SocketClient_OnConnectError(object sender, Sockets.Core.SocketErrorEventArgs e)
+                {
+                    Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")}- 客戶端 Socket 發生錯誤，Token ID:\"{e.UserToken.TokenId}\"，訊息: {e.SocketError.ToString()}");
+                }
+                private static void SocketClient_OnClosingSocket(object sender, DataHoldingEventArgs e)
+                {
+                    Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")}- 客戶端正在關閉 Socket ，Token ID:\"{e.DataHoldingUserToken.TokenId}\"");
+                }
+                private static void SocketClient_OnStartingSend(object sender, DataHoldingEventArgs e)
+                {
+                    DataHolder dataHolder = e.DataHoldingUserToken.DataHolder as DataHolder;
+                    Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")}- 以 Token ID: {e.DataHoldingUserToken.TokenId} 準備送資料給伺服器端({e.DataHoldingUserToken.RemoteEndpoint})。");
+                    Console.WriteLine($"   資料:{System.Text.Encoding.UTF8.GetString(dataHolder.OriginalDataToSend) }");
+                    Console.WriteLine($"   (已處理)資料:{String.Join(" ", dataHolder.Data) }");
+                }
+                private static void SocketClient_OnStartingReceive(object sender, DataHoldingEventArgs e)
+                {
+                    Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")}- 以 Token ID: {e.DataHoldingUserToken.TokenId} 準備接受伺服器端({e.DataHoldingUserToken.RemoteEndpoint})的資料。");
+                }
+                private static void SocketClientTest_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+                {
+                    System.Collections.ObjectModel.ReadOnlyObservableCollection&lt;int&gt; connectedTokenIdCollection = sender as System.Collections.ObjectModel.ReadOnlyObservableCollection&lt;int&gt;;
+                    Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")}- 已連接的連線集合發生變更，目前共管理\"{connectedTokenIdCollection.Count}\"個 Token");
+                    Console.WriteLine($"   Token: {String.Join(",", connectedTokenIdCollection)}");
+                }
+                private static void SocketClient_OnConnected(object sender, ConnectedEventArgs e)
+                {
+                    Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")}- 已連接的至伺服器，Token ID:\"{e.DataHoldingUserToken.TokenId}\"");
+                }
+            }
+            </code>
+            </example>
+            <seealso cref="T:TEC.Core.Sockets.Core.DataHolderBase"/>
+            <seealso cref="T:TEC.Core.Sockets.Server.SocketListener`1"/>
+            <seealso cref="T:TEC.Core.Sockets.Client.IClientMediator`1"/>
+        </member>
+        <member name="M:TEC.Core.Sockets.Client.SocketClient`1.#ctor(TEC.Core.Sockets.Client.IClientMediator{`0},TEC.Core.Sockets.Client.SocketClientSettingCollection,System.Boolean)">
+            <summary>
+            初始化 Socket 的客戶器端管理物件
+            </summary>
+            <param name="mediator">用於處理資料的中介物件</param>
+            <param name="socketClientSettingCollection">關於此管理物件的設定檔集合</param>
+            <param name="initialImmediately">是否在建構函式完成時立即開始接聽，若輸入<c>false</c>則需要呼叫<see cref="M:TEC.Core.Sockets.Client.SocketClient`1.inital"/>以開始接聽作業</param>
+        </member>
+        <member name="M:TEC.Core.Sockets.Client.SocketClient`1.inital">
+            <summary>
+            初始化 Socket 管理物件
+            </summary>
+        </member>
+        <member name="M:TEC.Core.Sockets.Client.SocketClient`1.ConnctedSocketAsyncEventArgsCollection_CollectionChanged(System.Object,System.Collections.Specialized.NotifyCollectionChangedEventArgs)">
+            <summary>
+            當在連線中的集合發生變更時(可能是新增連線或斷線)，需要連同<see cref="P:TEC.Core.Sockets.Client.SocketClient`1.ConnectedTokenIdCollection"/>的資料一起修改。
+            </summary>
+            <param name="sender"></param>
+            <param name="e"></param>
+        </member>
+        <member name="M:TEC.Core.Sockets.Client.SocketClient`1.connectToServer(System.Net.IPEndPoint,System.Object)">
+            <summary>
+            連接至遠端伺服器，若要取得其 Token ID，請監聽<see cref="E:TEC.Core.Sockets.Client.SocketClient`1.OnConnected"/>事件
+            </summary>
+            <param name="data">用於連接完成的事件引發時可以一同取得的參數</param>
+            <param name="ipEndPoint">要連線的遠端伺服器位址</param>
+        </member>
+        <member name="M:TEC.Core.Sockets.Client.SocketClient`1.createNewSaeaForConnect">
+            <summary>
+            建立進行 Connect 的 Socket 操作所需要的<see cref="T:System.Net.Sockets.SocketAsyncEventArgs"/>物件，建立此物件不會分配 buffer 至回傳的物件中。
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:TEC.Core.Sockets.Client.SocketClient`1.processConnect(System.Net.Sockets.SocketAsyncEventArgs)">
+            <summary>
+            處理"連接"作業的結果，以便開始傳送/接收作業
+            </summary>
+            <param name="connectEventArgs">要處理連接作業的通訊端作業</param>
+        </member>
+        <member name="M:TEC.Core.Sockets.Client.SocketClient`1.disconnect(System.Int32)">
+            <summary>
+            關閉指定的 Socket Token 連線
+            </summary>
+            <param name="tokenId">要關閉 Socket 的 Token ID</param>
+            <exception cref="T:TEC.Core.Sockets.Core.TokenIdNotFoundException">當無法以<paramref name="tokenId"/>找到相對應的連線時擲出</exception>
+        </member>
+        <member name="M:TEC.Core.Sockets.Client.SocketClient`1.closeSocket(System.Net.Sockets.SocketAsyncEventArgs)">
+            <summary>
+            關閉指定非同步連線的 Socket (僅可用於 Receive / Send 作業)
+            </summary>
+            <param name="e">要關閉的非同步 Socket 連線作業</param>
+        </member>
+        <member name="M:TEC.Core.Sockets.Client.SocketClient`1.startReceive(System.Net.Sockets.SocketAsyncEventArgs)">
+            <summary>
+            開始接收 Socket 資料
+            </summary>
+            <param name="socketAsyncEventArgs">用於接收資料的通訊端作業</param>
+        </member>
+        <member name="M:TEC.Core.Sockets.Client.SocketClient`1.processReceive(System.Net.Sockets.SocketAsyncEventArgs)">
+            <summary>
+            處理接收的資料
+            </summary>
+            <param name="receiveSendEventArgs">用於接收資料的通訊端作業</param>
+        </member>
+        <member name="M:TEC.Core.Sockets.Client.SocketClient`1.sendDataAsync(System.Int32,System.Byte[])">
+            <summary>
+            送出指定的訊息至指定 Token ID，非同步作業完成時代表的是已成功遞交訊息給 Socket Client 處理，不代表訊息已全數送出。
+            若要監聽訊息完整送出事件，請參考<see cref="E:TEC.Core.Sockets.Client.SocketClient`1.OnDataSent"/>事件，並回傳傳送訊息的 Token (並非 Server 的連接 Token ，此值提供追蹤使用)。
+            </summary>
+            <param name="tokenId">要發送目標的 Token ID，可以在接受連線時取得到</param>
+            <param name="dataToSned">要發送的資料</param>
+            <exception cref="T:TEC.Core.Sockets.Core.TokenIdNotFoundException">當無法以<paramref name="tokenId"/>找到相對應的連線時擲出</exception>
+            <returns>非同步作業，若物件已經被處置時，將傳回 0</returns>
+        </member>
+        <member name="M:TEC.Core.Sockets.Client.SocketClient`1.processSend(System.Net.Sockets.SocketAsyncEventArgs)">
+            <summary>
+            當非同步的 Send 完成時須叫用的方法，此方法決定是否要繼續傳送資料。若已傳送完成，則開始接聽，若尚未傳送完成(依照尚未傳送的位元組來判斷)，則繼續進行 Send 作業。
+            </summary>
+            <param name="receiveSendEventArgs"></param>
+        </member>
+        <member name="M:TEC.Core.Sockets.Client.SocketClient`1.Dispose">
+            <summary>
+            釋放 Socket 客戶端的所有資源，並中斷所有現存的連線
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Client.SocketClient`1.Mediator">
+            <summary>
+            設定或取得傳送/接受資料的中介物件
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Client.SocketClient`1.CurrentConnectedCount">
+            <summary>
+            取得目前已連線的 Socket 數量 (值變更時引發通知)
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Client.SocketClient`1.IsInitialized">
+            <summary>
+            取得 Socket 管理物件是否已經初始化完成(值變更時引發通知)
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Client.SocketClient`1.IsDisposing">
+            <summary>
+            設定或取得物件是否已處置
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Client.SocketClient`1.SocketClientSettingCollection">
+            <summary>
+            設定或取得 Socket 的設定檔集合
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Client.SocketClient`1.ConnectSocketAsyncEventArgsPool">
+            <summary>
+            設定或取得接受 Socket 連線所使用的 <see cref="T:System.Net.Sockets.SocketAsyncEventArgs"/> 管理物件
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Client.SocketClient`1.ReceiveSendSocketAsyncEventArgsPool">
+            <summary>
+            設定或取得傳送/接收 Socket 連線所使用的 <see cref="T:System.Net.Sockets.SocketAsyncEventArgs"/> 管理物件
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Client.SocketClient`1.ConnctedSocketAsyncEventArgsCollection">
+            <summary>
+            設定或取得已經連線的<see cref="T:System.Net.Sockets.SocketAsyncEventArgs"/>
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Client.SocketClient`1.ReadOnlyConnectedTokenIdCollection">
+            <summary>
+            取得所有已經連線的 Token ID 集合
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Client.SocketClient`1.ConnectedTokenIdCollection">
+            <summary>
+            設定或取得所有已經連線的 Token ID 集合，不應直接操作此集合內的元素，
+            並且此集合的元素應隨<see cref="P:TEC.Core.Sockets.Client.SocketClient`1.ConnctedSocketAsyncEventArgsCollection"/>而有所變動
+            (變動由<see cref="P:TEC.Core.Sockets.Client.SocketClient`1.ConnctedSocketAsyncEventArgsCollection"/>的事件觸發)
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Client.SocketClient`1.BufferManager">
+            <summary>
+            設定或取得緩衝區管理物件
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Client.SocketClient`1.ReadOnlyClientSocketSettingDictionary">
+            <summary>
+            取得此監聽器的唯讀設定檔字典
+            </summary>
+        </member>
+        <member name="E:TEC.Core.Sockets.Client.SocketClient`1.OnConnectError">
+            <summary>
+            當連接至遠端伺服器發生錯誤時引發
+            </summary>
+        </member>
+        <member name="E:TEC.Core.Sockets.Client.SocketClient`1.OnConnected">
+            <summary>
+            當已連接至遠端伺服器時引發
+            </summary>
+        </member>
+        <member name="E:TEC.Core.Sockets.Client.SocketClient`1.OnClosingSocket">
+            <summary>
+            當準備關閉連線時發生
+            </summary>
+        </member>
+        <member name="E:TEC.Core.Sockets.Client.SocketClient`1.OnReceiveError">
+            <summary>
+            當在 Receive 作業出現錯誤時引發
+            </summary>
+        </member>
+        <member name="E:TEC.Core.Sockets.Client.SocketClient`1.OnReceiveEmptyData">
+            <summary>
+            當在 Receive 作業沒有收到任何資料時引發
+            </summary>
+        </member>
+        <member name="E:TEC.Core.Sockets.Client.SocketClient`1.OnDataReceived">
+            <summary>
+            當成功接收到一個完整訊息時引發的事件
+            </summary>
+        </member>
+        <member name="E:TEC.Core.Sockets.Client.SocketClient`1.OnReceivedMessage">
+            <summary>
+            當有任何 Receive 單次作業接收到資料時引發的事件(非完整訊息)
+            </summary>
+        </member>
+        <member name="E:TEC.Core.Sockets.Client.SocketClient`1.OnSendCompleted">
+            <summary>
+            當有任何 Send 作業完成時引發的事件
+            </summary>
+        </member>
+        <member name="E:TEC.Core.Sockets.Client.SocketClient`1.OnDataSent">
+            <summary>
+            當成功傳送一個完整訊息時引發的事件
+            </summary>
+        </member>
+        <member name="E:TEC.Core.Sockets.Client.SocketClient`1.OnSendError">
+            <summary>
+            當在 Send 作業出現錯誤時引發
+            </summary>
+        </member>
+        <member name="E:TEC.Core.Sockets.Client.SocketClient`1.OnStartingSend">
+            <summary>
+            當準備開始接聽伺服器端 Send 作業時發生
+            </summary>
+        </member>
+        <member name="E:TEC.Core.Sockets.Client.SocketClient`1.OnStartingReceive">
+            <summary>
+            當準備開始接聽伺服器端 Receive 作業時發生
+            </summary>
+        </member>
+        <member name="T:TEC.Core.Sockets.Client.SocketClientSettingEnum">
+            <summary>
+            用於 Socket 用戶端的設定檔列舉
+            </summary>
+        </member>
+        <member name="F:TEC.Core.Sockets.Client.SocketClientSettingEnum.MaxConnections">
+            <summary>
+            同時處理 Socket 的最大上限，屬於<see cref="T:System.Int32"/>
+            </summary>
+        </member>
+        <member name="F:TEC.Core.Sockets.Client.SocketClientSettingEnum.MaxSimultaneousConnectOperation">
+            <summary>
+            最大同時進行 Connect 作業的數量，屬於<see cref="T:System.Int32"/>
+            </summary>
+        </member>
+        <member name="F:TEC.Core.Sockets.Client.SocketClientSettingEnum.OperationBufferSize">
+            <summary>
+            每一個 Socket 進行任一種作業的緩衝區大小，屬於<see cref="T:System.Int32"/>
+            </summary>
+        </member>
+        <member name="T:TEC.Core.Sockets.Client.SocketClientSettingCollection">
+            <summary>
+            描述 Socket 客戶端設定檔的集合
+            </summary>
+        </member>
+        <member name="M:TEC.Core.Sockets.Client.SocketClientSettingCollection.#ctor">
+            <summary>
+            初始化 Socket 客戶端設定檔的集合
+            </summary>
+        </member>
+        <member name="M:TEC.Core.Sockets.Client.SocketClientSettingCollection.getDefaultValue(TEC.Core.Sockets.Client.SocketClientSettingEnum)">
+            <summary>
+            取得指定設定的預設值
+            </summary>
+            <param name="key">要取得預設值的索引鍵</param>
+            <returns>傳回其預設值</returns>
+        </member>
+        <member name="T:TEC.Core.Sockets.Client.UserTokens.ConnectOperationUserToken">
+            <summary>
+            用於連接遠端伺服器 Socket 作業的 User Token
+            </summary>
+        </member>
+        <member name="M:TEC.Core.Sockets.Client.UserTokens.ConnectOperationUserToken.#ctor(System.Int32)">
+            <summary>
+            初始化用於接受 Socket 連入作業的 User Token
+            </summary>
+            <param name="tokenId">Token ID</param>
+        </member>
+        <member name="P:TEC.Core.Sockets.Client.UserTokens.ConnectOperationUserToken.TokenId">
+            <summary>
+            取得 Token ID
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Client.UserTokens.ConnectOperationUserToken.Data">
+            <summary>
+            取得與此作業相關的參數
+            </summary>
+        </member>
+        <member name="T:TEC.Core.Sockets.Client.UserTokens.DataHoldingUserToken">
+            <summary>
+            在 Socket 的 Connect 作業完成後，會使用到的資料儲存專用的 User Token
+            </summary>
+        </member>
+        <member name="M:TEC.Core.Sockets.Client.UserTokens.DataHoldingUserToken.#ctor(System.Int32,System.Int32,TEC.Core.Sockets.Client.SocketClientSettingCollection)">
+            <summary>
+            初始化用於儲存交換資料的 User Token
+            </summary>
+            <param name="socketSettingCollection">socket 客戶端設定檔集合</param>
+            <param name="tokenId">Token ID</param>
+            <param name="bufferOffsetReceive">接收訊息的緩衝區位置</param>
+        </member>
+        <member name="M:TEC.Core.Sockets.Client.UserTokens.DataHoldingUserToken.createDataHolder``1">
+            <summary>
+            建立一個新的資料儲存物件及指派新的工作階段ID，並將新的<see cref="T:TEC.Core.Sockets.Core.DataHolderBase"/>參考傳回
+            </summary>
+            <returns>新建立的<see cref="T:TEC.Core.Sockets.Core.DataHolderBase"/>參考</returns>
+        </member>
+        <member name="M:TEC.Core.Sockets.Client.UserTokens.DataHoldingUserToken.releaseDataHolder">
+            <summary>
+            清除目前物件所指向的<see cref="T:TEC.Core.Sockets.Core.DataHolderBase"/>，並將原始的<see cref="T:TEC.Core.Sockets.Core.DataHolderBase"/>參考傳回
+            </summary>
+            <returns>原始的<see cref="T:TEC.Core.Sockets.Core.DataHolderBase"/>參考</returns>
+        </member>
+        <member name="P:TEC.Core.Sockets.Client.UserTokens.DataHoldingUserToken.RelatedSocketAsyncEventArgs">
+            <summary>
+            設定或取得與此作業相關的通訊端作業
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Client.UserTokens.DataHoldingUserToken.ReceiveBufferOffset">
+            <summary>
+            取得接收訊息的緩衝區位置
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Client.UserTokens.DataHoldingUserToken.SendBufferOffset">
+            <summary>
+            取得傳送訊息的緩衝區位置
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Client.UserTokens.DataHoldingUserToken.TokenId">
+            <summary>
+            取得 Token ID
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Client.UserTokens.DataHoldingUserToken.DataHolder">
+            <summary>
+            取得用於儲存傳輸資料的類別
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Client.UserTokens.DataHoldingUserToken.BytesSentAlreadyCount">
+            <summary>
+            設定或取得在進行 Send 的作業時，已送出多少位元組。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Client.UserTokens.DataHoldingUserToken.SendBytesRemainingCount">
+            <summary>
+            設定或取得在進行 Send 的作業時，尚有多少位元組尚未傳送，因目前會切割訊息後送出，故需要此欄位紀錄位置。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Client.UserTokens.DataHoldingUserToken.SocketSettingCollection">
+            <summary>
+            設定或取得 Socket 客戶端設定檔集合
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Client.UserTokens.DataHoldingUserToken.RemoteEndpoint">
+            <summary>
+            取得目標連線的識別網路位址，此參考可用於偵錯及分析目標連線。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Client.UserTokens.DataHoldingUserToken.IsDataHolderReleased">
+            <summary>
+            取得此 <see cref="P:TEC.Core.Sockets.Client.UserTokens.DataHoldingUserToken.DataHolder"/> 是否為 <c>null</c> 參考(呼叫<see cref="M:TEC.Core.Sockets.Client.UserTokens.DataHoldingUserToken.releaseDataHolder"/>後且尚未呼叫<see cref="M:TEC.Core.Sockets.Client.UserTokens.DataHoldingUserToken.createDataHolder``1"/>時)
+            </summary>
+        </member>
+        <member name="T:TEC.Core.Sockets.Server.AcceptedEventArgs">
+            <summary>
+            Accept 的 Socket 作業完成時引發的事件參數
+            </summary>
+        </member>
+        <member name="M:TEC.Core.Sockets.Server.AcceptedEventArgs.#ctor(TEC.Core.Sockets.Server.UserTokens.AcceptOperationUserToken,TEC.Core.Sockets.Server.UserTokens.DataHoldingUserToken)">
+            <summary>
+            初始化 Accept 的 Socket 作業完成時引發的事件參數
+            </summary>
+            <param name="acceptOperationUserToken">用於接受連線的<see cref="P:TEC.Core.Sockets.Server.AcceptedEventArgs.AcceptOperationUserToken"/></param>
+            <param name="dataHoldingUserToken">用於準備傳送/接收連線的<see cref="P:TEC.Core.Sockets.Server.AcceptedEventArgs.DataHoldingUserToken"/></param>
+        </member>
+        <member name="P:TEC.Core.Sockets.Server.AcceptedEventArgs.AcceptOperationUserToken">
+            <summary>
+            取得用於接受連線的<see cref="P:TEC.Core.Sockets.Server.AcceptedEventArgs.AcceptOperationUserToken"/>
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Server.AcceptedEventArgs.DataHoldingUserToken">
+            <summary>
+            取得用於準備傳送/接收連線的<see cref="P:TEC.Core.Sockets.Server.AcceptedEventArgs.DataHoldingUserToken"/>
+            </summary>
+        </member>
+        <member name="T:TEC.Core.Sockets.Server.AcceptingEventArgs">
+            <summary>
+            當開始接聽客戶端的 Accept 作業時引發事件的參數
+            </summary>
+        </member>
+        <member name="M:TEC.Core.Sockets.Server.AcceptingEventArgs.#ctor(TEC.Core.Sockets.Server.UserTokens.AcceptOperationUserToken)">
+            <summary>
+            初始化當開始接聽客戶端的 Accept 作業時引發事件的參數
+            </summary>
+            <param name="acceptOperationUserToken">用於接受連線的<see cref="P:TEC.Core.Sockets.Server.AcceptingEventArgs.AcceptOperationUserToken"/></param>
+        </member>
+        <member name="P:TEC.Core.Sockets.Server.AcceptingEventArgs.AcceptOperationUserToken">
+            <summary>
+            取得用於接受連線的<see cref="P:TEC.Core.Sockets.Server.AcceptingEventArgs.AcceptOperationUserToken"/>
+            </summary>
+        </member>
+        <member name="T:TEC.Core.Sockets.Server.DataHoldingEventArgs">
+            <summary>
+            當引發 Socket 事件時，保有<see cref="T:TEC.Core.Sockets.Server.UserTokens.DataHoldingUserToken"/>的事件參數
+            </summary>
+        </member>
+        <member name="M:TEC.Core.Sockets.Server.DataHoldingEventArgs.#ctor(TEC.Core.Sockets.Server.UserTokens.DataHoldingUserToken)">
+            <summary>
+            初始化引發 Socket 事件時，保有<see cref="T:TEC.Core.Sockets.Server.UserTokens.DataHoldingUserToken"/>的事件參數
+            </summary>
+            <param name="dataHoldingUserToken">與此事件相關的資料儲存物件</param>
+        </member>
+        <member name="P:TEC.Core.Sockets.Server.DataHoldingEventArgs.DataHoldingUserToken">
+            <summary>
+            取得與此事件參數相關的<see cref="T:TEC.Core.Sockets.Server.UserTokens.DataHoldingUserToken"/>
+            </summary>
+        </member>
+        <member name="T:TEC.Core.Sockets.Server.IServerMediator`1">
+            <summary>
+            用於處理傳送/接收資料使用的處理器介面
+            </summary>
+            <seealso cref="T:TEC.Core.Sockets.Client.IClientMediator`1"/>
+            <seealso cref="T:TEC.Core.Sockets.Core.DataHolderBase"/>
+            <example>
+            <para>
+            Mediator.cs
+            </para>
+            <code lang="C#">
+            /// &lt;summary&gt;
+            /// 處理傳送及接收資料的中介類別，通常整個訊息處理結束準備送出資料時，都可以由此類別取得或設定相關資料。
+            /// &lt;/summary&gt;
+            public class Mediator : IServerMediator&lt;DataHolder&gt;, IClientMediator&lt;DataHolder&gt;
+            {
+                #region Core
+                /// &lt;summary&gt;
+                /// 將要傳送的資料經過指定格式運算後，設定至[SocketAsyncEventArgs]以準備傳送作業
+                /// &lt;/summary&gt;
+                /// &lt;param name="dataToSend"&gt;要送出的原始資料&lt;/param&gt;
+                /// &lt;param name="dataHolder"&gt;用於送出資料的[TEC.Core.Sockets.Server.DataHolderBase]&lt;/param&gt;
+                /// &lt;param name="bufferSizeForEachSendOperation"&gt;傳送的緩稱區大小&lt;/param&gt;
+                public void prepareOutgoingData(byte[] dataToSend, DataHolder dataHolder, int bufferSizeForEachSendOperation, ref int messageId)
+                {
+                    dataHolder.OriginalDataToSend = dataToSend;
+                    Encoding encoding = Encoding.UTF8;
+                    // 第一則
+                    // 1. 0-4 byte =&gt; 固定字 HEAD
+                    // 2. 5-8 byte =&gt; 訊息 ID
+                    // 3. 9-12 byte =&gt; 訊息總長度
+                    // 4. 13~ =&gt; 訊息內文
+                    // 第二則以後
+                    // 1. 0-4 byte =&gt; 訊息 ID
+                    // 2. 5~ =&gt; 訊息內文
+                    // 每一則訊息的緩衝區
+                    //指定此訊息的ID
+                    int currentMessgaeId = Interlocked.Increment(ref messageId);
+                    //儲存準備發送的資料
+                    List&lt;byte&gt; finalMessageList = new List&lt;byte&gt;();
+                    #region 處理Header
+                    //放入HEAD字串
+                    foreach (byte textByte in encoding.GetBytes("HEAD"))
+                    {
+                        finalMessageList.Add(textByte);
+                    }
+                    #endregion
+                    #region 計算總送出的位元組
+                    // 1. 第一則實際內文長度 = bufferSizeForEachSendOperation - 4 bytes(HEAD 字串) - 4bytes(Total Message Length) - 4bytes(ID)
+                    int firstContextLength = bufferSizeForEachSendOperation - 12;
+                    // 2. 非第一則實際內文長度 = bufferSizeForEachSendOperation -  4bytes(ID)
+                    int nonFirstContextLength = bufferSizeForEachSendOperation - 4;
+                    #endregion
+                    #region 開始填入位元組
+                    int currentHandleIndex = 0;
+                    byte[] messageIdByteArray = BitConverter.GetBytes(currentMessgaeId);
+                    //填入ID
+                    finalMessageList.AddRange(messageIdByteArray);
+                    //先塞空的，之後會補上訊息總長度
+                    finalMessageList.Add(0);
+                    finalMessageList.Add(0);
+                    finalMessageList.Add(0);
+                    finalMessageList.Add(0);
+                    //處理第一則訊息，輸入第一則訊息應包含的資料 (firstContextLength 位元組)
+                    for (; currentHandleIndex &lt; firstContextLength &amp;&amp; currentHandleIndex &lt; dataToSend.Length; currentHandleIndex++)
+                    {
+                        finalMessageList.Add(dataToSend[currentHandleIndex]);
+                    }
+                    for (int currentIndex = 0; currentHandleIndex &lt; dataToSend.Length; currentIndex++, currentHandleIndex++)
+                    {
+                        if (currentIndex == nonFirstContextLength)
+                        {
+                            currentIndex = 0;
+                        }
+                        if (currentIndex == 0)
+                        {
+                            //訊息的第一個 byte ，加入標頭
+                            finalMessageList.AddRange(messageIdByteArray);
+                        }
+                        finalMessageList.Add(dataToSend[currentHandleIndex]);
+                    }
+                    #endregion
+                    #region 總長度計算
+                    byte[] lengthOfCurrentOutgoingMessageByteArray = BitConverter.GetBytes(dataToSend.Length);
+                    finalMessageList.RemoveRange(8, 4);
+                    finalMessageList.InsertRange(8, lengthOfCurrentOutgoingMessageByteArray);
+                    #endregion
+                    #region 計算填補字元(補上最後一則訊息不滿位元組的部分)
+                    int padingCount = bufferSizeForEachSendOperation - (finalMessageList.Count % bufferSizeForEachSendOperation);
+                    if (padingCount == bufferSizeForEachSendOperation)
+                    {
+                        padingCount = 0;
+                    }
+                    for (int index = 0; index &lt; padingCount; index++)
+                    {
+                        finalMessageList.Add(0);
+                    }
+                    #endregion
+                    //設定要傳送的資料
+                    dataHolder.Data = finalMessageList.ToArray();
+                }
+                /// &lt;summary&gt;
+                /// 處理接收到的資料，並傳回此訊息是否已接收完成。
+                /// &lt;/summary&gt;
+                /// &lt;param name="receivedData"&gt;已接收到的資料&lt;/param&gt;
+                /// &lt;param name="dataHolder"&gt;儲存資料的物件參考&lt;/param&gt;
+                /// &lt;returns&gt;&lt;c&gt;true&lt;/c&gt;:訊息已接收完成；&lt;c&gt;false&lt;/c&gt;:訊息尚未接收完成&lt;/returns&gt;
+                public bool handleData(byte[] receivedData, DataHolder dataHolder)
+                {
+                    Encoding encoding = Encoding.UTF8;
+                    bool isHead = String.Compare(encoding.GetString(receivedData.Take(4).ToArray()), "HEAD", false) == 0;
+                    int messageId;
+                    if (isHead)
+                    {
+                        byte[] dataByteArray;
+                        try
+                        {
+                            dataByteArray = new byte[BitConverter.ToInt32(receivedData.Skip(8).Take(4).ToArray(), 0)];
+                            messageId = BitConverter.ToInt32(receivedData.Skip(4).Take(4).ToArray(), 0);
+                        }
+                        catch (Exception ex)
+                        {
+                            //有發生錯誤則停止接收資料
+                            dataHolder.LastError = ex;
+                            return true;
+                        }
+                        dataHolder.switchData(messageId);
+                        dataHolder.Data = dataByteArray;
+                        //開始處理第一則訊息的內文
+                        dataHolder.LastWriteDataOffset = receivedData.Length - 12;
+                        if (dataHolder.LastWriteDataOffset &gt; dataHolder.Data.Length)
+                        {
+                            //第一則就已經是完整訊息
+                            Buffer.BlockCopy(receivedData, 12, dataHolder.Data, 0, dataHolder.Data.Length);
+                            return true;
+                        }
+                        Buffer.BlockCopy(receivedData, 12, dataHolder.Data, 0, dataHolder.LastWriteDataOffset);
+                        //回傳false以繼續接收新的資料
+                        return false;
+                    }
+                    else
+                    {
+                        //第二則內文的前4個byte是 ID
+                        try
+                        {
+                            messageId = BitConverter.ToInt32(receivedData.Take(4).ToArray(), 0);
+                        }
+                        catch (Exception ex)
+                        {
+                            //有發生錯誤則停止接收資料
+                            dataHolder.LastError = ex;
+                            return true;
+                        }
+                        messageId = BitConverter.ToInt32(receivedData.Take(4).ToArray(), 0);
+                        if (dataHolder.PendingDataDictionary.ContainsKey(messageId))
+                        {
+                            dataHolder.switchData(messageId);
+                        }
+                        else if (dataHolder.MessageId != messageId)
+                        {
+                            return true;
+                        }
+                        //計算本次應寫入多少位元組
+                        int bytesCountToWrite = receivedData.Length - 4;//扣掉ID 的 位元組陣列
+                        if (bytesCountToWrite &gt; dataHolder.Data.Length - dataHolder.LastWriteDataOffset)
+                        {
+                            //若有傳輸超過的狀況，捨棄多出來的位元組(已經溝通好多的部分補0的情況)
+                            bytesCountToWrite = dataHolder.Data.Length - dataHolder.LastWriteDataOffset;
+                        }
+                        Buffer.BlockCopy(receivedData, 4, dataHolder.Data, dataHolder.LastWriteDataOffset, bytesCountToWrite);
+                        dataHolder.LastWriteDataOffset += bytesCountToWrite;
+                        if (dataHolder.LastWriteDataOffset &gt;= dataHolder.Data.Length)
+                        {
+                            //已接收完成
+                            return true;
+                        }
+                        return false;
+                    }
+                }
+                #endregion
+                #region ServerSide
+                private int serverMessgaeId = 0;
+                /// &lt;summary&gt;
+                /// 將要傳送的資料經過指定格式運算後，設定至[SocketAsyncEventArgs]以準備傳送作業
+                /// &lt;/summary&gt;
+                /// &lt;param name="dataToSend"&gt;要送出的原始資料&lt;/param&gt;
+                /// &lt;param name="dataHolder"&gt;用於送出資料的[TEC.Core.Sockets.Server.DataHolderBase]&lt;/param&gt;
+                /// &lt;param name="readOnlySocketSettingDictionary"&gt;準備發送訊息的相關設定檔唯讀字典&lt;/param&gt;
+                public void prepareOutgoingData(byte[] dataToSend, DataHolder dataHolder, IReadOnlyDictionary&lt;SocketServerSettingEnum, object&gt; readOnlySocketSettingDictionary)
+                {
+                    this.prepareOutgoingData(dataToSend, dataHolder, (int)readOnlySocketSettingDictionary[SocketServerSettingEnum.OperationBufferSize], ref this.serverMessgaeId);
+                }
+                /// &lt;summary&gt;
+                /// 處理接收到的資料，並傳回此訊息是否已接收完成。
+                /// &lt;/summary&gt;
+                /// &lt;param name="receivedData"&gt;已接收到的資料&lt;/param&gt;
+                /// &lt;param name="dataHolder"&gt;儲存資料的物件參考&lt;/param&gt;
+                /// &lt;param name="readOnlySocketSettingDictionary"&gt;接收訊息的相關設定檔唯讀字典&lt;/param&gt;
+                /// &lt;returns&gt;&lt;c&gt;true&lt;/c&gt;:訊息已接收完成；&lt;c&gt;false&lt;/c&gt;:訊息尚未接收完成&lt;/returns&gt;
+                public bool handleData(byte[] receivedData, DataHolder dataHolder, IReadOnlyDictionary&lt;SocketServerSettingEnum, object&gt; readOnlySocketSettingDictionary)
+                {
+                    return this.handleData(receivedData, dataHolder);
+                }
+                #endregion
+                #region ClientSide
+                private int clientMessageId = 0;
+                /// &lt;summary&gt;
+                /// 將要傳送的資料經過指定格式運算後，設定至[SocketAsyncEventArgs]以準備傳送作業
+                /// &lt;/summary&gt;
+                /// &lt;param name="dataToSend"&gt;要送出的原始資料&lt;/param&gt;
+                /// &lt;param name="dataHolder"&gt;用於送出資料的[TEC.Core.Sockets.Server.DataHolderBase]&lt;/param&gt;
+                /// &lt;param name="readOnlySocketSettingDictionary"&gt;準備發送訊息的相關設定檔唯讀字典&lt;/param&gt;
+                public void prepareOutgoingData(byte[] dataToSend, DataHolder dataHolder, IReadOnlyDictionary&lt;SocketClientSettingEnum, object&gt; readOnlySocketSettingDictionary)
+                {
+                    this.prepareOutgoingData(dataToSend, dataHolder, (int)readOnlySocketSettingDictionary[SocketClientSettingEnum.OperationBufferSize], ref this.clientMessageId);
+                }
+                /// &lt;summary&gt;
+                /// 處理接收到的資料，並傳回此訊息是否已接收完成。
+                /// &lt;/summary&gt;
+                /// &lt;param name="receivedData"&gt;已接收到的資料&lt;/param&gt;
+                /// &lt;param name="dataHolder"&gt;儲存資料的物件參考&lt;/param&gt;
+                /// &lt;param name="readOnlySocketSettingDictionary"&gt;接收訊息的相關設定檔唯讀字典&lt;/param&gt;
+                /// &lt;returns&gt;&lt;c&gt;true&lt;/c&gt;:訊息已接收完成；&lt;c&gt;false&lt;/c&gt;:訊息尚未接收完成&lt;/returns&gt;
+                public bool handleData(byte[] receivedData, DataHolder dataHolder, IReadOnlyDictionary&lt;SocketClientSettingEnum, object&gt; readOnlySocketSettingDictionary)
+                {
+                    return this.handleData(receivedData, dataHolder);
+                }
+                #endregion
+            }
+            </code>
+            </example>
+        </member>
+        <member name="M:TEC.Core.Sockets.Server.IServerMediator`1.prepareOutgoingData(System.Byte[],`0,System.Collections.Generic.IReadOnlyDictionary{TEC.Core.Sockets.Server.SocketServerSettingEnum,System.Object})">
+            <summary>
+            將要傳送的資料經過指定格式運算後，設定至<paramref name="dataHolder"/>的<see cref="P:TEC.Core.Sockets.Core.DataHolderBase.Data"/>屬性以準備傳送作業
+            </summary>
+            <param name="dataToSend">要送出的原始資料</param>
+            <param name="dataHolder">用於送出資料的<see cref="T:TEC.Core.Sockets.Core.DataHolderBase"/></param>
+            <param name="readOnlySocketSettingDictionary">準備發送訊息的相關設定檔唯讀字典</param>
+        </member>
+        <member name="M:TEC.Core.Sockets.Server.IServerMediator`1.handleData(System.Byte[],`0,System.Collections.Generic.IReadOnlyDictionary{TEC.Core.Sockets.Server.SocketServerSettingEnum,System.Object})">
+            <summary>
+            處理接收到的資料，並傳回此訊息是否已接收完成。
+            </summary>
+            <param name="receivedData">已接收到的資料</param>
+            <param name="dataHolder">儲存資料的物件參考</param>
+            <param name="readOnlySocketSettingDictionary">接收訊息的相關設定檔唯讀字典</param>
+            <returns><c>true</c>:訊息已接收完成；<c>false</c>:訊息尚未接收完成</returns>
+            <remarks>通常這些資料會被設定至<paramref name="dataHolder"/>的<see cref="P:TEC.Core.Sockets.Core.DataHolderBase.Data"/>屬性中。</remarks>
+        </member>
+        <member name="T:TEC.Core.Sockets.Server.Resources.SocketListener">
+            <summary>
+              用於查詢當地語系化字串等的強類型資源類別。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Server.Resources.SocketListener.ResourceManager">
+            <summary>
+              傳回這個類別使用的快取的 ResourceManager 執行個體。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Server.Resources.SocketListener.Culture">
+            <summary>
+              覆寫目前執行緒的 CurrentUICulture 屬性，對象是所有
+              使用這個強類型資源類別的資源查閱。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Server.Resources.SocketListener.LastOperationNotSupported">
+            <summary>
+              查詢類似 The &quot;{0}&quot; value({1}) is not supported for this event. Possible values:&quot;{2}&quot;. 的當地語系化字串。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Server.Resources.SocketListener.MaxConnectionsToLarge">
+            <summary>
+              查詢類似 The &quot;{0}&quot; value(current: {1}) of the server setting collection must larger than &quot;{2}&quot; value(current: {3}). 的當地語系化字串。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Server.Resources.SocketListener.SocketListenerAlreadyInitialized">
+            <summary>
+              查詢類似 The socket listener is already initialized. 的當地語系化字串。
+            </summary>
+        </member>
+        <member name="T:TEC.Core.Sockets.Server.SocketListener`1">
+            <summary>
+            進行 Socket 的監聽管理類別，此類別無法被繼承
+            </summary>
+            <typeparam name="T">用於儲存資料的類型</typeparam>
+            <example>
+            <para>SocketListenerTest.cs</para>
+            <code lang="C#">
+            public class SocketListenerTest
+            {
+                private static SocketServerSettingCollection socketSettingCollection = new SocketServerSettingCollection();
+                public static void main()
+                {
+                    try
+                    {
+                        IPEndPoint localEndPoint = new IPEndPoint(IPAddress.Any, 9527);
+                        WriteInfoToConsole(localEndPoint);
+                        Mediator mediator = new Mediator();
+                        SocketListenerTest.socketSettingCollection[SocketServerSettingEnum.BackLog] = 100;
+                        SocketListenerTest.socketSettingCollection[SocketServerSettingEnum.LocalEndPoint] = localEndPoint;
+                        SocketListenerTest.socketSettingCollection[SocketServerSettingEnum.MaxConnections] = 30;
+                        SocketListenerTest.socketSettingCollection[SocketServerSettingEnum.MaxSimultaneousAcceptOperation] = 10;
+                        SocketListenerTest.socketSettingCollection[SocketServerSettingEnum.MaxProcessingOperationCount] = 3000;
+                        SocketListenerTest.socketSettingCollection[SocketServerSettingEnum.OperationBufferSize] = 25;
+                        SocketListener&lt;DataHolder&gt; socketListener = new SocketListener&lt;DataHolder&gt;(mediator, SocketListenerTest.socketSettingCollection, false);
+                        socketListener.OnAccepted += SocketListenerTest.SocketListener_OnAccepted;
+                        socketListener.OnBadAccept += SocketListenerTest.SocketListener_OnBadAccept;
+                        socketListener.OnClosingClientSocket += SocketListenerTest.SocketListener_OnClosingClientSocket;
+                        socketListener.OnDataReceived += SocketListenerTest.SocketListener_OnDataReceived;
+                        socketListener.OnReceivedMessage += SocketListenerTest.SocketListener_OnReceivedMessage;
+                        socketListener.OnReceiveEmptyData += SocketListenerTest.SocketListener_OnReceiveEmptyData;
+                        socketListener.OnReceiveError += SocketListenerTest.SocketListener_OnReceiveError;
+                        socketListener.OnDataSent += SocketListenerTest.SocketListener_OnDataSent;
+                        socketListener.OnSendCompleted += SocketListenerTest.SocketListener_OnSendCompleted;
+                        socketListener.OnSendError += SocketListenerTest.SocketListener_OnSendError;
+                        socketListener.OnStartingAccept += SocketListenerTest.SocketListener_OnStartingAccept;
+                        socketListener.OnStartingReceive += SocketListenerTest.SocketListener_OnStartingReceive;
+                        socketListener.OnStartingSend += SocketListenerTest.SocketListener_OnStartingSend;
+                        ((System.Collections.Specialized.INotifyCollectionChanged)socketListener.ReadOnlyConnectedTokenIdCollection).CollectionChanged += SocketListenerTest.SocketListenerTest_CollectionChanged;
+                        socketListener.inital();
+                        while (true)
+                        {
+                            string data = Console.ReadLine();
+                            if (String.Compare(data, "D", true) == 0)
+                            {
+                                //斷線
+                                socketListener.ReadOnlyConnectedTokenIdCollection.AsParallel().ForAll(tokenId =&gt;
+                                {
+                                    socketListener.disconnect(tokenId);
+                                });
+                                continue;
+                            }
+                            socketListener.ReadOnlyConnectedTokenIdCollection.AsParallel().ForAll(tokenId =&gt;
+                            {
+                                //傳送訊息至客戶端
+                                Console.WriteLine($"已佇列發送訊息，發送的訊息 Token 為: {socketListener.sendDataAsync(tokenId, System.Text.Encoding.UTF8.GetBytes(data)).Result}");
+                            });
+                            Console.WriteLine("已傳送完成");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex.Message);
+                    }
+                }
+                private static void SocketListenerTest_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+                {
+                    System.Collections.ObjectModel.ReadOnlyObservableCollection&lt;int&gt; connectedTokenIdCollection = sender as System.Collections.ObjectModel.ReadOnlyObservableCollection&lt;int&gt;;
+                    Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")}- 已連接的客戶端發生變更，目前共管理\"{connectedTokenIdCollection.Count}\"個 Token");
+                    Console.WriteLine($"   Token: {String.Join(",", connectedTokenIdCollection)}");
+                }
+                private static void SocketListener_OnStartingSend(object sender, DataHoldingEventArgs e)
+                {
+                    DataHolder dataHolder = e.DataHoldingUserToken.DataHolder as DataHolder;
+                    Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")}- 以 Token ID: {e.DataHoldingUserToken.TokenId} 準備送資料給客戶端({e.DataHoldingUserToken.RemoteEndpoint})。");
+                    Console.WriteLine($"   資料:{System.Text.Encoding.UTF8.GetString(dataHolder.OriginalDataToSend) }");
+                    Console.WriteLine($"   (已處理)資料:{String.Join(" ", dataHolder.Data) }");
+                }
+                private static void SocketListener_OnStartingReceive(object sender, DataHoldingEventArgs e)
+                {
+                    Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")}- 以 Token ID: {e.DataHoldingUserToken.TokenId} 準備接受客戶端({e.DataHoldingUserToken.RemoteEndpoint})的資料。");
+                }
+                private static void SocketListener_OnStartingAccept(object sender, AcceptingEventArgs e)
+                {
+                    Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")}- 以 Accept Token ID: {e.AcceptOperationUserToken.TokenId} 的接收通訊端準備接受客戶端的 Accept 作業。");
+                }
+                private static void SocketListener_OnSendError(object sender, SocketErrorEventArgs e)
+                {
+                    Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")}- 傳送作業發生錯誤，Token ID: {e.UserToken.TokenId}，原因: {e.SocketError.ToString()}");
+                }
+                private static void SocketListener_OnDataSent(object sender, DataHoldingEventArgs e)
+                {
+                    Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")}- 已傳送完整訊息，Token ID: {e.DataHoldingUserToken.TokenId}，訊息: { System.Text.Encoding.UTF8.GetString(e.DataHoldingUserToken.DataHolder.Data)}");
+                }
+                private static void SocketListener_OnSendCompleted(object sender, DataHoldingEventArgs e)
+                {
+                    Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")}- Send 操作已完成，Token ID: {e.DataHoldingUserToken.TokenId}");
+                }
+                private static void SocketListener_OnReceiveError(object sender, SocketErrorEventArgs e)
+                {
+                    Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")}- 接收作業發生錯誤，Token ID: {e.UserToken.TokenId}，原因: {e.SocketError.ToString()}");
+                }
+                private static void SocketListener_OnReceiveEmptyData(object sender, DataHoldingEventArgs e)
+                {
+                    Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")}- 接收到空白資料，Token ID: {e.DataHoldingUserToken.TokenId}");
+                }
+                private static void SocketListener_OnReceivedMessage(object sender, DataHoldingEventArgs e)
+                {
+                    Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")}- 已完成一次 Receive 作業，目前結果:  {(e.DataHoldingUserToken.DataHolder.Data == null ? "尚未建立或已傳送完畢" : Encoding.UTF8.GetString(e.DataHoldingUserToken.DataHolder.Data))}");
+                }
+                private static void SocketListener_OnDataReceived(object sender, DataReceivedEventArgs e)
+                {
+                    Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")}- 已接收到一次完整訊息，資料: {(e.DataHolder.Data == null ? "尚未建立" : System.Text.Encoding.UTF8.GetString(e.DataHolder.Data))}，來源:{e.RemoteEndPoint}");
+                }
+                private static void SocketListener_OnClosingClientSocket(object sender, DataHoldingEventArgs e)
+                {
+                    Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")}- 已關閉連線，Token ID: {e.DataHoldingUserToken.TokenId}");
+                }
+                private static void SocketListener_OnBadAccept(object sender, SocketErrorEventArgs e)
+                {
+                    Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")}- Accept 發生錯誤，Token ID: {e.UserToken.TokenId}");
+                }
+                private static void SocketListener_OnAccepted(object sender, AcceptedEventArgs e)
+                {
+                    Console.WriteLine($"已接受連入連線，Token ID: {e.DataHoldingUserToken.TokenId}(來自 Accept Token ID: {e.AcceptOperationUserToken.TokenId})");
+                }
+                public static void WriteInfoToConsole(IPEndPoint localEndPoint)
+                {
+                    Console.WriteLine("緩衝區大小 = " + SocketListenerTest.socketSettingCollection[SocketServerSettingEnum.OperationBufferSize].ToString());
+                    Console.WriteLine("最大客戶端同時連線數量 = " + SocketListenerTest.socketSettingCollection[SocketServerSettingEnum.MaxConnections].ToString());
+                    Console.WriteLine("最大同時處理傳送/接受作業的連線數量 = " + SocketListenerTest.socketSettingCollection[SocketServerSettingEnum.MaxProcessingOperationCount].ToString());
+                    Console.WriteLine("等待連接最大上限 = " + SocketListenerTest.socketSettingCollection[SocketServerSettingEnum.BackLog].ToString());
+                    Console.WriteLine();
+                    Console.WriteLine();
+                    Console.WriteLine("本機接聽位址 = " + IPAddress.Parse(((IPEndPoint)localEndPoint).Address.ToString()) + ": " + ((IPEndPoint)localEndPoint).Port.ToString());
+                    Console.WriteLine("伺服器名稱 = " + Environment.MachineName);
+                    Console.WriteLine();
+                    Console.WriteLine("請注意防火牆是否已經開啟相對應的埠號");
+                    Console.WriteLine();
+                }
+            }
+            </code>
+            </example>
+            <seealso cref="T:TEC.Core.Sockets.Core.DataHolderBase"/>
+            <seealso cref="T:TEC.Core.Sockets.Server.IServerMediator`1"/>
+            <seealso cref="T:TEC.Core.Sockets.Client.SocketClient`1"/>
+        </member>
+        <member name="M:TEC.Core.Sockets.Server.SocketListener`1.#ctor(TEC.Core.Sockets.Server.IServerMediator{`0},TEC.Core.Sockets.Server.SocketServerSettingCollection,System.Boolean)">
+            <summary>
+            初始化 Socket 的伺服器端管理物件
+            </summary>
+            <param name="socketServerSettingCollection">關於此管理物件的設定檔集合</param>
+            <param name="initialImmediately">是否在建構函式完成時立即開始接聽，若輸入<c>false</c>則需要呼叫<see cref="M:TEC.Core.Sockets.Server.SocketListener`1.inital"/>以開始接聽作業</param>
+            <param name="mediator">用於處理資料的中介物件</param>
+        </member>
+        <member name="M:TEC.Core.Sockets.Server.SocketListener`1.inital">
+            <summary>
+            初始化 Socket 管理物件
+            </summary>
+        </member>
+        <member name="M:TEC.Core.Sockets.Server.SocketListener`1.ConnctedSocketAsyncEventArgsCollection_CollectionChanged(System.Object,System.Collections.Specialized.NotifyCollectionChangedEventArgs)">
+            <summary>
+            當在連線中的集合發生變更時(可能是新增連線或斷線)，需要連同<see cref="P:TEC.Core.Sockets.Server.SocketListener`1.ConnectedTokenIdCollection"/>的資料一起修改。
+            </summary>
+            <param name="sender"></param>
+            <param name="e"></param>
+        </member>
+        <member name="M:TEC.Core.Sockets.Server.SocketListener`1.createNewSaeaForAccept">
+            <summary>
+            建立進行 Accept 的 Socket 操作所需要的<see cref="T:System.Net.Sockets.SocketAsyncEventArgs"/>物件，建立此物件不會分配 buffer 至回傳的物件中。
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:TEC.Core.Sockets.Server.SocketListener`1.processAccept(System.Net.Sockets.SocketAsyncEventArgs)">
+            <summary>
+            在 Accept 作業完成(<see cref="E:System.Net.Sockets.SocketAsyncEventArgs.Completed"/>)時，將其 Socket 派送用於傳送/接收資料的<see cref="T:System.Net.Sockets.SocketAsyncEventArgs"/>物件。
+            並且迅速地準備接受下一個連線。
+            </summary>
+            <param name="acceptEventArgs">用來進行 Accept 的 Socket 作業的<see cref="T:System.Net.Sockets.SocketAsyncEventArgs"/></param>
+        </member>
+        <member name="M:TEC.Core.Sockets.Server.SocketListener`1.startAccept">
+            <summary>
+            開始讓客戶端能進行 Accept 的作業
+            </summary>
+        </member>
+        <member name="M:TEC.Core.Sockets.Server.SocketListener`1.startReceive(System.Net.Sockets.SocketAsyncEventArgs)">
+            <summary>
+            設定接收專用的緩衝區以及準備進行 Receive 作業
+            </summary>
+            <param name="receiveSendEventArgs">用於通訊的作業</param>
+        </member>
+        <member name="M:TEC.Core.Sockets.Server.SocketListener`1.processReceive(System.Net.Sockets.SocketAsyncEventArgs)">
+            <summary>
+            當非同步的 Receive 作業完成時呼叫，若客戶端已經關閉此連線，則用於連線的 Socket 會被關閉；否則允許回應給客戶端(必要的話)
+            </summary>
+            <param name="receiveSendEventArgs"></param>
+        </member>
+        <member name="M:TEC.Core.Sockets.Server.SocketListener`1.sendDataAsync(System.Int32,System.Byte[])">
+            <summary>
+            送出指定的訊息至指定 Token ID，非同步作業完成時代表的是已成功遞交訊息給 Socket Listener 處理，不代表訊息已全數送出。
+            若要監聽訊息完整送出事件，請參考<see cref="E:TEC.Core.Sockets.Server.SocketListener`1.OnDataSent"/>事件，並回傳傳送訊息的 Token (並非 Client 的連接 Token ，此值提供追蹤使用)。
+            </summary>
+            <param name="tokenId">要發送目標的 Token ID，可以在接受連線時取得到</param>
+            <param name="dataToSned">要發送的資料</param>
+            <exception cref="T:TEC.Core.Sockets.Core.TokenIdNotFoundException">當無法以<paramref name="tokenId"/>找到相對應的連線時擲出</exception>
+            <returns>非同步作業，若物件已經被處置時，將傳回 0</returns>
+        </member>
+        <member name="M:TEC.Core.Sockets.Server.SocketListener`1.processSend(System.Net.Sockets.SocketAsyncEventArgs)">
+            <summary>
+            當非同步的 Send 完成時須叫用的方法，此方法決定是否要繼續傳送資料。若已傳送完成，則開始接聽，若尚未傳送完成(依照尚未傳送的位元組來判斷)，則繼續進行 Send 作業。
+            </summary>
+            <param name="receiveSendEventArgs"></param>
+        </member>
+        <member name="M:TEC.Core.Sockets.Server.SocketListener`1.disconnect(System.Int32)">
+            <summary>
+            中斷指定的 Socket 連線
+            </summary>
+            <param name="tokenId">要中斷連線的 Socket Token Id</param>
+            <exception cref="T:TEC.Core.Sockets.Core.TokenIdNotFoundException">當無法以<paramref name="tokenId"/>找到相對應的連線時擲出</exception>
+        </member>
+        <member name="M:TEC.Core.Sockets.Server.SocketListener`1.closeClientSocket(System.Net.Sockets.SocketAsyncEventArgs)">
+            <summary>
+            關閉指定非同步連線的 Socket (僅可用於 Receive / Send 作業)
+            </summary>
+            <param name="e">要關閉的非同步 Socket 連線作業</param>
+        </member>
+        <member name="M:TEC.Core.Sockets.Server.SocketListener`1.Dispose">
+            <summary>
+            釋放此 Socket 伺服器的所有資源，並中斷所有現存的連線
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Server.SocketListener`1.MaxConnectionSemaphore">
+            <summary>
+            設定或取得控制最大取用堆疊的限制物件
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Server.SocketListener`1.IsDisposing">
+            <summary>
+            設定或取得物件是否已處置
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Server.SocketListener`1.ReadOnlyServerSocketSettingDictionary">
+            <summary>
+            取得此監聽器的唯讀設定檔字典
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Server.SocketListener`1.Mediator">
+            <summary>
+            設定或取得傳送/接受資料的中介物件
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Server.SocketListener`1.SocketServerSettingCollection">
+            <summary>
+            設定或取得 Socket 的設定檔集合
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Server.SocketListener`1.ListenSocket">
+            <summary>
+            設定或取得用於接聽客戶端 Accept 作業的 <see cref="T:System.Net.Sockets.Socket"/> 物件
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Server.SocketListener`1.BufferManager">
+            <summary>
+            設定或取得緩衝區管理物件
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Server.SocketListener`1.AcceptSocketAsyncEventArgsPool">
+            <summary>
+            設定或取得接受 Socket 連線所使用的 <see cref="T:TEC.Core.Sockets.Core.SocketAsyncEventArgsPool"/> 管理物件
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Server.SocketListener`1.ReceiveSendSocketAsyncEventArgsPool">
+            <summary>
+            設定或取得傳送/接收 Socket 連線所使用的 <see cref="T:TEC.Core.Sockets.Core.SocketAsyncEventArgsPool"/> 管理物件
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Server.SocketListener`1.IsInitialized">
+            <summary>
+            取得 Socket 管理物件是否已經初始化完成(值變更時引發通知)
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Server.SocketListener`1.ConnctedSocketAsyncEventArgsCollection">
+            <summary>
+            設定或取得已經連線的<see cref="T:System.Net.Sockets.SocketAsyncEventArgs"/>
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Server.SocketListener`1.ReadOnlyConnectedTokenIdCollection">
+            <summary>
+            取得所有已經連線的 Token ID 集合
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Server.SocketListener`1.ConnectedTokenIdCollection">
+            <summary>
+            設定或取得所有已經連線的 Token ID 集合，不應直接操作此集合內的元素，
+            並且此集合的元素應隨<see cref="P:TEC.Core.Sockets.Server.SocketListener`1.ConnctedSocketAsyncEventArgsCollection"/>而有所變動
+            (變動由<see cref="P:TEC.Core.Sockets.Server.SocketListener`1.ConnctedSocketAsyncEventArgsCollection"/>的事件觸發)
+            </summary>
+        </member>
+        <member name="E:TEC.Core.Sockets.Server.SocketListener`1.OnBadAccept">
+            <summary>
+            當 Accept 的 Socket 作業發生錯誤時發生
+            </summary>
+        </member>
+        <member name="E:TEC.Core.Sockets.Server.SocketListener`1.OnAccepted">
+            <summary>
+            當 Accept 的 Socket 作業已完成連接時發生
+            </summary>
+        </member>
+        <member name="E:TEC.Core.Sockets.Server.SocketListener`1.OnReceivedMessage">
+            <summary>
+            當有任何 Receive 單次作業接收到資料時引發的事件(非完整訊息)
+            </summary>
+        </member>
+        <member name="E:TEC.Core.Sockets.Server.SocketListener`1.OnSendCompleted">
+            <summary>
+            當有任何 Send 作業完成時引發的事件
+            </summary>
+        </member>
+        <member name="E:TEC.Core.Sockets.Server.SocketListener`1.OnStartingAccept">
+            <summary>
+            當準備開始接聽客戶端 Accept 作業時發生
+            </summary>
+        </member>
+        <member name="E:TEC.Core.Sockets.Server.SocketListener`1.OnStartingReceive">
+            <summary>
+            當準備開始接聽客戶端 Receive 作業時發生
+            </summary>
+        </member>
+        <member name="E:TEC.Core.Sockets.Server.SocketListener`1.OnStartingSend">
+            <summary>
+            當準備開始接聽客戶端 Send 作業時發生
+            </summary>
+        </member>
+        <member name="E:TEC.Core.Sockets.Server.SocketListener`1.OnClosingClientSocket">
+            <summary>
+            當準備關閉客戶端連線時發生
+            </summary>
+        </member>
+        <member name="E:TEC.Core.Sockets.Server.SocketListener`1.OnReceiveError">
+            <summary>
+            當在 Receive 作業出現錯誤時引發
+            </summary>
+        </member>
+        <member name="E:TEC.Core.Sockets.Server.SocketListener`1.OnSendError">
+            <summary>
+            當在 Send 作業出現錯誤時引發
+            </summary>
+        </member>
+        <member name="E:TEC.Core.Sockets.Server.SocketListener`1.OnReceiveEmptyData">
+            <summary>
+            當在 Receive 作業沒有收到任何資料時引發
+            </summary>
+        </member>
+        <member name="E:TEC.Core.Sockets.Server.SocketListener`1.OnDataReceived">
+            <summary>
+            當成功接收到一個完整訊息時引發的事件
+            </summary>
+        </member>
+        <member name="E:TEC.Core.Sockets.Server.SocketListener`1.OnDataSent">
+            <summary>
+            當成功傳送一個完整訊息時引發的事件
+            </summary>
+        </member>
+        <member name="T:TEC.Core.Sockets.Server.SocketServerSettingCollection">
+            <summary>
+            描述 Socket 伺服器端設定檔的集合
+            </summary>
+        </member>
+        <member name="M:TEC.Core.Sockets.Server.SocketServerSettingCollection.#ctor">
+            <summary>
+            初始化 Socket 伺服器端設定檔的集合
+            </summary>
+        </member>
+        <member name="M:TEC.Core.Sockets.Server.SocketServerSettingCollection.getDefaultValue(TEC.Core.Sockets.Server.SocketServerSettingEnum)">
+            <summary>
+            取得指定設定的預設值
+            </summary>
+            <param name="key">要取得預設值的索引鍵</param>
+            <returns>傳回其預設值</returns>
+        </member>
+        <member name="T:TEC.Core.Sockets.Server.SocketServerSettingEnum">
+            <summary>
+            Socket 的設定檔列舉
+            </summary>
+        </member>
+        <member name="F:TEC.Core.Sockets.Server.SocketServerSettingEnum.MaxConnections">
+            <summary>
+            同時允許客戶端連線的最大上限，屬於<see cref="T:System.Int32"/>
+            </summary>
+        </member>
+        <member name="F:TEC.Core.Sockets.Server.SocketServerSettingEnum.BackLog">
+            <summary>
+            暫止連接佇列的最大長度，屬於<see cref="T:System.Int32"/>
+            </summary>
+        </member>
+        <member name="F:TEC.Core.Sockets.Server.SocketServerSettingEnum.MaxSimultaneousAcceptOperation">
+            <summary>
+            最大同時進行 Accept 作業的數量，屬於<see cref="T:System.Int32"/>
+            </summary>
+        </member>
+        <member name="F:TEC.Core.Sockets.Server.SocketServerSettingEnum.OperationBufferSize">
+            <summary>
+            每一個 Socket 進行任一種作業的緩衝區大小，屬於<see cref="T:System.Int32"/>
+            </summary>
+        </member>
+        <member name="F:TEC.Core.Sockets.Server.SocketServerSettingEnum.LocalEndPoint">
+            <summary>
+            本機 Socket 監聽位址，屬於<see cref="T:System.Net.IPEndPoint"/>
+            </summary>
+        </member>
+        <member name="F:TEC.Core.Sockets.Server.SocketServerSettingEnum.MaxProcessingOperationCount">
+            <summary>
+            監聽物件最大同時處理操作的數量，屬於<see cref="T:System.Int32"/>
+            </summary>
+        </member>
+        <member name="T:TEC.Core.Sockets.Server.UserTokens.AcceptOperationUserToken">
+            <summary>
+            用於接受 Socket 連入作業的 User Token
+            </summary>
+        </member>
+        <member name="M:TEC.Core.Sockets.Server.UserTokens.AcceptOperationUserToken.#ctor(System.Int32)">
+            <summary>
+            初始化用於接受 Socket 連入作業的 User Token
+            </summary>
+            <param name="tokenId">Token ID</param>
+        </member>
+        <member name="P:TEC.Core.Sockets.Server.UserTokens.AcceptOperationUserToken.TokenId">
+            <summary>
+            取得 Token ID
+            </summary>
+        </member>
+        <member name="T:TEC.Core.Sockets.Server.UserTokens.DataHoldingUserToken">
+            <summary>
+            在 Socket 的 Accept 作業完成後，會使用到的資料儲存專用的 User Token
+            </summary>
+        </member>
+        <member name="M:TEC.Core.Sockets.Server.UserTokens.DataHoldingUserToken.#ctor(System.Int32,System.Int32,TEC.Core.Sockets.Server.SocketServerSettingCollection)">
+            <summary>
+            初始化用於儲存交換資料的 User Token
+            </summary>
+            <param name="socketSettingCollection">socket 設定檔集合</param>
+            <param name="tokenId">Token ID</param>
+            <param name="bufferOffsetReceive">接收訊息的緩衝區位置</param>
+        </member>
+        <member name="M:TEC.Core.Sockets.Server.UserTokens.DataHoldingUserToken.createDataHolder``1">
+            <summary>
+            建立一個新的資料儲存物件及指派新的工作階段ID，並將新的<see cref="T:TEC.Core.Sockets.Core.DataHolderBase"/>參考傳回
+            </summary>
+            <returns>新建立的<see cref="T:TEC.Core.Sockets.Core.DataHolderBase"/>參考</returns>
+        </member>
+        <member name="M:TEC.Core.Sockets.Server.UserTokens.DataHoldingUserToken.releaseDataHolder">
+            <summary>
+            清除目前物件所指向的<see cref="T:TEC.Core.Sockets.Core.DataHolderBase"/>，並將原始的<see cref="T:TEC.Core.Sockets.Core.DataHolderBase"/>參考傳回
+            </summary>
+            <returns>原始的<see cref="T:TEC.Core.Sockets.Core.DataHolderBase"/>參考</returns>
+        </member>
+        <member name="P:TEC.Core.Sockets.Server.UserTokens.DataHoldingUserToken.RelatedSocketAsyncEventArgs">
+            <summary>
+            設定或取得與此作業相關的通訊端作業
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Server.UserTokens.DataHoldingUserToken.ReceiveBufferOffset">
+            <summary>
+            取得接收訊息的緩衝區位置
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Server.UserTokens.DataHoldingUserToken.SendBufferOffset">
+            <summary>
+            取得傳送訊息的緩衝區位置
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Server.UserTokens.DataHoldingUserToken.TokenId">
+            <summary>
+            取得 Token ID
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Server.UserTokens.DataHoldingUserToken.DataHolder">
+            <summary>
+            取得用於儲存傳輸資料的類別
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Server.UserTokens.DataHoldingUserToken.BytesSentAlreadyCount">
+            <summary>
+            設定或取得在進行 Send 的作業時，已送出多少位元組。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Server.UserTokens.DataHoldingUserToken.SendBytesRemainingCount">
+            <summary>
+            設定或取得在進行 Send 的作業時，尚有多少位元組尚未傳送，因目前會切割訊息後送出，故需要此欄位紀錄位置。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Server.UserTokens.DataHoldingUserToken.SocketSettingCollection">
+            <summary>
+            設定或取得 Socket 設定檔集合
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Server.UserTokens.DataHoldingUserToken.RemoteEndpoint">
+            <summary>
+            取得目標連線的識別網路位址，此參考可用於偵錯及分析目標連線。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Server.UserTokens.DataHoldingUserToken.IsDataHolderReleased">
+            <summary>
+            取得此 <see cref="P:TEC.Core.Sockets.Server.UserTokens.DataHoldingUserToken.DataHolder"/> 是否為 <c>null</c> 參考(呼叫<see cref="M:TEC.Core.Sockets.Server.UserTokens.DataHoldingUserToken.releaseDataHolder"/>後且尚未呼叫<see cref="M:TEC.Core.Sockets.Server.UserTokens.DataHoldingUserToken.createDataHolder``1"/>時)
+            </summary>
+        </member>
+        <member name="T:TEC.Core.Sockets.Core.BufferManager">
+            <summary>
+            緩衝區資源管理器
+            </summary>
+            <remarks>
+            此資源管理器目的是建立長位元組陣列(byte array)以管理在操作非同步 socket 作業時，<see cref="T:System.Net.Sockets.SocketAsyncEventArgs"/> 所需要的緩衝區。
+            </remarks>
+        </member>
+        <member name="M:TEC.Core.Sockets.Core.BufferManager.#ctor(System.Int32,System.Int32)">
+            <summary>
+            依照輸入的 Socket 設定檔集合初始化緩衝區資源管理器
+            </summary>
+            <param name="operationBufferSize">每一個 Operation 的緩衝區大小</param>
+            <param name="maxConnections">最大連線數量</param>
+        </member>
+        <member name="M:TEC.Core.Sockets.Core.BufferManager.setBuffer(System.Net.Sockets.SocketAsyncEventArgs)">
+            <summary>
+            切割目前緩衝區的資料至每一個<see cref="T:System.Net.Sockets.SocketAsyncEventArgs"/>物件參考中。
+            </summary>
+            <param name="args"></param>
+            <returns>如果成功設定緩衝區，傳回<c lang="C#">true</c>，否則傳回<c lang="C#">false</c></returns>
+        </member>
+        <member name="M:TEC.Core.Sockets.Core.BufferManager.freeBuffer(System.Net.Sockets.SocketAsyncEventArgs)">
+            <summary>
+            將目前的緩衝區清空，除非您需要回收並摧毀<see cref="T:System.Net.Sockets.SocketAsyncEventArgs"/>物件參考或處理其例外；
+            除此之外，在應用程式執行時，應保持此物件的緩衝區被分配到一個<see cref="T:System.Net.Sockets.SocketAsyncEventArgs"/>物件參考。
+            </summary>
+            <param name="args"></param>
+        </member>
+        <member name="P:TEC.Core.Sockets.Core.BufferManager.TotalBytes">
+            <summary>
+            取得緩衝集區管理的位元組數
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Core.BufferManager.TotalBufferBytesInEachSaeaObject">
+            <summary>
+            取得每一個<see cref="T:System.Net.Sockets.SocketAsyncEventArgs"/>的緩衝區總位元組
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Core.BufferManager.FreeIndexPool">
+            <summary>
+            設定或取得先前經由<see cref="M:TEC.Core.Sockets.Core.BufferManager.freeBuffer(System.Net.Sockets.SocketAsyncEventArgs)"/>方法釋放過的緩衝區起始索引位置的<see cref="T:System.Collections.Generic.Stack`1"/>
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Core.BufferManager.CurrentIndex">
+            <summary>
+            取得 socket 作業時，最後紀錄的位元組數位置
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Core.BufferManager.BufferBlockLazy">
+            <summary>
+            設定或取得緩衝區
+            </summary>
+        </member>
+        <member name="T:TEC.Core.Sockets.Core.DataReceivedEventArgs">
+            <summary>
+            當接收的資料已處理完成時引發事件的參數
+            </summary>
+        </member>
+        <member name="M:TEC.Core.Sockets.Core.DataReceivedEventArgs.#ctor(TEC.Core.Sockets.Core.DataHolderBase,System.Int32,System.Net.EndPoint)">
+            <summary>
+            初始化當接收的資料已處理完成時引發事件的參數
+            </summary>
+            <param name="dataHolder">儲存資料的類別</param>
+            <param name="tokenId">接收到資料的 Token ID</param>
+            <param name="endPoint">目標連線的識別網路位址，此參考可用於偵錯及分析目標連線</param>
+        </member>
+        <member name="P:TEC.Core.Sockets.Core.DataReceivedEventArgs.DataHolder">
+            <summary>
+            取得已完成接收的資料
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Core.DataReceivedEventArgs.TokenId">
+            <summary>
+            取得接收到資料的 Token ID
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Core.DataReceivedEventArgs.RemoteEndPoint">
+            <summary>
+            取得目標連線的識別網路位址，此參考可用於偵錯及分析目標連線。
+            </summary>
+        </member>
+        <member name="T:TEC.Core.Sockets.Core.DataHolderBase">
+            <summary>
+            用於儲存接收/傳送資料的基底型別
+            </summary>
+            <example>
+            <para>DataHolder.cs</para>
+            <code lang="C#">
+            /// &lt;summary&gt;
+            /// 儲存傳送/接收資料所使用的儲存物件
+            /// &lt;/summary&gt;
+            public class DataHolder : DataHolderBase
+            {
+                public DataHolder()
+                {
+                    this.PendingDataDictionary = new Dictionary&lt;int, Tuple&lt;byte[], int&gt;&gt;();
+                }
+                /// &lt;summary&gt;
+                /// 將目前的資料切換至以&lt;see cref="MessageId"/&gt;為主的資料，若有資料得切換則傳回&lt;c&gt;true&lt;/c&gt;；無法切換則傳回&lt;c&gt;false&lt;/c&gt;
+                /// &lt;/summary&gt;
+                /// &lt;returns&gt;&lt;/returns&gt;
+                public void switchData(int targetMessageId)
+                {
+                    if (this.MessageId.HasValue &amp;&amp; this.MessageId.Value == targetMessageId)
+                    {
+                        //一樣的資料，不轉換
+                        return;
+                    }
+                    if (!this.MessageId.HasValue)
+                    {
+                        //第一次建立
+                        this.MessageId = targetMessageId;
+                        base.Data = null;
+                        this.LastWriteDataOffset = 0;
+                        return;
+                    }
+                    lock (this.PendingDataDictionary)
+                    {
+                        this.PendingDataDictionary.Add(this.MessageId.Value, new Tuple&lt;byte[], int&gt;(this.Data, this.LastWriteDataOffset));
+                        if (!this.PendingDataDictionary.ContainsKey(targetMessageId))
+                        {
+                            //將目前資料移至字典中暫存，並將Data清空以接受新的資料
+                            this.MessageId = targetMessageId;
+                            this.LastWriteDataOffset = 0;
+                            base.Data = null;
+                            return;
+                        }
+                        this.MessageId = targetMessageId;
+                        Tuple&lt;byte[], int&gt; tuple = this.PendingDataDictionary[this.MessageId.Value];
+                        base.Data = tuple.Item1;
+                        this.LastWriteDataOffset = tuple.Item2;
+                        this.PendingDataDictionary.Remove(targetMessageId);
+                    }
+                }
+                /// &lt;summary&gt;
+                /// 設定或取得訊息ID，若尚未設定過則為&lt;c&gt;null&lt;/c&gt;參考
+                /// &lt;/summary&gt;
+                public int? MessageId { private set; get; }
+                /// &lt;summary&gt;
+                /// 設定或取得最後發生的錯誤資料，若無則為&lt;c&gt;null&lt;/c&gt;。
+                /// &lt;/summary&gt;
+                public Exception LastError { set; get; }
+                /// &lt;summary&gt;
+                /// 設定或取得最後寫入的資料位元組位置，紀錄以便下一個資料進入時能夠繼續寫入
+                /// &lt;/summary&gt;
+                public int LastWriteDataOffset { set; get; }
+                /// &lt;summary&gt;
+                /// 設定或取得尚未經過訊息切割的訊息位元組陣列
+                /// &lt;/summary&gt;
+                public byte[] OriginalDataToSend { set; get; }
+                /// &lt;summary&gt;
+                /// 取得暫存資料的字典，目的用於同時傳輸多個ID的資料時，需要互相切換使用。
+                /// &lt;/summary&gt;
+                public Dictionary&lt;int, Tuple&lt;byte[], int&gt;&gt; PendingDataDictionary { set; get; }
+            }
+            </code>
+            </example>
+            <seealso cref="T:TEC.Core.Sockets.Client.SocketClient`1"/>
+            <seealso cref="T:TEC.Core.Sockets.Client.IClientMediator`1"/>
+            <seealso cref="T:TEC.Core.Sockets.Server.IServerMediator`1"/>
+            <seealso cref="T:TEC.Core.Sockets.Server.SocketListener`1"/>
+        </member>
+        <member name="P:TEC.Core.Sockets.Core.DataHolderBase.Data">
+            <summary>
+            設定或取得接收/傳送的資料位元組
+            </summary>
+        </member>
+        <member name="T:TEC.Core.Sockets.Core.ITokenContainer">
+            <summary>
+            宣告類別具有存放 Token ID 的欄位
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Core.ITokenContainer.TokenId">
+            <summary>
+            取得 Token ID
+            </summary>
+        </member>
+        <member name="T:TEC.Core.Sockets.Core.SocketAsyncEventArgsPool">
+            <summary>
+            用於儲存可共用的<see cref="T:System.Net.Sockets.SocketAsyncEventArgs"/>物件集合，此類別無法被繼承
+            </summary>
+        </member>
+        <member name="F:TEC.Core.Sockets.Core.SocketAsyncEventArgsPool.nextTokenId">
+            <summary>
+            在應用程式測試時易於辨識的TokenId
+            </summary>
+        </member>
+        <member name="M:TEC.Core.Sockets.Core.SocketAsyncEventArgsPool.#ctor(System.Int32)">
+            <summary>
+            初始化用於儲存可共用的<see cref="T:System.Net.Sockets.SocketAsyncEventArgs"/>物件集合
+            </summary>
+            <param name="capacity"></param>
+        </member>
+        <member name="M:TEC.Core.Sockets.Core.SocketAsyncEventArgsPool.pop(System.Nullable{System.TimeSpan})">
+            <summary>
+            移除並回傳最頂端的<see cref="T:System.Net.Sockets.SocketAsyncEventArgs"/>物件
+            </summary>
+            <returns>傳回<see cref="T:System.Net.Sockets.SocketAsyncEventArgs"/>物件</returns>
+            <exception cref="T:System.InvalidOperationException">當沒有任何物在在此集合中擲出</exception>
+            <param name="timeout">等待取得資料的時間，若要無限期等待則輸入<c>null</c>參考</param>
+        </member>
+        <member name="M:TEC.Core.Sockets.Core.SocketAsyncEventArgsPool.push(System.Net.Sockets.SocketAsyncEventArgs)">
+            <summary>
+            將指定的<see cref="T:System.Net.Sockets.SocketAsyncEventArgs"/>加入至此集合中
+            </summary>
+            <param name="socketAsyncEventArgs">要加入的<see cref="T:System.Net.Sockets.SocketAsyncEventArgs"/></param>
+            <exception cref="T:System.ArgumentNullException">當<paramref name="socketAsyncEventArgs"/>為<c>null</c>時擲出</exception>
+            <returns>是否成功加入堆疊</returns>
+        </member>
+        <member name="M:TEC.Core.Sockets.Core.SocketAsyncEventArgsPool.assignTokenId">
+            <summary>
+            由此管理集合取得對此集合而言唯一的流水號(自動遞增)
+            </summary>
+            <returns>回傳流水號</returns>
+        </member>
+        <member name="P:TEC.Core.Sockets.Core.SocketAsyncEventArgsPool.SocketAsyncEventArgsStack">
+            <summary>
+            設定或取得儲存可共用的<see cref="T:System.Collections.Generic.Stack`1"/>，T: <see cref="T:System.Net.Sockets.SocketAsyncEventArgs"/>
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Core.SocketAsyncEventArgsPool.Count">
+            <summary>
+            取得目前所有在佇列中的<see cref="T:System.Net.Sockets.SocketAsyncEventArgs"/>數量
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Core.SocketAsyncEventArgsPool.SocketAsyncEventArgsPoolSemaphore">
+            <summary>
+            設定或取得控制最大取用堆疊的限制物件
+            </summary>
+        </member>
+        <member name="T:TEC.Core.Sockets.Core.SocketErrorEventArgs">
+            <summary>
+            當 Socket 作業發生錯誤時，引發相關事件的參數
+            </summary>
+        </member>
+        <member name="M:TEC.Core.Sockets.Core.SocketErrorEventArgs.#ctor(System.Net.Sockets.SocketAsyncEventArgs)">
+            <summary>
+            初始化當 Socket 作業發生錯誤時，引發相關事件的參數(此建構元不會儲存<paramref name="socketAsyncEventArgs"/>)的參考
+            </summary>
+            <param name="socketAsyncEventArgs">發生錯誤的相關連接資訊</param>
+        </member>
+        <member name="M:TEC.Core.Sockets.Core.SocketErrorEventArgs.#ctor(System.Net.Sockets.SocketAsyncOperation,System.Net.Sockets.IPPacketInformation,System.Exception,System.Net.Sockets.SocketError,TEC.Core.Sockets.Core.ITokenContainer)">
+            <summary>
+            初始化當 Socket 作業發生錯誤時，引發相關事件的參數
+            </summary>
+            <param name="lastOperation">最近使用這個內容物件執行的通訊端作業類型</param>
+            <param name="receiveMessageFromPacketInfo">接收之封包的 IP 位址和介面</param>
+            <param name="connectByNameError">使用 <see cref="T:System.Net.DnsEndPoint"/> 時發生連接失敗的例外狀況</param>
+            <param name="socketError">非同步通訊端作業的結果</param>
+            <param name="userToken">這個非同步通訊端作業相關聯的使用者或應用程式物件</param>
+        </member>
+        <member name="P:TEC.Core.Sockets.Core.SocketErrorEventArgs.LastOperation">
+            <summary>
+            取得最近使用這個內容物件執行的通訊端作業類型。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Core.SocketErrorEventArgs.ReceiveMessageFromPacketInfo">
+            <summary>
+             取得接收之訊息的 IP 位址和介面。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Core.SocketErrorEventArgs.ConnectByNameError">
+            <summary>
+            取得使用 <see cref="T:System.Net.DnsEndPoint"/> 時發生連接失敗的例外狀況 (Exception)。
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Core.SocketErrorEventArgs.SocketError">
+            <summary>
+            取得非同步通訊端作業的結果
+            </summary>
+        </member>
+        <member name="P:TEC.Core.Sockets.Core.SocketErrorEventArgs.UserToken">
+            <summary>
+            取得作業的相關 User Token
+            </summary>
+        </member>
+        <member name="T:TEC.Core.Sockets.Core.TokenIdNotFoundException">
+            <summary>
+            當以 Token ID 為條件無法找到相對應的 <see cref="T:System.Net.Sockets.SocketAsyncEventArgs"/> 發生的錯誤
+            </summary>
+        </member>
+        <member name="M:TEC.Core.Sockets.Core.TokenIdNotFoundException.#ctor(System.Int32)">
+            <summary>
+            初始化以 Token ID 為條件無法找到相對應的 <see cref="T:System.Net.Sockets.SocketAsyncEventArgs"/> 發生的錯誤
+            </summary>
+            <param name="tokenId">相對應的 Token ID</param>
+        </member>
+        <member name="M:TEC.Core.Sockets.Core.TokenIdNotFoundException.GetObjectData(System.Runtime.Serialization.SerializationInfo,System.Runtime.Serialization.StreamingContext)">
+            <summary>
+            在衍生類別中覆寫時，使用例外狀況的資訊設定 <see cref="T:System.Runtime.Serialization.SerializationInfo"/>
+            </summary>
+            <param name="info">存有所擲回例外狀況之序列化物件資料的<see cref="T:System.Runtime.Serialization.SerializationInfo"/></param>
+            <param name="context">包含有關來源或目的端內容資訊的<see cref="T:System.Runtime.Serialization.StreamingContext"/></param>
+        </member>
+        <member name="P:TEC.Core.Sockets.Core.TokenIdNotFoundException.TokenId">
+            <summary>
+            取得無法對應到<see cref="T:System.Net.Sockets.SocketAsyncEventArgs"/>的 Token ID
+            </summary>
+        </member>
+    </members>
+</doc>

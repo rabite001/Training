@@ -1,0 +1,84 @@
+﻿@using WebApplication1.Models
+@model Index2Model
+@{
+    this.Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Index</title>
+    <link href="@Url.Content("~/Content/bootstrap.css")" rel="stylesheet" />
+    <script src="~/Scripts/jquery-1.9.1.min.js"></script>
+    <script src="~/Scripts/bootstrap.min.js"></script>
+</head>
+<body class="container">
+    @using (Html.BeginForm())
+        {
+            <div class="row">
+                <div class="col-sm-5 ">
+                    @Html.DisplayNameFor(t=>t.Name)
+                </div>
+                <div class="col-sm-7">
+                    @Html.TextBoxFor(t => t.Name, new { @class = "form-control" })
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-5 ">
+                    @Html.DisplayNameFor(t => t.Amount)
+                </div>
+                <div class="col-sm-7">
+                    @Html.TextBoxFor(t => t.Amount, new { @class = "form-control" })
+                </div>
+            </div>
+            <div class="text-center row">
+                <input type="submit" class="btn btn-success" value="Submit" />
+            </div>
+        }
+    @*@using (Html.BeginForm("AddBankAccountInfo", "Home", FormMethod.Post))
+    {
+        <div class="row">
+            <div class="col-sm-5 ">
+                @Html.DisplayNameFor(t=>t.Name)
+            </div>
+            <div class="col-sm-7">
+                @Html.TextBoxFor(t => t.Name, new { @class = "form-control" })
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-5 ">
+                @Html.DisplayNameFor(t => t.Amount)
+            </div>
+            <div class="col-sm-7">
+                @Html.TextBoxFor(t => t.Amount, new { @class = "form-control" })
+            </div>
+        </div>
+        <div class="text-center row">
+            <input type="submit" class="btn btn-success" value="Submit" />
+        </div>
+    }*@
+    @*<form method="post" action="@Url.Action("AddBankAccountInfo")">
+            <div class="row">
+                <div class="col-sm-5 ">
+                    姓名:
+                </div>
+                <div class="col-sm-7">
+                    <input type="text" class="form-control" name="name" />
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-5 ">
+                    金額:
+                </div>
+                <div class="col-sm-7">
+                    <input type="text" class="form-control" name="amount" />
+                </div>
+            </div>
+            <div class="text-center row">
+                <input type="submit" class="btn btn-success" value="Submit" />
+            </div>
+        </form>*@
+</body>
+</html>

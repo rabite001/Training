@@ -1,0 +1,6 @@
+D:\Users\Yen\Documents\Visual Studio 2015\Projects\ConsoleApplication1\ConsoleApplication3\bin\Debug\ConsoleApplication3.exe.config
+D:\Users\Yen\Documents\Visual Studio 2015\Projects\ConsoleApplication1\ConsoleApplication3\bin\Debug\ConsoleApplication3.exe
+D:\Users\Yen\Documents\Visual Studio 2015\Projects\ConsoleApplication1\ConsoleApplication3\bin\Debug\ConsoleApplication3.pdb
+D:\Users\Yen\Documents\Visual Studio 2015\Projects\ConsoleApplication1\ConsoleApplication3\obj\Debug\ConsoleApplication3.exe
+D:\Users\Yen\Documents\Visual Studio 2015\Projects\ConsoleApplication1\ConsoleApplication3\obj\Debug\ConsoleApplication3.pdb
+D:\Users\Yen\Documents\Visual Studio 2015\Projects\ConsoleApplication1\ConsoleApplication3\obj\Debug\ConsoleApplication3.csprojResolveAssemblyReference.cache

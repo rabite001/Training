@@ -1,0 +1,22 @@
+﻿
+@{
+    Layout = null;
+    bool isAuthenticated = (this.ViewContext.Controller as homework20161014.Controllers.ControllerBase).IsAuthenticated;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title></title>
+</head>
+<body>
+    <div>
+        <a href="@this.Url.Action((isAuthenticated?"Logout":"Login"),"Account")">@(isAuthenticated ? "登出" : "登入") </a>
+        <a href="@this.Url.Action("Register","Account")"> 註冊</a>
+        <a href="@this.Url.Action("Index","Home")"> 首頁</a>
+    </div>
+    @RenderBody()
+</body>
+</html>
