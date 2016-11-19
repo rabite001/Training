@@ -17,7 +17,7 @@ namespace Teach.Web.Controllers
         // GET: Home
         public ActionResult Index()
         {
-            SchedulerUIData schedulerUIData = new SchedulerUIData(TimerManagerConfig.TimerManager);
+            SchedulerUIData schedulerUIData = new SchedulerUIData(TimerManagerConfig.TimerManager, HearConfig.Hear);
             schedulerUIData.initial();
             return View(new IndexModel()
             {

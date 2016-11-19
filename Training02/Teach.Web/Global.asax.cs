@@ -17,6 +17,7 @@ namespace Teach.Web
             AreaRegistration.RegisterAllAreas();
             RouteConfig.RegisterRoutes(RouteTable.Routes);
             TimerManagerConfig.initializeTimerManager();
+            HearConfig.initializeHear();
             //Mapper.Initialize(t => ConverterConfig.configConverters(t));
 
             var config = new MapperConfiguration(cfg => ConverterConfig.configConverters(cfg));

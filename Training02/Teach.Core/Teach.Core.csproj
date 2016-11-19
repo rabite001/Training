@@ -69,8 +69,10 @@
     <Compile Include="Converters\Bank\BankUserConverter.cs" />
     <Compile Include="Converters\Bank\BankAccountConverter.cs" />
     <Compile Include="Converters\ConverterConfig.cs" />
+    <Compile Include="Hear.cs" />
     <Compile Include="Infos\BankAccountInfo.cs" />
     <Compile Include="Infos\BankUserInfo.cs" />
+    <Compile Include="Infos\EventInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SchedulerUIData.cs" />
     <Compile Include="Task\LoginTransactionTask.cs" />

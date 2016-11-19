@@ -11,7 +11,7 @@ namespace Teach.Core
 {
     public class SchedulerUIData
     {
-        public SchedulerUIData(TimerManager timerManager)
+        public SchedulerUIData(TimerManager timerManager, Hear hear)
         {
             //if (Object.ReferenceEquals(null, timerManager))
             if (timerManager == null)
@@ -19,12 +19,13 @@ namespace Teach.Core
                 throw new ArgumentNullException(nameof(timerManager));
             }
             this.TimerManager = timerManager;
-            this.ConsumerTimerStorage = this.TimerManager.createTimersTimer(new ConsumerTimerEvent(),
+            this.ConsumerTimerStorage = this.TimerManager.createTimersTimer(new ConsumerTimerEvent(hear),
                   new TimePeriodCollection(new[] { new TimeRange(DateTime.Now, DateTime.Now.AddSeconds(15)) }),
                   null, 3000, NextTimeEvaluationType.ExecutionEndTime);
-            this.ProducerTimerStorage = this.TimerManager.createTimersTimer(new ProducerTimerEvent(),
+            this.ProducerTimerStorage = this.TimerManager.createTimersTimer(new ProducerTimerEvent(hear),
                  new TimePeriodCollection(new[] { new TimeRange(DateTime.Now.AddSeconds(10), DateTime.Now.AddSeconds(35)) }),
                  null, 3000, NextTimeEvaluationType.ExecutionEndTime);
+            new Hear().push(new Infos.EventInfo());
         }
         public void initial()
         {
