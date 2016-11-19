@@ -47,6 +47,10 @@
       <HintPath>..\packages\AutoMapper.5.1.1\lib\net45\AutoMapper.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Itenso.TimePeriod, Version=2.0.0.0, Culture=neutral, PublicKeyToken=d7f23b760ed5c748, processorArchitecture=MSIL">
+      <HintPath>..\packages\TimePeriodLibrary.NET.2.0.0\lib\net35\Desktop.Release\Itenso.TimePeriod.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Microsoft.CodeDom.Providers.DotNetCompilerPlatform, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.0\lib\net45\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.dll</HintPath>
       <Private>True</Private>
@@ -75,6 +79,10 @@
     </Reference>
     <Reference Include="TEC.Core.Portable, Version=1.0.0.0, Culture=neutral, PublicKeyToken=fa430e8d94144bb0, processorArchitecture=MSIL">
       <HintPath>..\packages\TEC_Core_Library.1.2.37\lib\net46\TEC.Core.Portable.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="TEC.Core.Scheduler, Version=1.0.0.0, Culture=neutral, PublicKeyToken=fa430e8d94144bb0, processorArchitecture=MSIL">
+      <HintPath>..\packages\TEC_Core_Scheduler_Library.1.0.30\lib\net46\TEC.Core.Scheduler.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="TEC.Core.Transactions, Version=1.0.0.0, Culture=neutral, PublicKeyToken=fa430e8d94144bb0, processorArchitecture=MSIL">
@@ -123,6 +131,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="App_Start\RouteConfig.cs" />
+    <Compile Include="App_Start\TimerManagerConfig.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>

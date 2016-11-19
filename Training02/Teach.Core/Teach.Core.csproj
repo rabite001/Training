@@ -34,6 +34,10 @@
       <HintPath>..\packages\AutoMapper.5.1.1\lib\net45\AutoMapper.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Itenso.TimePeriod, Version=2.0.0.0, Culture=neutral, PublicKeyToken=d7f23b760ed5c748, processorArchitecture=MSIL">
+      <HintPath>..\packages\TimePeriodLibrary.NET.2.0.0\lib\net35\Desktop.Release\Itenso.TimePeriod.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Transactions" />
@@ -51,6 +55,10 @@
       <HintPath>..\packages\TEC_Core_Library.1.2.37\lib\net46\TEC.Core.Portable.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="TEC.Core.Scheduler, Version=1.0.0.0, Culture=neutral, PublicKeyToken=fa430e8d94144bb0, processorArchitecture=MSIL">
+      <HintPath>..\packages\TEC_Core_Scheduler_Library.1.0.30\lib\net46\TEC.Core.Scheduler.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="TEC.Core.Transactions, Version=1.0.0.0, Culture=neutral, PublicKeyToken=fa430e8d94144bb0, processorArchitecture=MSIL">
       <HintPath>..\packages\TEC_Core_Transaction_Library.1.0.23\lib\net46\TEC.Core.Transactions.dll</HintPath>
       <Private>True</Private>
@@ -64,7 +72,10 @@
     <Compile Include="Infos\BankAccountInfo.cs" />
     <Compile Include="Infos\BankUserInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SchedulerUIData.cs" />
     <Compile Include="Task\LoginTransactionTask.cs" />
+    <Compile Include="TimerEvent\ConsumerTimerEvent.cs" />
+    <Compile Include="TimerEvent\ProducerTimerEvent.cs" />
     <Compile Include="UIDataConfig.cs" />
   </ItemGroup>
   <ItemGroup>
