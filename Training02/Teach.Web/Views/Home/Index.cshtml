@@ -23,7 +23,12 @@ else
             </tr>
         </thead>
         <tbody>
-            @foreach (TimerStorageBase timerStorageBase in this.Model.TimerManager.ManagedTimerReadOnlyObservableCollection)
+            @foreach (TimerStorageBase timerStorageBase
+
+
+
+
+                 in this.Model.TimerManager.ManagedTimerReadOnlyObservableCollection)
             {
                 string color = "";
                 <tr>
@@ -56,6 +61,25 @@ else
 
                 </tr>
             }
+
         </tbody>
+    </table>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <td>已被消費的事件名稱</td>
+                <td>事件建立時間</td>
+                <td>事件執行時間</td>
+            </tr>
+        </thead>
+        @foreach (Teach.Core.Infos.EventInfo eventInfo in this.Model.EventInfoListLog)
+        {
+            <tr>
+                <td>@eventInfo.CreatedDateTime</td>
+                <td>@eventInfo.EventName</td>
+                <td>@eventInfo.ExecuteDuration</td>
+            </tr>
+        }
     </table>
 }

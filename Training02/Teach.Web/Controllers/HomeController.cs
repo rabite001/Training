@@ -19,9 +19,11 @@ namespace Teach.Web.Controllers
         {
             SchedulerUIData schedulerUIData = new SchedulerUIData(TimerManagerConfig.TimerManager, HearConfig.Hear);
             schedulerUIData.initial();
+            var list = HearConfig.Hear.getEventInfoListLog();
             return View(new IndexModel()
             {
-                TimerManager = TimerManagerConfig.TimerManager
+                TimerManager = TimerManagerConfig.TimerManager,
+                EventInfoListLog = HearConfig.Hear.getEventInfoListLog()
             });
         }
         [HttpPost]

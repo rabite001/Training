@@ -15,6 +15,7 @@ namespace Teach.Core
         public Hear()
         {
             this.EventInfoList = new List<EventInfo>();
+            this.ConsumerEventInfoList=new List<EventInfo>();
         }
         /// <summary>
         /// 佇列待執行的事件
@@ -40,12 +41,20 @@ namespace Teach.Core
                 return null;
             }
             EventInfo eventInfo = this.EventInfoList.First();
+
             this.EventInfoList.Remove(eventInfo);
+            ConsumerEventInfoList.Add(eventInfo);
             return eventInfo;
+        }
+        public List<EventInfo> getEventInfoListLog()
+        {
+            return this.ConsumerEventInfoList;
         }
         /// <summary>
         /// 設定或取得執行的佇列
         /// </summary>
         private List<EventInfo> EventInfoList { set; get; }
+        private List<EventInfo> ConsumerEventInfoList { set; get; }
+
     }
 }
