@@ -115,3 +115,16 @@ D:\Users\Yen\Documents\GitHub\Training\Training02\Teach.Web\bin\TEC.Core.Schedul
 D:\Users\Yen\Documents\GitHub\Training\Training02\Teach.Web\bin\TEC.Core.Scheduler.xml
 D:\Users\Yen\Documents\GitHub\Training\Training02\Teach.Web\bin\de\Itenso.TimePeriod.resources.dll
 D:\Users\Yen\Documents\GitHub\Training\Training02\Teach.Web\bin\zh\TEC.Core.Scheduler.resources.dll
+D:\Users\Yen\Documents\GitHub\Training\Training02\Teach.Web\bin\Microsoft.AspNet.SignalR.Core.dll
+D:\Users\Yen\Documents\GitHub\Training\Training02\Teach.Web\bin\Microsoft.AspNet.SignalR.SystemWeb.dll
+D:\Users\Yen\Documents\GitHub\Training\Training02\Teach.Web\bin\Microsoft.Owin.dll
+D:\Users\Yen\Documents\GitHub\Training\Training02\Teach.Web\bin\Microsoft.Owin.Host.SystemWeb.dll
+D:\Users\Yen\Documents\GitHub\Training\Training02\Teach.Web\bin\Microsoft.Owin.Security.dll
+D:\Users\Yen\Documents\GitHub\Training\Training02\Teach.Web\bin\Newtonsoft.Json.dll
+D:\Users\Yen\Documents\GitHub\Training\Training02\Teach.Web\bin\Owin.dll
+D:\Users\Yen\Documents\GitHub\Training\Training02\Teach.Web\bin\Microsoft.AspNet.SignalR.Core.xml
+D:\Users\Yen\Documents\GitHub\Training\Training02\Teach.Web\bin\Microsoft.AspNet.SignalR.SystemWeb.xml
+D:\Users\Yen\Documents\GitHub\Training\Training02\Teach.Web\bin\Microsoft.Owin.xml
+D:\Users\Yen\Documents\GitHub\Training\Training02\Teach.Web\bin\Microsoft.Owin.Host.SystemWeb.xml
+D:\Users\Yen\Documents\GitHub\Training\Training02\Teach.Web\bin\Microsoft.Owin.Security.xml
+D:\Users\Yen\Documents\GitHub\Training\Training02\Teach.Web\bin\Newtonsoft.Json.xml

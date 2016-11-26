@@ -3,55 +3,36 @@
     ViewBag.Title = "Index";
 }
 @model Teach.Web.Models.Home.IndexModel
-
 <script type="text/javascript">
-    //jQuery(document).ready(function ()
-    //{
-    //    alert('123');
-    //})
     $(function () {
-        //$("span").html("Lorence");//找 element
-        //$("#Span_hear").html("Lorence");//id
-        //$(".label-info").html("Lorence");//class
-        // advanced: http://stackoverflow.com/questions/2220851/element-or-class-like-selector-for-jquery
-        // selector intro: http://api.jquery.com/category/selectors/
-        @*setInterval(function () {
-            $.ajax({
-                url: "@this.Url.Action("TestHttpAction")",
-                method: "GET",
-                data: {},
-                dataType: "html",
-                success: function (data, textStatus, jqXHR) {
-                    $("#Span_hear").html(data);
-                }
-            });
-        }, 1000);*@
-        setInterval(function () {
-            $('#Div_TimerStatus_Container').block({ message: "Lorence" });
-            $.ajax({
-                url: "@this.Url.Action("GetTimerStatusPagePartial")",
-                method: "GET",
-                data: {},
-                dataType: "html",
-                success: function (data, textStatus, jqXHR) {
-                    $('#Div_TimerStatus_Container').unblock();
-                    $("#Div_TimerStatus").html(data);
-                }
-            });
-        }, 5000);
+        // Declare a proxy to reference the hub. 
+        var test = $.connection.testHub;
+        // Create a function that the hub can call to broadcast messages.
+        test.client.receiveTimersData = function (tableData) {
+            $("#TBody_TimersTBoby").html(tableData);
+        }
+        $.connection.hub.start().done(function () {
+            $("#Span_hear").html("SignalR 初始化完成");
+        });
     });
-    //function test(p1,p2,p3){
-
-    //}
 </script>
 <div>
     <span class="label label-info" id="Span_hear">123</span>
+    <span class="label label-info" id="Span_hear2"></span>
 </div>
 
-<div id="Div_TimerStatus_Container">
     <div id="Div_TimerStatus">
-        @*@{
-                Html.RenderPartial("_TimerStatusTable", new Teach.Web.Models.Home.TimerStatusModel() { TimerManager = this.Model.TimerManager });
-            }*@
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <td>排程事件型別</td>
+                    <td>有效執行區間</td>
+                    <td>下次執行</td>
+                    <td>程式執行狀態</td>
+                </tr>
+            </thead>
+            <tbody id="TBody_TimersTBoby">
+             
+            </tbody>
+        </table>
     </div>
-</div>

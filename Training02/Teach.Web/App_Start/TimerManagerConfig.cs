@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.AspNet.SignalR;
+using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
@@ -34,6 +35,7 @@ namespace Teach.Web
                        timerStorage.PropertyChanged -= TimerManagerConfig.TimerStorage_PropertyChanged;
                    });
             }
+            TimerManagerConfig.sendTimerData();
         }
 
         private static void TimerStorage_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -43,8 +45,47 @@ namespace Teach.Web
             {
                 timerStorageBase.Dispose();
             }
+            TimerManagerConfig.sendTimerData();
         }
+        private static void sendTimerData()
+        {
+            string result = String.Join("", TimerManagerConfig.TimerManager.ManagedTimerReadOnlyObservableCollection
+                    .ToList()
+                    .Cast<TimerStorageBase>()
+                    .Select(timerStorageBase =>
+                    {
+                        string color = String.Empty;
+                        switch (timerStorageBase.TimerStatus)
+                        {
+                            case TimerStatus.Executing:
+                                color = "success";
+                                break;
+                            case TimerStatus.NotStart:
+                                color = "default";
+                                break;
+                            case TimerStatus.Pending:
+                                color = "warning";
+                                break;
+                            case TimerStatus.Stopped:
+                                color = "info";
+                                break;
+                        }
+                        return $@"
+<tr>
+    <td>{(((dynamic)timerStorageBase.ITimerEvent).Name)}</td>
+    <td>{timerStorageBase.TimePeriodCollection.First().Start} ~ {timerStorageBase.TimePeriodCollection.First().End}</td>
+    <td>{(timerStorageBase.NextExecuteDateTime.HasValue ? timerStorageBase.NextExecuteDateTime.Value.ToString() : "已結束")}</td>
+    <td>
+        <span class='label label-{color}'>
+            {timerStorageBase.TimerStatus.ToString()}
+        </span>
+    </td>
 
+</tr>";
+                    }));
+            GlobalHost.ConnectionManager.GetHubContext<Controllers.TestHub>()
+                        .Clients.All.receiveTimersData(result);
+        }
         /// <summary>
         /// 設定或取得排程器管理物件
         /// </summary>

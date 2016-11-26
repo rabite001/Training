@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.AspNet.SignalR;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -19,6 +20,15 @@ namespace Teach.Web.Controllers
         {
             SchedulerUIData schedulerUIData = new SchedulerUIData(TimerManagerConfig.TimerManager, ProducerAndConsumerMediatorConfig.ProducerAndConsumerMediator);
             schedulerUIData.initial();
+            //new System.Threading.Thread(new System.Threading.ThreadStart(() =>
+            //{
+            //    while (true)
+            //    {
+            //        GlobalHost.ConnectionManager.GetHubContext<TestHub>()
+            //            .Clients.All.receiveDateTime(DateTime.Now.ToString());
+            //        System.Threading.Thread.Sleep(1000);
+            //    }
+            //})).Start();
             return View(new IndexModel()
             {
                 TimerManager = TimerManagerConfig.TimerManager
@@ -27,7 +37,7 @@ namespace Teach.Web.Controllers
         [HttpPost]
         public ActionResult Index(IndexModel indexModel)
         {
-          
+
             return View(indexModel);
         }
         public ActionResult GetTimerStatusPagePartial()
