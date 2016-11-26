@@ -4,58 +4,54 @@
 }
 @model Teach.Web.Models.Home.IndexModel
 
-@using TEC.Core.Scheduler.Timers;
-@if (this.Model.TimerManager.ManagedTimerReadOnlyObservableCollection.Count == 0)
-{
-    <div class="alert alert-warning">
-        目前沒有任何排程器
+<script type="text/javascript">
+    //jQuery(document).ready(function ()
+    //{
+    //    alert('123');
+    //})
+    $(function () {
+        //$("span").html("Lorence");//找 element
+        //$("#Span_hear").html("Lorence");//id
+        //$(".label-info").html("Lorence");//class
+        // advanced: http://stackoverflow.com/questions/2220851/element-or-class-like-selector-for-jquery
+        // selector intro: http://api.jquery.com/category/selectors/
+        @*setInterval(function () {
+            $.ajax({
+                url: "@this.Url.Action("TestHttpAction")",
+                method: "GET",
+                data: {},
+                dataType: "html",
+                success: function (data, textStatus, jqXHR) {
+                    $("#Span_hear").html(data);
+                }
+            });
+        }, 1000);*@
+        setInterval(function () {
+            $('#Div_TimerStatus_Container').block({ message: "Lorence" });
+            $.ajax({
+                url: "@this.Url.Action("GetTimerStatusPagePartial")",
+                method: "GET",
+                data: {},
+                dataType: "html",
+                success: function (data, textStatus, jqXHR) {
+                    $('#Div_TimerStatus_Container').unblock();
+                    $("#Div_TimerStatus").html(data);
+                }
+            });
+        }, 5000);
+    });
+    //function test(p1,p2,p3){
+
+    //}
+</script>
+<div>
+    <span class="label label-info" id="Span_hear">123</span>
+</div>
+
+<div id="Div_TimerStatus_Container">
+    <div id="Div_TimerStatus">
+        @*@{
+                Html.RenderPartial("_TimerStatusTable", new Teach.Web.Models.Home.TimerStatusModel() { TimerManager = this.Model.TimerManager });
+            }*@
     </div>
-}
-else
-{
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <td>排程事件型別</td>
-                <td>有效執行區間</td>
-                <td>下次執行</td>
-                <td>程式執行狀態</td>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (TimerStorageBase timerStorageBase in this.Model.TimerManager.ManagedTimerReadOnlyObservableCollection)
-            {
-                string color = "";
-                <tr>
-                    <!--不要學底下的做法!!-->
-                    <td>@(((dynamic)timerStorageBase.ITimerEvent).Name)</td>
-                    <td>@timerStorageBase.TimePeriodCollection.First().Start ~ @timerStorageBase.TimePeriodCollection.First().End</td>
-                    <td>@(timerStorageBase.NextExecuteDateTime.HasValue ? timerStorageBase.NextExecuteDateTime.Value.ToString() : "已結束")</td>
-                    <td>
-
-                        @switch (timerStorageBase.TimerStatus)
-                        {
-                            case TimerStatus.Executing:
-                                color = "success";
-                                break;
-                            case TimerStatus.NotStart:
-                                color = "default";
-                                break;
-                            case TimerStatus.Pending:
-                                color = "warning";
-                                break;
-                            case TimerStatus.Stopped:
-                                color = "info";
-                                break;
-                        }
-                        <span class="label label-@color">
-                            @timerStorageBase.TimerStatus.ToString()
-                        </span>
-                    </td>
-
-
-                </tr>
-            }
-        </tbody>
-    </table>
-}
+</div>

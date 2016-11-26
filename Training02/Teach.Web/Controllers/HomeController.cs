@@ -17,7 +17,7 @@ namespace Teach.Web.Controllers
         // GET: Home
         public ActionResult Index()
         {
-            SchedulerUIData schedulerUIData = new SchedulerUIData(TimerManagerConfig.TimerManager, HearConfig.Hear);
+            SchedulerUIData schedulerUIData = new SchedulerUIData(TimerManagerConfig.TimerManager, ProducerAndConsumerMediatorConfig.ProducerAndConsumerMediator);
             schedulerUIData.initial();
             return View(new IndexModel()
             {
@@ -30,5 +30,14 @@ namespace Teach.Web.Controllers
           
             return View(indexModel);
         }
+        public ActionResult GetTimerStatusPagePartial()
+        {
+            System.Threading.Thread.Sleep(3000);
+            return View("_TimerStatusTable", new Teach.Web.Models.Home.TimerStatusModel() { TimerManager = TimerManagerConfig.TimerManager });
+        }
+        //public ActionResult TestHttpAction()
+        //{
+        //    return this.Content($"{DateTime.Now.ToString()}");
+        //}
     }
 }

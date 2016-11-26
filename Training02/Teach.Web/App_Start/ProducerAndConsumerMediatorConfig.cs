@@ -8,16 +8,16 @@ using TEC.Core.Scheduler.Timers;
 
 namespace Teach.Web
 {
-    public class HearConfig
+    public class ProducerAndConsumerMediatorConfig
     {
-        public static void initializeHear()
+        public static void initializeProducerAndConsumerMediator()
         {
-            HearConfig.Hear = new Hear();
+            ProducerAndConsumerMediatorConfig.ProducerAndConsumerMediator = new ProducerAndConsumerMediator();
         }
 
         /// <summary>
         /// 設定或取得排程器管理物件
         /// </summary>
-        internal static Hear Hear { set; get; }
+        internal static ProducerAndConsumerMediator ProducerAndConsumerMediator { set; get; }
     }
 }

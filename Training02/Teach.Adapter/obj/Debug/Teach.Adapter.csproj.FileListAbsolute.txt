@@ -14,3 +14,19 @@ D:\Users\Yen\Documents\Visual Studio 2015\Projects\Teach.Web\Teach.Adapter\bin\D
 D:\Users\Yen\Documents\Visual Studio 2015\Projects\Teach.Web\Teach.Adapter\bin\Debug\TEC.Core.Transactions.dll
 D:\Users\Yen\Documents\Visual Studio 2015\Projects\Teach.Web\Teach.Adapter\bin\Debug\TEC.Core.Transactions.xml
 D:\Users\Yen\Documents\Visual Studio 2015\Projects\Teach.Web\Teach.Adapter\bin\Debug\zh\TEC.Core.Transactions.resources.dll
+D:\Users\Yen\Documents\GitHub\Training\Training02\Teach.Adapter\bin\Debug\Teach.Adapter.dll
+D:\Users\Yen\Documents\GitHub\Training\Training02\Teach.Adapter\bin\Debug\Teach.Adapter.pdb
+D:\Users\Yen\Documents\GitHub\Training\Training02\Teach.Adapter\bin\Debug\Teach.Util.dll
+D:\Users\Yen\Documents\GitHub\Training\Training02\Teach.Adapter\bin\Debug\TEC.Core.dll
+D:\Users\Yen\Documents\GitHub\Training\Training02\Teach.Adapter\bin\Debug\TEC.Core.Portable.dll
+D:\Users\Yen\Documents\GitHub\Training\Training02\Teach.Adapter\bin\Debug\TEC.Core.Transactions.dll
+D:\Users\Yen\Documents\GitHub\Training\Training02\Teach.Adapter\bin\Debug\Teach.Util.pdb
+D:\Users\Yen\Documents\GitHub\Training\Training02\Teach.Adapter\bin\Debug\TEC.Core.xml
+D:\Users\Yen\Documents\GitHub\Training\Training02\Teach.Adapter\bin\Debug\TEC.Core.Portable.xml
+D:\Users\Yen\Documents\GitHub\Training\Training02\Teach.Adapter\bin\Debug\TEC.Core.Transactions.xml
+D:\Users\Yen\Documents\GitHub\Training\Training02\Teach.Adapter\bin\Debug\zh\TEC.Core.resources.dll
+D:\Users\Yen\Documents\GitHub\Training\Training02\Teach.Adapter\bin\Debug\zh\TEC.Core.Portable.resources.dll
+D:\Users\Yen\Documents\GitHub\Training\Training02\Teach.Adapter\bin\Debug\zh\TEC.Core.Transactions.resources.dll
+D:\Users\Yen\Documents\GitHub\Training\Training02\Teach.Adapter\obj\Debug\Teach.Adapter.csprojResolveAssemblyReference.cache
+D:\Users\Yen\Documents\GitHub\Training\Training02\Teach.Adapter\obj\Debug\Teach.Adapter.dll
+D:\Users\Yen\Documents\GitHub\Training\Training02\Teach.Adapter\obj\Debug\Teach.Adapter.pdb

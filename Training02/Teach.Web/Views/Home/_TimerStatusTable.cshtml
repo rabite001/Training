@@ -1,0 +1,57 @@
+﻿@{ this.Layout = null;}
+@model Teach.Web.Models.Home.TimerStatusModel
+@using TEC.Core.Scheduler.Timers;
+@if (this.Model.TimerManager.ManagedTimerReadOnlyObservableCollection.Count == 0)
+{
+    <div class="alert alert-warning">
+        目前沒有任何排程器
+    </div>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <td>排程事件型別</td>
+                <td>有效執行區間</td>
+                <td>下次執行</td>
+                <td>程式執行狀態</td>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (TimerStorageBase timerStorageBase in this.Model.TimerManager.ManagedTimerReadOnlyObservableCollection)
+            {
+                string color = "";
+                <tr>
+                    <!--不要學底下的做法!!-->
+                    <td>@(((dynamic)timerStorageBase.ITimerEvent).Name)</td>
+                    <td>@timerStorageBase.TimePeriodCollection.First().Start ~ @timerStorageBase.TimePeriodCollection.First().End</td>
+                    <td>@(timerStorageBase.NextExecuteDateTime.HasValue ? timerStorageBase.NextExecuteDateTime.Value.ToString() : "已結束")</td>
+                    <td>
+
+                        @switch (timerStorageBase.TimerStatus)
+                        {
+                            case TimerStatus.Executing:
+                                color = "success";
+                                break;
+                            case TimerStatus.NotStart:
+                                color = "default";
+                                break;
+                            case TimerStatus.Pending:
+                                color = "warning";
+                                break;
+                            case TimerStatus.Stopped:
+                                color = "info";
+                                break;
+                        }
+                        <span class="label label-@color">
+                            @timerStorageBase.TimerStatus.ToString()
+                        </span>
+                    </td>
+
+
+                </tr>
+            }
+        </tbody>
+    </table>
+}

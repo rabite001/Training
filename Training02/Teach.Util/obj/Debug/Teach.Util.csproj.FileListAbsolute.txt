@@ -12,3 +12,17 @@ D:\Users\Yen\Documents\Visual Studio 2015\Projects\Teach.Web\Teach.Util\bin\Debu
 D:\Users\Yen\Documents\Visual Studio 2015\Projects\Teach.Web\Teach.Util\bin\Debug\zh\TEC.Core.Portable.resources.dll
 D:\Users\Yen\Documents\Visual Studio 2015\Projects\Teach.Web\Teach.Util\bin\Debug\zh\TEC.Core.Transactions.resources.dll
 D:\Users\Yen\Documents\Visual Studio 2015\Projects\Teach.Web\Teach.Util\obj\Debug\Teach.Util.csprojResolveAssemblyReference.cache
+D:\Users\Yen\Documents\GitHub\Training\Training02\Teach.Util\bin\Debug\Teach.Util.dll
+D:\Users\Yen\Documents\GitHub\Training\Training02\Teach.Util\bin\Debug\Teach.Util.pdb
+D:\Users\Yen\Documents\GitHub\Training\Training02\Teach.Util\bin\Debug\TEC.Core.dll
+D:\Users\Yen\Documents\GitHub\Training\Training02\Teach.Util\bin\Debug\TEC.Core.Portable.dll
+D:\Users\Yen\Documents\GitHub\Training\Training02\Teach.Util\bin\Debug\TEC.Core.Transactions.dll
+D:\Users\Yen\Documents\GitHub\Training\Training02\Teach.Util\bin\Debug\TEC.Core.xml
+D:\Users\Yen\Documents\GitHub\Training\Training02\Teach.Util\bin\Debug\TEC.Core.Portable.xml
+D:\Users\Yen\Documents\GitHub\Training\Training02\Teach.Util\bin\Debug\TEC.Core.Transactions.xml
+D:\Users\Yen\Documents\GitHub\Training\Training02\Teach.Util\bin\Debug\zh\TEC.Core.resources.dll
+D:\Users\Yen\Documents\GitHub\Training\Training02\Teach.Util\bin\Debug\zh\TEC.Core.Portable.resources.dll
+D:\Users\Yen\Documents\GitHub\Training\Training02\Teach.Util\bin\Debug\zh\TEC.Core.Transactions.resources.dll
+D:\Users\Yen\Documents\GitHub\Training\Training02\Teach.Util\obj\Debug\Teach.Util.csprojResolveAssemblyReference.cache
+D:\Users\Yen\Documents\GitHub\Training\Training02\Teach.Util\obj\Debug\Teach.Util.dll
+D:\Users\Yen\Documents\GitHub\Training\Training02\Teach.Util\obj\Debug\Teach.Util.pdb

@@ -11,7 +11,7 @@ namespace Teach.Core
 {
     public class SchedulerUIData
     {
-        public SchedulerUIData(TimerManager timerManager, Hear hear)
+        public SchedulerUIData(TimerManager timerManager, ProducerAndConsumerMediator hear)
         {
             //if (Object.ReferenceEquals(null, timerManager))
             if (timerManager == null)
@@ -25,7 +25,7 @@ namespace Teach.Core
             this.ProducerTimerStorage = this.TimerManager.createTimersTimer(new ProducerTimerEvent(hear),
                  new TimePeriodCollection(new[] { new TimeRange(DateTime.Now.AddSeconds(10), DateTime.Now.AddSeconds(35)) }),
                  null, 3000, NextTimeEvaluationType.ExecutionEndTime);
-            new Hear().push(new Infos.EventInfo());
+            new ProducerAndConsumerMediator().push(new Infos.EventInfo());
         }
         public void initial()
         {

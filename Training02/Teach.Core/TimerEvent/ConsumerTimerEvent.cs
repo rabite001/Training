@@ -11,7 +11,7 @@ namespace Teach.Core.TimerEvent
 {
     public class ConsumerTimerEvent : ITimerEvent
     {
-        public ConsumerTimerEvent(Hear hear)
+        public ConsumerTimerEvent(ProducerAndConsumerMediator hear)
         {
             this.Hear = hear;
         }
@@ -28,6 +28,6 @@ namespace Teach.Core.TimerEvent
         }
         public string Name { private set; get; } = $"消費者_{Guid.NewGuid()}";
 
-        private Hear Hear { set; get; }
+        private ProducerAndConsumerMediator Hear { set; get; }
     }
 }

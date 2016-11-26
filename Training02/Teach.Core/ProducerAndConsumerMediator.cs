@@ -8,11 +8,11 @@ using Teach.Core.Infos;
 namespace Teach.Core
 {
     /// <summary>
-    /// 聽!
+    /// 消費者與生產者中介物件
     /// </summary>
-    public class Hear
+    public class ProducerAndConsumerMediator
     {
-        public Hear()
+        public ProducerAndConsumerMediator()
         {
             this.EventInfoList = new List<EventInfo>();
         }
