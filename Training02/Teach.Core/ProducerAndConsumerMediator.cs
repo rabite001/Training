@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -14,7 +15,7 @@ namespace Teach.Core
     {
         public ProducerAndConsumerMediator()
         {
-            this.EventInfoList = new List<EventInfo>();
+            this.EventInfoConcurrentQueue = new ConcurrentQueue<EventInfo>();
         }
         /// <summary>
         /// 佇列待執行的事件
@@ -27,7 +28,7 @@ namespace Teach.Core
             {
                 throw new ArgumentNullException(nameof(eventInfo));
             }
-            this.EventInfoList.Add(eventInfo);
+            this.EventInfoConcurrentQueue.Enqueue(eventInfo);
         }
         /// <summary>
         /// 沒有了傳回 null
@@ -35,17 +36,16 @@ namespace Teach.Core
         /// <returns></returns>
         public EventInfo pop()
         {
-            if (this.EventInfoList.Count == 0)
+            EventInfo eventInfo;
+            if (!this.EventInfoConcurrentQueue.TryDequeue(out eventInfo))
             {
                 return null;
             }
-            EventInfo eventInfo = this.EventInfoList.First();
-            this.EventInfoList.Remove(eventInfo);
             return eventInfo;
         }
         /// <summary>
         /// 設定或取得執行的佇列
         /// </summary>
-        private List<EventInfo> EventInfoList { set; get; }
+        private ConcurrentQueue<EventInfo> EventInfoConcurrentQueue { set; get; }
     }
 }

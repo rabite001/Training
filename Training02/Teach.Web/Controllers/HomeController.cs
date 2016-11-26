@@ -15,20 +15,38 @@ namespace Teach.Web.Controllers
 {
     public class HomeController : Controller
     {
+        private static SchedulerUIData schedulerUIData = new SchedulerUIData(TimerManagerConfig.TimerManager, ProducerAndConsumerMediatorConfig.ProducerAndConsumerMediator);
+        static HomeController()
+        {
+            HomeController.schedulerUIData.createConsumerTimer().start();
+            HomeController.schedulerUIData.createConsumerTimer().start();
+            HomeController.schedulerUIData.createConsumerTimer().start();
+            HomeController.schedulerUIData.createProducerTimer().start();
+            HomeController.schedulerUIData.createProducerTimer().start();
+            HomeController.schedulerUIData.createConsumerTimer().start();
+            HomeController.schedulerUIData.createConsumerTimer().start();
+            HomeController.schedulerUIData.createConsumerTimer().start();
+            HomeController.schedulerUIData.createProducerTimer().start();
+            HomeController.schedulerUIData.createProducerTimer().start();
+            HomeController.schedulerUIData.createConsumerTimer().start();
+            HomeController.schedulerUIData.createConsumerTimer().start();
+            HomeController.schedulerUIData.createConsumerTimer().start();
+            HomeController.schedulerUIData.createProducerTimer().start();
+            HomeController.schedulerUIData.createProducerTimer().start();
+            HomeController.schedulerUIData.createConsumerTimer().start();
+            HomeController.schedulerUIData.createConsumerTimer().start();
+            HomeController.schedulerUIData.createConsumerTimer().start();
+            HomeController.schedulerUIData.createProducerTimer().start();
+            HomeController.schedulerUIData.createProducerTimer().start();
+            HomeController.schedulerUIData.createConsumerTimer().start();
+            HomeController.schedulerUIData.createConsumerTimer().start();
+            HomeController.schedulerUIData.createConsumerTimer().start();
+            HomeController.schedulerUIData.createProducerTimer().start();
+            HomeController.schedulerUIData.createProducerTimer().start();
+        }
         // GET: Home
         public ActionResult Index()
         {
-            SchedulerUIData schedulerUIData = new SchedulerUIData(TimerManagerConfig.TimerManager, ProducerAndConsumerMediatorConfig.ProducerAndConsumerMediator);
-            schedulerUIData.initial();
-            //new System.Threading.Thread(new System.Threading.ThreadStart(() =>
-            //{
-            //    while (true)
-            //    {
-            //        GlobalHost.ConnectionManager.GetHubContext<TestHub>()
-            //            .Clients.All.receiveDateTime(DateTime.Now.ToString());
-            //        System.Threading.Thread.Sleep(1000);
-            //    }
-            //})).Start();
             return View(new IndexModel()
             {
                 TimerManager = TimerManagerConfig.TimerManager
@@ -45,9 +63,5 @@ namespace Teach.Web.Controllers
             System.Threading.Thread.Sleep(3000);
             return View("_TimerStatusTable", new Teach.Web.Models.Home.TimerStatusModel() { TimerManager = TimerManagerConfig.TimerManager });
         }
-        //public ActionResult TestHttpAction()
-        //{
-        //    return this.Content($"{DateTime.Now.ToString()}");
-        //}
     }
 }

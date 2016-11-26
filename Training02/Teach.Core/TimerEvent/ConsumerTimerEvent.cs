@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -13,15 +14,16 @@ namespace Teach.Core.TimerEvent
     {
         public ConsumerTimerEvent(ProducerAndConsumerMediator hear)
         {
-            this.Hear = hear;
+            this.ProducerAndConsumerMediator = hear;
             this.Id = Guid.NewGuid();
             this.Name = $"消費者_{this.Id}";
         }
         public void execute()
         {
-            EventInfo eventInfo = this.Hear.pop();
+            EventInfo eventInfo = this.ProducerAndConsumerMediator.pop();
             if (eventInfo != null)
             {
+                Debug.WriteLine($"開始執行消費:{eventInfo.EventName}");
                 Thread.Sleep(eventInfo.ExecuteDuration);
             }
         }
@@ -31,6 +33,6 @@ namespace Teach.Core.TimerEvent
         public Guid Id { private set; get; }
         public string Name { private set; get; }
 
-        private ProducerAndConsumerMediator Hear { set; get; }
+        private ProducerAndConsumerMediator ProducerAndConsumerMediator { set; get; }
     }
 }
