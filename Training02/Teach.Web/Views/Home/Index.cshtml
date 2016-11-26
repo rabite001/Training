@@ -5,11 +5,33 @@
 @model Teach.Web.Models.Home.IndexModel
 <script type="text/javascript">
     $(function () {
-        // Declare a proxy to reference the hub. 
+        // Declare a proxy to reference the hub.
         var test = $.connection.testHub;
         // Create a function that the hub can call to broadcast messages.
         test.client.receiveTimersData = function (tableData) {
-            $("#TBody_TimersTBoby").html(tableData);
+            //<tr data-row-id="guid....."><td data-prop-name="Name"></td></tr>
+            data = JSON.parse(tableData);
+            targetRow = $("tr", "#TBody_TimersTBoby").filter(function () {
+                return $(this).data("rowId") == data.DataId;
+            });
+            if (data.IsRemoved) {
+                targetRow.remove();
+            }
+            else if (targetRow.length == 0) {
+                tableRow = '<tr data-row-id="' + data.DataId + '"> ';
+                tableRow += '<td>' + data.Name + '</td>';
+                tableRow += '<td>' + data.StartDateTime + ' ~ ' + data.EndDateTime + '</td>';
+                tableRow += '<td>' + data.NextExecutionDateTime + '</td>';
+                tableRow += '<td>' + data.Status + '</td>';
+                tableRow += '</tr>';
+                $('#TBody_TimersTBoby').append(tableRow);
+            } else if (targetRow.length != 0) {
+                tableRow = '<td>' + data.Name + '</td>';
+                tableRow += '<td>' + data.StartDateTime + ' ~ ' + data.EndDateTime + '</td>';
+                tableRow += '<td>' + data.NextExecutionDateTime + '</td>';
+                tableRow += '<td>' + data.Status + '</td>';
+                targetRow.html(tableRow);
+            }
         }
         $.connection.hub.start().done(function () {
             $("#Span_hear").html("SignalR 初始化完成");
@@ -21,18 +43,16 @@
     <span class="label label-info" id="Span_hear2"></span>
 </div>
 
-    <div id="Div_TimerStatus">
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <td>排程事件型別</td>
-                    <td>有效執行區間</td>
-                    <td>下次執行</td>
-                    <td>程式執行狀態</td>
-                </tr>
-            </thead>
-            <tbody id="TBody_TimersTBoby">
-             
-            </tbody>
-        </table>
-    </div>
+<div id="Div_TimerStatus">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <td>排程事件型別</td>
+                <td>有效執行區間</td>
+                <td>下次執行</td>
+                <td>程式執行狀態</td>
+            </tr>
+        </thead>
+        <tbody id="TBody_TimersTBoby"></tbody>
+    </table>
+</div>

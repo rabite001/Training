@@ -14,6 +14,8 @@ namespace Teach.Core.TimerEvent
         public ConsumerTimerEvent(ProducerAndConsumerMediator hear)
         {
             this.Hear = hear;
+            this.Id = Guid.NewGuid();
+            this.Name = $"消費者_{this.Id}";
         }
         public void execute()
         {
@@ -26,7 +28,8 @@ namespace Teach.Core.TimerEvent
         public void Dispose()
         {
         }
-        public string Name { private set; get; } = $"消費者_{Guid.NewGuid()}";
+        public Guid Id { private set; get; }
+        public string Name { private set; get; }
 
         private ProducerAndConsumerMediator Hear { set; get; }
     }

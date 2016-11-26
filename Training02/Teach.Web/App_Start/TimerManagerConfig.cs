@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNet.SignalR;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -24,6 +25,7 @@ namespace Teach.Web
                 e.NewItems.Cast<TimerStorageBase>().ToList()
                     .ForEach(timerStorage =>
                     {
+                        TimerManagerConfig.sendTimerData(timerStorage, false);
                         timerStorage.PropertyChanged += TimerManagerConfig.TimerStorage_PropertyChanged;
                     });
             }
@@ -32,59 +34,56 @@ namespace Teach.Web
                 e.OldItems.Cast<TimerStorageBase>().ToList()
                    .ForEach(timerStorage =>
                    {
+                       TimerManagerConfig.sendTimerData(timerStorage, true);
                        timerStorage.PropertyChanged -= TimerManagerConfig.TimerStorage_PropertyChanged;
                    });
             }
-            TimerManagerConfig.sendTimerData();
         }
 
         private static void TimerStorage_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
             TimerStorageBase timerStorageBase = sender as TimerStorageBase;
+            TimerManagerConfig.sendTimerData(timerStorageBase, false);
             if (e.PropertyName == nameof(timerStorageBase.TimerStatus) && timerStorageBase.TimerStatus == TimerStatus.Stopped)
             {
                 timerStorageBase.Dispose();
             }
-            TimerManagerConfig.sendTimerData();
         }
-        private static void sendTimerData()
+        /// <summary>
+        /// 發送
+        /// </summary>
+        /// <param name="timerStorageBase"></param>
+        private static void sendTimerData(TimerStorageBase timerStorageBase, bool isRemoved)
         {
-            string result = String.Join("", TimerManagerConfig.TimerManager.ManagedTimerReadOnlyObservableCollection
-                    .ToList()
-                    .Cast<TimerStorageBase>()
-                    .Select(timerStorageBase =>
-                    {
-                        string color = String.Empty;
-                        switch (timerStorageBase.TimerStatus)
-                        {
-                            case TimerStatus.Executing:
-                                color = "success";
-                                break;
-                            case TimerStatus.NotStart:
-                                color = "default";
-                                break;
-                            case TimerStatus.Pending:
-                                color = "warning";
-                                break;
-                            case TimerStatus.Stopped:
-                                color = "info";
-                                break;
-                        }
-                        return $@"
-<tr>
-    <td>{(((dynamic)timerStorageBase.ITimerEvent).Name)}</td>
-    <td>{timerStorageBase.TimePeriodCollection.First().Start} ~ {timerStorageBase.TimePeriodCollection.First().End}</td>
-    <td>{(timerStorageBase.NextExecuteDateTime.HasValue ? timerStorageBase.NextExecuteDateTime.Value.ToString() : "已結束")}</td>
-    <td>
-        <span class='label label-{color}'>
-            {timerStorageBase.TimerStatus.ToString()}
-        </span>
-    </td>
+            if (timerStorageBase.TimePeriodCollection == null)
+            {
+                GlobalHost.ConnectionManager.GetHubContext<Controllers.TestHub>()
+                       .Clients.All.receiveTimersData(JsonConvert.SerializeObject(new
+                       {
+                           @DataId = ((dynamic)timerStorageBase.ITimerEvent).Id,
+                           @Name = ((dynamic)timerStorageBase.ITimerEvent).Name,
+                           @StartDateTime = String.Empty,
+                           @EndDateTime = String.Empty,
+                           @NextExecutionDateTime = String.Empty,
+                           @Status = (int)timerStorageBase.TimerStatus,
+                           @IsRemoved = isRemoved
+                       }));
+            }
+            else
+            {
+                GlobalHost.ConnectionManager.GetHubContext<Controllers.TestHub>()
+                       .Clients.All.receiveTimersData(JsonConvert.SerializeObject(new
+                       {
+                           @DataId = ((dynamic)timerStorageBase.ITimerEvent).Id,
+                           @Name = ((dynamic)timerStorageBase.ITimerEvent).Name,
+                           @StartDateTime = timerStorageBase.TimePeriodCollection.First().Start,
+                           @EndDateTime = timerStorageBase.TimePeriodCollection.First().End,
+                           @NextExecutionDateTime = timerStorageBase.NextExecuteDateTime,
+                           @Status = (int)timerStorageBase.TimerStatus,
+                           @IsRemoved = isRemoved
+                       }));
+            }
 
-</tr>";
-                    }));
-            GlobalHost.ConnectionManager.GetHubContext<Controllers.TestHub>()
-                        .Clients.All.receiveTimersData(result);
         }
         /// <summary>
         /// 設定或取得排程器管理物件
