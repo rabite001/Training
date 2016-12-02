@@ -26,3 +26,17 @@ D:\Users\Yen\Documents\GitHub\Training\Training02\Teach.Util\bin\Debug\zh\TEC.Co
 D:\Users\Yen\Documents\GitHub\Training\Training02\Teach.Util\obj\Debug\Teach.Util.csprojResolveAssemblyReference.cache
 D:\Users\Yen\Documents\GitHub\Training\Training02\Teach.Util\obj\Debug\Teach.Util.dll
 D:\Users\Yen\Documents\GitHub\Training\Training02\Teach.Util\obj\Debug\Teach.Util.pdb
+D:\Training\Training02\Teach.Util\bin\Debug\Teach.Util.dll
+D:\Training\Training02\Teach.Util\bin\Debug\Teach.Util.pdb
+D:\Training\Training02\Teach.Util\bin\Debug\TEC.Core.dll
+D:\Training\Training02\Teach.Util\bin\Debug\TEC.Core.Portable.dll
+D:\Training\Training02\Teach.Util\bin\Debug\TEC.Core.Transactions.dll
+D:\Training\Training02\Teach.Util\bin\Debug\TEC.Core.xml
+D:\Training\Training02\Teach.Util\bin\Debug\TEC.Core.Portable.xml
+D:\Training\Training02\Teach.Util\bin\Debug\TEC.Core.Transactions.xml
+D:\Training\Training02\Teach.Util\bin\Debug\zh\TEC.Core.resources.dll
+D:\Training\Training02\Teach.Util\bin\Debug\zh\TEC.Core.Portable.resources.dll
+D:\Training\Training02\Teach.Util\bin\Debug\zh\TEC.Core.Transactions.resources.dll
+D:\Training\Training02\Teach.Util\obj\Debug\Teach.Util.csprojResolveAssemblyReference.cache
+D:\Training\Training02\Teach.Util\obj\Debug\Teach.Util.dll
+D:\Training\Training02\Teach.Util\obj\Debug\Teach.Util.pdb

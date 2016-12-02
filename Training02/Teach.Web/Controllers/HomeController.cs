@@ -19,30 +19,8 @@ namespace Teach.Web.Controllers
         static HomeController()
         {
             HomeController.schedulerUIData.createConsumerTimer().start();
-            HomeController.schedulerUIData.createConsumerTimer().start();
-            HomeController.schedulerUIData.createConsumerTimer().start();
             HomeController.schedulerUIData.createProducerTimer().start();
-            HomeController.schedulerUIData.createProducerTimer().start();
-            HomeController.schedulerUIData.createConsumerTimer().start();
-            HomeController.schedulerUIData.createConsumerTimer().start();
-            HomeController.schedulerUIData.createConsumerTimer().start();
-            HomeController.schedulerUIData.createProducerTimer().start();
-            HomeController.schedulerUIData.createProducerTimer().start();
-            HomeController.schedulerUIData.createConsumerTimer().start();
-            HomeController.schedulerUIData.createConsumerTimer().start();
-            HomeController.schedulerUIData.createConsumerTimer().start();
-            HomeController.schedulerUIData.createProducerTimer().start();
-            HomeController.schedulerUIData.createProducerTimer().start();
-            HomeController.schedulerUIData.createConsumerTimer().start();
-            HomeController.schedulerUIData.createConsumerTimer().start();
-            HomeController.schedulerUIData.createConsumerTimer().start();
-            HomeController.schedulerUIData.createProducerTimer().start();
-            HomeController.schedulerUIData.createProducerTimer().start();
-            HomeController.schedulerUIData.createConsumerTimer().start();
-            HomeController.schedulerUIData.createConsumerTimer().start();
-            HomeController.schedulerUIData.createConsumerTimer().start();
-            HomeController.schedulerUIData.createProducerTimer().start();
-            HomeController.schedulerUIData.createProducerTimer().start();
+        
         }
         // GET: Home
         public ActionResult Index()

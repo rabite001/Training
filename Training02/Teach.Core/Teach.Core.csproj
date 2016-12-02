@@ -69,6 +69,7 @@
     <Compile Include="Converters\Bank\BankUserConverter.cs" />
     <Compile Include="Converters\Bank\BankAccountConverter.cs" />
     <Compile Include="Converters\ConverterConfig.cs" />
+    <Compile Include="ObservableConcurrentQueue\ObservableConcurrentQueue.cs" />
     <Compile Include="ProducerAndConsumerMediator.cs" />
     <Compile Include="Infos\BankAccountInfo.cs" />
     <Compile Include="Infos\BankUserInfo.cs" />

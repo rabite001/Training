@@ -3,12 +3,14 @@
     ViewBag.Title = "Index";
 }
 @model Teach.Web.Models.Home.IndexModel
+
 <script type="text/javascript">
+    //加入暫停 繼續
     $(function () {
         // Declare a proxy to reference the hub.
-        var test = $.connection.testHub;
+        var timerManagerHub = $.connection.timerManagerHub;
         // Create a function that the hub can call to broadcast messages.
-        test.client.receiveTimersData = function (tableData) {
+        timerManagerHub.client.data = function (tableData) {
             //<tr data-row-id="guid....."><td data-prop-name="Name"></td></tr>
             data = JSON.parse(tableData);
             targetRow = $("tr", "#TBody_TimersTBoby").filter(function () {
@@ -33,26 +35,66 @@
                 targetRow.html(tableRow);
             }
         }
-        $.connection.hub.start().done(function () {
-            $("#Span_hear").html("SignalR 初始化完成");
-        });
+        $.connection.hub.start();
     });
 </script>
-<div>
-    <span class="label label-info" id="Span_hear">123</span>
-    <span class="label label-info" id="Span_hear2"></span>
+
+
+<script type="text/javascript">
+    //生產
+ 
+
+
+</script>
+
+
+
+<script type="text/javascript">
+    //消費後
+</script>
+
+
+<div class="row">
+    <div class="panel  panel-default">
+        <div class="panel-heading">排程器</div>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <td>排程事件型別</td>
+                    <td>有效執行區間</td>
+                    <td>下次執行</td>
+                    <td>程式執行狀態</td>
+                </tr>
+            </thead>
+            <tbody id="TBody_TimersTBoby"></tbody>
+        </table>
+
+    </div>
 </div>
 
-<div id="Div_TimerStatus">
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <td>排程事件型別</td>
-                <td>有效執行區間</td>
-                <td>下次執行</td>
-                <td>程式執行狀態</td>
-            </tr>
-        </thead>
-        <tbody id="TBody_TimersTBoby"></tbody>
-    </table>
+<!--取得生產者-->
+<div class="row">
+    <div class="panel  panel-success">
+        <div class="panel-heading">生產者</div>
+
+
+
+    </div>
 </div>
+
+<!--取得消費者-->
+<div class="row">
+    <div class="panel panel-info">
+        <div class="panel-heading">消費者</div>
+
+
+
+    </div>
+</div>
+
+
+
+
+
+
+

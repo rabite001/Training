@@ -13,6 +13,22 @@ namespace Teach.Web
         public static void initializeProducerAndConsumerMediator()
         {
             ProducerAndConsumerMediatorConfig.ProducerAndConsumerMediator = new ProducerAndConsumerMediator();
+            ((INotifyCollectionChanged)ProducerAndConsumerMediatorConfig.ProducerAndConsumerMediator.EventInfoConcurrentQueue).CollectionChanged += ProducerAndConsumerMediatorConfig.ProducerAndConsumerMediatorConfig_CollectionChanged;
+        }
+
+        private static void ProducerAndConsumerMediatorConfig_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.NewItems!=null)
+            {
+
+            }
+
+            if (e.OldItems!=null)
+            {
+
+            }
+
+
         }
 
         /// <summary>

@@ -55,35 +55,36 @@ namespace Teach.Web
         /// <param name="timerStorageBase"></param>
         private static void sendTimerData(TimerStorageBase timerStorageBase, bool isRemoved)
         {
+
+            
             if (timerStorageBase.TimePeriodCollection == null)
             {
-                GlobalHost.ConnectionManager.GetHubContext<Controllers.TestHub>()
-                       .Clients.All.receiveTimersData(JsonConvert.SerializeObject(new
+                GlobalHost.ConnectionManager.GetHubContext<Controllers.TimerManagerHub>()
+                       .Clients.All.data(JsonConvert.SerializeObject(new
                        {
                            @DataId = ((dynamic)timerStorageBase.ITimerEvent).Id,
                            @Name = ((dynamic)timerStorageBase.ITimerEvent).Name,
                            @StartDateTime = String.Empty,
                            @EndDateTime = String.Empty,
                            @NextExecutionDateTime = String.Empty,
-                           @Status = (int)timerStorageBase.TimerStatus,
+                           @Status = ((TimerStatus)timerStorageBase.TimerStatus).ToString(),
                            @IsRemoved = isRemoved
                        }));
             }
             else
             {
-                GlobalHost.ConnectionManager.GetHubContext<Controllers.TestHub>()
-                       .Clients.All.receiveTimersData(JsonConvert.SerializeObject(new
+                GlobalHost.ConnectionManager.GetHubContext<Controllers.TimerManagerHub>()
+                       .Clients.All.data(JsonConvert.SerializeObject(new
                        {
                            @DataId = ((dynamic)timerStorageBase.ITimerEvent).Id,
                            @Name = ((dynamic)timerStorageBase.ITimerEvent).Name,
                            @StartDateTime = timerStorageBase.TimePeriodCollection.First().Start,
                            @EndDateTime = timerStorageBase.TimePeriodCollection.First().End,
                            @NextExecutionDateTime = timerStorageBase.NextExecuteDateTime,
-                           @Status = (int)timerStorageBase.TimerStatus,
+                           @Status = ((TimerStatus)timerStorageBase.TimerStatus).ToString(),
                            @IsRemoved = isRemoved
                        }));
             }
-
         }
         /// <summary>
         /// 設定或取得排程器管理物件

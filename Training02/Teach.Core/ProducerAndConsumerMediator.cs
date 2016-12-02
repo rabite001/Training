@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Teach.Core.Infos;
+using Teach.Core.ObservableConcurrentQueue;
 
 namespace Teach.Core
 {
@@ -15,7 +17,8 @@ namespace Teach.Core
     {
         public ProducerAndConsumerMediator()
         {
-            this.EventInfoConcurrentQueue = new ConcurrentQueue<EventInfo>();
+            this.EventInfoConcurrentQueue = new ObservableConcurrentQueue<EventInfo>();
+
         }
         /// <summary>
         /// 佇列待執行的事件
@@ -46,6 +49,6 @@ namespace Teach.Core
         /// <summary>
         /// 設定或取得執行的佇列
         /// </summary>
-        private ConcurrentQueue<EventInfo> EventInfoConcurrentQueue { set; get; }
+        public ObservableConcurrentQueue<EventInfo> EventInfoConcurrentQueue { set; get; }
     }
 }
